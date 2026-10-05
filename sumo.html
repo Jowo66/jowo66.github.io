@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>相撲 | Sumo Loop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Shippori+Mincho+B1:wght@800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0b0716;--magenta:#ff2e88;--cyan:#27e8ff;--amber:#ffb347;--paper:#eee6ff;--muted:#a99cc9}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:radial-gradient(ellipse at 80% 0%,rgba(255,46,136,.2),transparent 55%),var(--ink);color:var(--paper);font-family:'Rajdhani',sans-serif;font-size:1.15rem;line-height:1.5;min-height:100vh}
+a{color:var(--cyan);text-decoration:none;font-weight:600}
+a:hover{color:var(--magenta)}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+header{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;padding:18px 6%;border-bottom:1px solid rgba(255,46,136,.4)}
+header .mark{font-family:'Shippori Mincho B1',serif;font-size:1.5rem;color:var(--magenta);text-shadow:0 0 14px var(--magenta)}
+header div{display:flex;gap:24px}
+main{max-width:960px;margin:0 auto;padding:40px 5% 60px}
+h1{font-family:'Shippori Mincho B1',serif;font-size:clamp(2rem,6vw,3.2rem);text-shadow:0 0 18px rgba(255,46,136,.7);line-height:1.1}
+.lede{color:var(--muted);margin:12px 0 26px;max-width:56ch}
+.stage{position:relative;border:2px solid var(--magenta);box-shadow:0 0 30px rgba(255,46,136,.35)}
+canvas{display:block;width:100%;height:auto;image-rendering:pixelated;background:#0c0618}
+#banner{position:absolute;top:8%;left:50%;transform:translateX(-50%);text-align:center;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+#banner.on{opacity:1}
+#banner b{font-family:'Shippori Mincho B1',serif;font-size:clamp(1.6rem,6vw,3rem);color:var(--amber);text-shadow:0 0 18px var(--amber);margin-right:12px}
+#banner span{font-size:clamp(1.1rem,3.5vw,1.8rem);font-weight:700;color:var(--paper);text-shadow:0 0 10px var(--magenta)}
+.board{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}
+.board div{padding:12px 16px;background:rgba(18,10,36,.8);border:1px solid rgba(39,232,255,.45)}
+.board small{display:block;color:var(--muted)}
+.board i{display:inline-block;width:12px;height:12px;margin-right:8px;border:1px solid var(--paper);vertical-align:-1px}
+.row{display:flex;justify-content:space-between;align-items:center;margin-top:18px;gap:16px;flex-wrap:wrap}
+button{font:inherit;font-weight:700;padding:10px 24px;background:transparent;color:var(--cyan);border:1px solid var(--cyan);cursor:pointer;transition:.25s}
+button:hover{background:var(--cyan);color:var(--ink);box-shadow:0 0 22px var(--cyan)}
+@media(max-width:560px){.board{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <span class="mark">相撲</span>
+  <div><a href="https://jowo66.github.io/future/">Neo-Edo</a><a href="https://jowo66.github.io/">Home</a></div>
+</header>
+<main>
+  <h1>Sumo Loop</h1>
+  <p class="lede">Two wrestlers meet on the dohyō. One is pushed out, a new challenger steps in, and the fight starts again. Every wrestler and every result is random.</p>
+  <div class="stage">
+    <canvas id="c" width="320" height="180" role="img" aria-label="Pixel-art sumo wrestlers fighting in a ring"></canvas>
+    <div id="banner"><b>勝</b><span id="win"></span></div>
+  </div>
+  <div class="board" role="status" aria-live="polite">
+    <div><small>West</small><span id="bl"></span></div>
+    <div><small>East</small><span id="br"></span></div>
+  </div>
+  <div class="row"><span id="count">Bouts fought: 0</span><button id="pause" type="button">Pause</button></div>
+</main>
+
+<script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+const pick=a=>a[Math.random()*a.length|0];
+const lerp=(a,b,k)=>a+(b-a)*k,clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const ease=k=>k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+const SK=['#f6d2b0','#e8b48a','#d09a6a','#b27348','#8a5232','#5e3522'];
+const HR=['#15121a','#3b2314','#8a4b1f','#c0392b','#2f6bff','#ff5fa2','#35d07f','#f2f2f2','#f5c542','#9b5de5'];
+const BL=['#ff2e88','#27e8ff','#ffb347','#7c5cff','#e8e8e8','#2ecc71','#c0392b'];
+const P=['Tora','Kuro','Aka','Ao','Shiro','Kita','Hoshi','Yama','Kaze','Ryu'];
+const S=['fuji','umi','zakura','maru','shima','nada','kaze','hana','yama','ryu'];
+const HOME={L:100,R:220};
+const shade=(h,f)=>{const n=parseInt(h.slice(1),16);return `rgb(${(n>>16)*f|0},${(n>>8&255)*f|0},${(n&255)*f|0})`};
+const R=(c,x,y,w,h)=>{ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),w,h)};
+
+function mk(side){return{side,name:pick(P)+pick(S),skin:pick(SK),hair:pick(HR),belt:pick(BL),
+  x:side==='L'?-40:360,y:140,alpha:1,ang:0,streak:0,pose:'down',lean:0,crouch:0,bob:0,air:false,from:0,to:0}}
+
+function drawW(w){
+  const f=w.side==='L'?1:-1,cy=w.crouch,bx=w.lean*.5,hx=w.lean;
+  const sk=w.skin,ds=shade(sk,.76),bt=w.belt,hr=w.hair;
+  ctx.save();ctx.globalAlpha=w.alpha;
+  if(!w.ang)R('rgba(0,0,0,.4)',w.x-20,w.y+1,40,3);
+  ctx.translate(Math.round(w.x),Math.round(w.y+w.bob));
+  if(w.ang){ctx.translate(0,-18);ctx.rotate(w.ang);ctx.translate(0,18)}
+  ctx.scale(f,1);
+  // legs + feet
+  R(sk,-12,-12+cy,9,12-cy);R(sk,3,-12+cy,9,12-cy);
+  R(ds,-13,-2,11,2);R(ds,2,-2,11,2);
+  // torso + belly
+  R(sk,bx-14,-36+cy,28,17);R(sk,bx-17,-31+cy,34,11);
+  R(ds,bx-17,-24+cy,34,2);R(ds,bx+3,-28+cy,2,2);
+  // mawashi belt + hanging strips
+  R(bt,bx-15,-22+cy,30,6);R(shade(bt,.7),bx-15,-17+cy,30,1);
+  for(let i=0;i<4;i++)R(i%2?shade(bt,.7):bt,bx+4+i*3,-16+cy,2,8);
+  // head
+  R(sk,hx-6,-47+cy,12,11);R(ds,hx-6,-38+cy,12,2);
+  R('#15121a',hx+2,-43+cy,2,2);R('#15121a',hx+1,-45+cy,4,1);
+  // hair + topknot
+  R(hr,hx-6,-49+cy,12,3);R(hr,hx-7,-47+cy,2,5);R(hr,hx-9,-53+cy,5,5);
+  // arms
+  if(w.pose==='push'){R(sk,bx+10,-32+cy,14,5);R(ds,bx+22,-32+cy,3,5);R(ds,bx+8,-26+cy,14,4)}
+  else if(w.pose==='ready'){R(sk,bx+13,-30+cy,7,6);R(ds,bx+10,-26+cy,7,5)}
+  else if(w.pose==='up'){R(sk,bx+13,-52+cy,5,17);R(ds,bx-18,-52+cy,5,17)}
+  else{R(sk,bx+13,-32+cy,5,13);R(ds,bx-18,-32+cy,5,13)}
+  ctx.restore();
+}
+
+function drawBg(){
+  ['#120a2b','#1d0c3d','#2b0f4d','#4a1060','#7a1468','#b01a73','#e0287d','#ff5c8a']
+    .forEach((c,i)=>R(c,0,i*16,320,16));
+  R('#0c0618',0,128,320,52);
+  for(let dy=-28;dy<=28;dy+=2){if(dy>0&&(dy/2)%3===0)continue;const w=Math.sqrt(784-dy*dy);R('#ffb347',230-w,100+dy,w*2,2)}
+  const d='#0c0618';
+  [[0,104,24,24],[250,100,16,28],[270,90,22,38],[296,106,24,22]].forEach(b=>R(d,...b));
+  R(d,30,108,36,20);R(d,32,98,32,6);R(d,38,90,20,6);R(d,36,84,24,3);R(d,42,76,12,6);R(d,46,70,4,6);R(d,47,62,2,8);
+  // dohyo
+  R('#5a3a24',66,144,188,20);R('#d9b26a',66,140,188,4);
+  for(let x=66;x<254;x+=6)R('#b08a4a',x,146,2,16);
+  R('#d9b26a',62,138,8,12);R('#d9b26a',250,138,8,12);R('#8a6a3a',62,148,8,2);R('#8a6a3a',250,148,8,2);
+  R('#0c0618',0,164,320,16);R('#ff2e88',0,164,320,1);
+}
+
+// ---- state ----
+const slots={L:mk('L'),R:mk('R')};
+let state='enter',st=0,W=null,Lo=null,c=160,phase=0,bouts=0;
+let paused=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const el=id=>document.getElementById(id);
+const go=s=>{state=s;st=0};
+const chip=w=>`<i style="background:${w.hair}"></i><i style="background:${w.skin}"></i>${w.name} &middot; streak ${w.streak}`;
+const board=()=>{el('bl').innerHTML=chip(slots.L);el('br').innerHTML=chip(slots.R);el('count').textContent='Bouts fought: '+bouts};
+function setWalk(w,to,from){w.from=from??w.x;w.to=to}
+function walk(w,k){w.x=lerp(w.from,w.to,k);w.bob=k<1?-Math.abs(Math.sin(st*12))*2:0;w.pose='down';w.lean=0;w.crouch=0}
+
+setWalk(slots.L,HOME.L,-40);setWalk(slots.R,HOME.R,360);board();
+
+function update(dt){
+  st+=dt;const L=slots.L,Rr=slots.R;
+  if(state==='enter'||state==='replace'){
+    const k=ease(Math.min(st/1.6,1));walk(L,k);walk(Rr,k);
+    if(k>=1){go('ready')}
+  }else if(state==='ready'){
+    [L,Rr].forEach(w=>{w.pose='ready';w.crouch=3;w.lean=2;w.bob=0});
+    if(st>1){W=Math.random()<.5?'L':'R';Lo=W==='L'?'R':'L';phase=Math.random()*6;go('charge')}
+  }else if(state==='charge'){
+    const k=Math.min(st/.35,1);L.x=lerp(HOME.L,146,k*k);Rr.x=lerp(HOME.R,174,k*k);
+    [L,Rr].forEach(w=>{w.pose='push';w.lean=6;w.crouch=3});
+    if(k>=1){c=160;go('shove')}
+  }else if(state==='shove'){
+    const dir=W==='L'?1:-1;
+    c=clamp(c+(dir*17+42*Math.sin(st*3.1+phase))*dt,70,250);
+    L.x=c-14;Rr.x=c+14;
+    slots[W].lean=9;slots[W].crouch=4;slots[Lo].lean=4;slots[Lo].crouch=2;
+    L.bob=Rr.bob=Math.random()<.4?-1:0;
+    if((W==='L'&&c>=222)||(W==='R'&&c<=98)){
+      const l=slots[Lo];l.air=true;l.vx=dir*85;l.vy=-120;l.spin=dir*5;l.bob=0;slots[W].bob=0;
+      slots[W].streak++;bouts++;board();
+      el('win').textContent=slots[W].name;go('out');
+    }
+  }else if(state==='out'){
+    const dir=W==='L'?1:-1,l=slots[Lo],w=slots[W];
+    if(l.air){
+      l.vy+=450*dt;l.x+=l.vx*dt;l.y+=l.vy*dt;
+      l.ang=dir*Math.min(Math.abs(l.ang+l.spin*dt),1.57);
+      if(l.y>=168){l.y=168;l.air=false}
+    }
+    w.pose=st>.5?'up':'push';w.lean=st>.5?0:6;w.crouch=0;
+    if(st>.4)el('banner').classList.add('on');
+    if(st>2)l.alpha=Math.max(0,1-(st-2)/.6);
+    if(st>2.7){
+      el('banner').classList.remove('on');
+      const n=mk(Lo);slots[Lo]=n;
+      setWalk(n,HOME[Lo],Lo==='L'?-40:360);setWalk(w,HOME[W],w.x);
+      w.pose='down';go('replace');board();
+    }
+  }
+}
+
+function render(){
+  drawBg();
+  const order=(state==='enter'||state==='replace'||state==='ready')?[slots.L,slots.R]:[slots[Lo],slots[W]];
+  order.forEach(drawW);
+  if(state==='shove'){
+    for(let i=0;i<3;i++)if(Math.random()<.5)R(['#fff','#27e8ff','#ff2e88'][i],c+Math.random()*12-6,140-24-Math.random()*20,2,2);
+  }
+}
+
+let last=performance.now();
+function loop(t){
+  const dt=Math.min(.05,(t-last)/1000);last=t;
+  if(!paused)update(dt);
+  render();requestAnimationFrame(loop);
+}
+const btn=el('pause');
+const label=()=>btn.textContent=paused?'Play':'Pause';
+btn.onclick=()=>{paused=!paused;label()};
+label();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
