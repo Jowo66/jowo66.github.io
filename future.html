@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>未来 | Neo-Edo 2087</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Shippori+Mincho+B1:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0b0716;
+  --panel:rgba(18,10,36,.78);
+  --magenta:#ff2e88;
+  --cyan:#27e8ff;
+  --amber:#ffb347;
+  --paper:#eee6ff;
+  --muted:#a99cc9;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:
+    radial-gradient(ellipse at 80% 10%,rgba(255,46,136,.22),transparent 55%),
+    radial-gradient(ellipse at 10% 90%,rgba(39,232,255,.14),transparent 50%),
+    var(--ink);
+  color:var(--paper);
+  font-family:'Rajdhani',sans-serif;
+  font-size:1.15rem;
+  line-height:1.6;
+  overflow-x:hidden;
+}
+/* rain */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;
+  background:repeating-linear-gradient(105deg,transparent 0 22px,rgba(39,232,255,.07) 23px 24px);
+  animation:rain 1.2s linear infinite;
+}
+@keyframes rain{to{background-position:-48px 96px}}
+a{color:inherit}
+a:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+
+header.bar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:18px 8%;border-bottom:1px solid rgba(255,46,136,.4);
+  background:rgba(11,7,22,.7);backdrop-filter:blur(8px);
+  position:sticky;top:0;z-index:10;
+}
+.bar a{text-decoration:none;color:var(--cyan);font-weight:600;transition:.25s}
+.bar a:hover{color:var(--magenta);text-shadow:0 0 12px var(--magenta)}
+.bar .mark{font-family:'Shippori Mincho B1',serif;font-size:1.4rem;color:var(--magenta);text-shadow:0 0 14px var(--magenta)}
+
+/* hero */
+.hero{
+  min-height:88vh;display:grid;grid-template-columns:1.2fr .8fr;
+  align-items:center;gap:40px;padding:60px 8%;
+}
+.hero h1{
+  font-family:'Shippori Mincho B1',serif;font-weight:800;
+  font-size:clamp(2.6rem,7vw,5.5rem);line-height:1;
+  color:var(--paper);
+  text-shadow:0 0 18px rgba(255,46,136,.7);
+}
+.hero .sub{margin-top:18px;color:var(--cyan);font-size:1.25rem;font-weight:600;letter-spacing:.08em}
+.hero p.lede{margin-top:22px;max-width:52ch;color:var(--muted)}
+.cta{display:flex;gap:18px;flex-wrap:wrap;margin-top:36px}
+.cta a{
+  padding:13px 26px;text-decoration:none;font-weight:700;
+  border:1px solid var(--magenta);color:var(--magenta);transition:.25s;
+  clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);
+}
+.cta a:hover{background:var(--magenta);color:var(--ink);box-shadow:0 0 28px var(--magenta)}
+.cta a.alt{border-color:var(--cyan);color:var(--cyan)}
+.cta a.alt:hover{background:var(--cyan);box-shadow:0 0 28px var(--cyan)}
+
+/* neon sign */
+.sign{
+  justify-self:center;position:relative;
+  display:flex;gap:26px;align-items:flex-start;
+}
+.sign .kanji{
+  writing-mode:vertical-rl;
+  font-family:'Shippori Mincho B1',serif;font-weight:800;
+  font-size:clamp(6rem,17vw,13rem);line-height:1;
+  color:transparent;-webkit-text-stroke:2px var(--cyan);
+  text-shadow:0 0 22px var(--cyan),0 0 60px rgba(39,232,255,.6);
+  animation:flicker 2.4s .3s 1 both;
+}
+.sign .side{
+  writing-mode:vertical-rl;color:var(--amber);font-weight:700;
+  letter-spacing:.35em;border-left:2px solid var(--amber);padding-left:12px;
+  text-shadow:0 0 10px var(--amber);
+}
+.seal{
+  position:absolute;right:-6px;bottom:-14px;width:54px;height:54px;
+  background:var(--magenta);color:var(--ink);display:grid;place-items:center;
+  font-family:'Shippori Mincho B1',serif;font-weight:800;font-size:1.9rem;
+  transform:rotate(-6deg);box-shadow:0 0 20px var(--magenta);
+}
+@keyframes flicker{
+  0%,18%,22%,60%{opacity:.15}
+  20%,24%,62%,100%{opacity:1}
+  23%{opacity:.4}
+}
+
+/* sections */
+section{padding:90px 8%}
+.head{
+  display:flex;align-items:baseline;gap:16px;margin-bottom:34px;
+  border-bottom:1px solid rgba(39,232,255,.35);padding-bottom:12px;
+}
+.head h2{font-family:'Shippori Mincho B1',serif;font-size:2rem;color:var(--cyan);text-shadow:0 0 14px rgba(39,232,255,.6)}
+.head span{color:var(--muted)}
+
+.districts{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:26px}
+.card{
+  position:relative;padding:30px;background:var(--panel);
+  border:1px solid rgba(255,46,136,.45);
+  /* lattice (kōshi) texture */
+  background-image:
+    linear-gradient(rgba(255,46,136,.07) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,46,136,.07) 1px,transparent 1px);
+  background-size:22px 22px;
+  transition:.3s;
+}
+.card:hover{border-color:var(--cyan);box-shadow:0 0 28px rgba(39,232,255,.35)}
+.card .k{font-family:'Shippori Mincho B1',serif;font-weight:800;font-size:3.2rem;color:var(--magenta);text-shadow:0 0 16px var(--magenta);line-height:1}
+.card .r{color:var(--amber);font-weight:600;margin:6px 0 12px}
+.card p{color:var(--muted)}
+
+/* wave band */
+.waves{
+  height:90px;opacity:.55;
+  background:
+    radial-gradient(circle at 50% 100%,transparent 0 22px,var(--cyan) 23px 24px,transparent 25px 34px,var(--magenta) 35px 36px,transparent 37px) 0 0/60px 45px repeat-x;
+  -webkit-mask:linear-gradient(transparent,#000);mask:linear-gradient(transparent,#000);
+}
+
+footer{text-align:center;padding:50px 20px;border-top:1px solid rgba(255,46,136,.3);color:var(--muted)}
+footer a{color:var(--cyan)}
+
+@media(max-width:800px){
+  .hero{grid-template-columns:1fr;text-align:left;padding-top:40px}
+  .sign{justify-self:start}
+}
+@media(prefers-reduced-motion:reduce){
+  body::before{animation:none}
+  .sign .kanji{animation:none}
+}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <span class="mark">未来</span>
+  <a href="https://jowo66.github.io/">&larr; Back to home</a>
+</header>
+
+<main>
+  <div class="hero">
+    <div>
+      <h1>Neo-Edo<br>2087</h1>
+      <p class="sub">A city of rain, lanterns and light</p>
+      <p class="lede">
+        Paper lanterns hang beside holograms, and shrines stand between server towers.
+        Walk through three districts of a city that never switches off.
+      </p>
+      <div class="cta">
+        <a href="#districts">Explore the districts</a>
+        <a class="alt" href="https://jowo66.github.io/">Return home</a>
+      </div>
+    </div>
+    <div class="sign" aria-hidden="true">
+      <div class="kanji">未来</div>
+      <div class="side">ネオ江戸</div>
+      <div class="seal">光</div>
+    </div>
+  </div>
+
+  <div class="waves" aria-hidden="true"></div>
+
+  <section id="districts">
+    <div class="head"><h2>The Districts</h2><span>Three places to start</span></div>
+    <div class="districts">
+      <article class="card">
+        <div class="k">夜市</div>
+        <div class="r">Yoichi &middot; Night Market</div>
+        <p>Neon food stalls, black-market chips and street vendors who sell memories by the gram.</p>
+      </article>
+      <article class="card">
+        <div class="k">電脳</div>
+        <div class="r">Dennō &middot; The Net</div>
+        <p>The city's mind. Data flows through glass towers, and everyone has a ghost inside the machine.</p>
+      </article>
+      <article class="card">
+        <div class="k">神社</div>
+        <div class="r">Jinja &middot; The Shrine</div>
+        <p>A quiet torii gate between two billboards, where residents leave offerings for the old servers.</p>
+      </article>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>未来 &copy; <span id="y">2026</span> Ejovwo Obahor &middot; <a href="https://jowo66.github.io/">Back to home</a></p>
+</footer>
+
+<script>document.getElementById('y').textContent=new Date().getFullYear();</script>
+</body>
+</html>
