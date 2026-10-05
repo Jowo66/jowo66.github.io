@@ -4,15 +4,147 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ejovwo Obahor</title>
+    <meta name="description" content="Portfolio of Ejovwo Obahor.">
 
-    style.css
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <h1>EJOVWO OBAHOR</h1>
+    <canvas id="matrix" aria-hidden="true"></canvas>
 
-    <p>SYSTEM STATUS: ONLINE</p>
+    <nav>
+        <div class="logo">EO://</div>
+        <ul>
+            <li><a href="#about">About</a></li>
+            <li><a href="#skills">Skills</a></li>
+            <li><a href="#projects">Projects</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </nav>
+
+    <header class="hero" id="home">
+        <div class="hero-content">
+            <p class="status-line">SYSTEM STATUS: ONLINE</p>
+            <h1>EJOVWO OBAHOR</h1>
+            <h2>Developer &amp; Builder of Digital Systems</h2>
+            <p class="intro">
+                I design and build fast, reliable software. Scroll down to see
+                what I work with, what I've made, and how to reach me.
+            </p>
+            <div class="hero-buttons">
+                <a href="#projects">View projects</a>
+                <a href="#contact">Get in touch</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+
+        <section id="about">
+            <h2 class="section-header"><span>&gt;</span>About</h2>
+            <div class="terminal-window">
+                <p>&gt; whoami</p>
+                <p>Ejovwo Obahor</p>
+                <p>&gt; cat profile.txt</p>
+                <p>I'm a developer who likes turning ideas into working products.</p>
+                <p>I care about clean code, clear interfaces, and details that hold up.</p>
+                <p>&gt; status</p>
+                <p>Open to new projects and collaborations.</p>
+            </div>
+        </section>
+
+        <section id="skills">
+            <h2 class="section-header"><span>&gt;</span>Skills</h2>
+            <div class="tech-grid">
+                <div class="tech-card">HTML</div>
+                <div class="tech-card">CSS</div>
+                <div class="tech-card">JavaScript</div>
+                <div class="tech-card">Python</div>
+                <div class="tech-card">Git</div>
+                <div class="tech-card">Linux</div>
+            </div>
+        </section>
+
+        <section id="projects">
+            <h2 class="section-header"><span>&gt;</span>Projects</h2>
+            <div class="project-grid">
+                <article class="project-card">
+                    <h3>Project One</h3>
+                    <p>A short description of what this project does and the problem it solves.</p>
+                </article>
+                <article class="project-card">
+                    <h3>Project Two</h3>
+                    <p>A short description of what this project does and the problem it solves.</p>
+                </article>
+                <article class="project-card">
+                    <h3>Project Three</h3>
+                    <p>A short description of what this project does and the problem it solves.</p>
+                </article>
+            </div>
+        </section>
+
+        <section id="contact">
+            <h2 class="section-header"><span>&gt;</span>Contact</h2>
+            <div class="contact-links">
+                <a href="mailto:you@example.com">Email</a>
+                <a href="https://github.com/" target="_blank" rel="noopener">GitHub</a>
+                <a href="https://www.linkedin.com/" target="_blank" rel="noopener">LinkedIn</a>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>&copy; <span id="year">2026</span> Ejovwo Obahor. All systems operational.</p>
+    </footer>
+
+    <script>
+        // Footer year
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Matrix rain
+        (function () {
+            const canvas = document.getElementById('matrix');
+            const ctx = canvas.getContext('2d');
+            const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノ0123456789'.split('');
+            const size = 16;
+            let columns, drops;
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                columns = Math.floor(canvas.width / size);
+                drops = Array.from({ length: columns }, () => Math.random() * -50);
+            }
+
+            function draw() {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#00ff41';
+                ctx.font = size + 'px "Share Tech Mono", monospace';
+
+                for (let i = 0; i < drops.length; i++) {
+                    const ch = chars[Math.floor(Math.random() * chars.length)];
+                    ctx.fillText(ch, i * size, drops[i] * size);
+                    if (drops[i] * size > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    drops[i]++;
+                }
+            }
+
+            resize();
+            window.addEventListener('resize', resize);
+
+            // Respect reduced-motion preferences: draw a single static frame
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                for (let i = 0; i < 60; i++) draw();
+            } else {
+                setInterval(draw, 50);
+            }
+        })();
+    </script>
 
 </body>
 </html>
