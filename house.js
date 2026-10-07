@@ -20,6 +20,9 @@ const STABP=[
  [0,0,0,0, 1,0,0,1, 0,0,0,0, 1,0,0,1],
  [1,0,0,1, 0,0,1,0, 0,0,0,1, 0,0,1,0],
  [0,0,1,0, 0,1,0,0, 0,0,1,0, 0,1,0,1]];
+const KICKP=[[1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],[1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,1],[1,0,0,0,1,0,0,0,1,0,0,1,1,0,0,0],[1,0,0,0,1,0,0,0,1,0,0,0,1,0,1,0]];
+const HATP=[[0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0],[0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,1],[1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],[0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,0]];
+const PERCP=[null,[0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1],[0,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0],[0,0,1,0,0,0,1,0,0,1,0,0,0,1,0,0]];
 const ADJ=['Rain','Neon','Midnight','Velvet','Chrome','Lantern','Static','Electric','Basement','Glass','Wet','Slow','Jowo','Koi','Paper'];
 const NOUN=['Groove','Circuit','Alley','Pulse','Echo','Shrine','Noodle','Elevator','Skyline','Signal','Disco','Ritual','Drift','Hologram','Taxi'];
 let ac=null,master,duck,send,noise,timer=0,step=0,nextT=0,t0=0,on=false,nTrack=0;
@@ -27,7 +30,7 @@ let T=null,SPB=60/124,S16=SPB/4;
 const subs=[],tsubs=[];
 function makeTrack(first){
   const mode=first?'minor':pick(Object.keys(SCALES)),sc=SCALES[mode],key=first?9:Math.floor(Math.random()*12);
-  const bpm=first?124:118+Math.floor(Math.random()*13);
+  const bpm=first?124:110+Math.floor(Math.random()*25);
   const prog=first?[0,3,6,4]:pick(PROGS),root=31+(((key-31)%12)+12)%12;   /* around A1 */
   const note=(d,oct)=>root+sc[d%7]+12*Math.floor(d/7)+oct;
   const chords=prog.map(d=>({b:(()=>{let b=note(d,12);while(b>51)b-=12;while(b<38)b+=12;return b})(),ch:[note(d,24),note(d+2,24),note(d+4,24),note(d+6,24)]}));
@@ -35,7 +38,7 @@ function makeTrack(first){
   return{name:(first?'Rain Groove':pick(ADJ)+' '+pick(NOUN)),no:nTrack,key:KEYS[key]+' '+(mode==='minor'?'min':mode),bpm,chords,
     bass:first?BASSP[0]:pick(BASSP),stab:first?STABP[0]:pick(STABP),cut:first?1100:700+Math.random()*1100,
     wave:first?'sawtooth':pick(['sawtooth','sawtooth','square']),hats:Math.random()<.5,wet:.2+Math.random()*.25,
-    arp:first?2:Math.floor(Math.random()*4),open:first?true:Math.random()<.8,swing:first?0:Math.random()*.012};
+    arp:first?2:Math.floor(Math.random()*4),kickp:first?KICKP[0]:pick(KICKP),hatp:first?HATP[0]:pick(HATP),percp:first?null:pick(PERCP),bwave:first?'sawtooth':pick(['sawtooth','square','triangle']),bcut:first?900:500+Math.random()*1400,clap:first?[4,12]:pick([[4,12],[4,12],[4,12,15],[4,10,12]]),open:first?true:Math.random()<.8,swing:first?0:Math.random()*.012};
 }
 function setTempo(){SPB=60/T.bpm;S16=SPB/4}
 T=makeTrack(true);setTempo();
@@ -69,8 +72,8 @@ function clap(t){[0,.012,.024].forEach((d,i)=>nz(t+d,'bandpass',1500,1.2,i==2?.5
 function hat(t,open){nz(t,'highpass',7500,.7,open?.22:.12,open?.2:.045,duck)}
 function bass(t,m,len){
   const o=ac.createOscillator(),f=ac.createBiquadFilter(),gn=ac.createGain();
-  o.type='sawtooth';o.frequency.value=mtof(m);f.type='lowpass';f.Q.value=6;
-  f.frequency.setValueAtTime(900,t);f.frequency.exponentialRampToValueAtTime(140,t+len);
+  o.type=T.bwave;o.frequency.value=mtof(m);f.type='lowpass';f.Q.value=6;
+  f.frequency.setValueAtTime(T.bcut,t);f.frequency.exponentialRampToValueAtTime(140,t+len);
   gn.gain.setValueAtTime(.0001,t);gn.gain.linearRampToValueAtTime(.34,t+.01);gn.gain.exponentialRampToValueAtTime(.0001,t+len);
   o.connect(f);f.connect(gn);gn.connect(duck);o.start(t);o.stop(t+len+.05);
 }
@@ -87,13 +90,20 @@ function pluck(t,m){
 function sched(n,t){
   const s=n%16,bar=Math.floor(n/16),ch=T.chords[bar%4],phrase=Math.floor(bar/4)%4;
   t+=(s%2?T.swing:0);
-  if(s%4===0)kick(t);
-  if(s===4||s===12)clap(t);
-  if(s%4===2&&T.open)hat(t,true);else if((phrase>0||T.hats)&&s%2===1)hat(t,false);
+  if(T.kickp[s])kick(t);
+  if(T.clap.indexOf(s)>=0)clap(t);
+  if(T.hatp[s]&&(T.open||s%4!==2))hat(t,s%4===2);else if((phrase>0||T.hats)&&s%2===1)hat(t,false);
+  if(T.percp&&T.percp[s])nz(t,'bandpass',3200,4,.16,.05,duck);
   if(T.bass[s])bass(t,s===15?ch.b+12:ch.b,S16*1.7);
   if(T.stab[s]&&phrase!==3)stab(t,ch.ch,T.cut+phrase*450+(s===13?350:0),T.wave);
   if(T.arp&&phrase>=4-T.arp&&s%2===0)pluck(t,ch.ch[(s/2)%4]);
   if(phrase===3&&bar%4===3&&s>=8&&s%2===0)nz(t,'bandpass',2200,1,.18,.08,master);
+}
+function swoosh(){
+  const t=ac.currentTime,s=ac.createBufferSource();s.buffer=noise;s.loop=true;
+  const f=ac.createBiquadFilter();f.type='bandpass';f.Q.value=2;f.frequency.setValueAtTime(300,t);f.frequency.exponentialRampToValueAtTime(7000,t+.45);
+  const gn=ac.createGain();gn.gain.setValueAtTime(.0001,t);gn.gain.linearRampToValueAtTime(.35,t+.35);gn.gain.exponentialRampToValueAtTime(.0001,t+.55);
+  s.connect(f);f.connect(gn);gn.connect(master);s.start(t);s.stop(t+.6);
 }
 function tick(){while(nextT<ac.currentTime+.14){sched(step,nextT);nextT+=S16;step++}}
 const House={
@@ -115,7 +125,7 @@ const House={
     subs.forEach(f=>{try{f(on)}catch(e){}});return on;
   },
   shuffle(){
-    T=makeTrack(false);setTempo();
+    T=makeTrack(false);setTempo();if(ac&&on)swoosh();
     if(ac&&on){step=0;nextT=Math.max(nextT,ac.currentTime+.05);t0=nextT;if(House._wet)House._wet.gain.value=T.wet}
     tsubs.forEach(f=>{try{f(T)}catch(e){}});return T;
   }
