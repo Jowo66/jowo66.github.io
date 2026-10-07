@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>相撲 | Sumo Loop</title>
+<meta name="description" content="A looping pixel-art sumo tournament. Win streaks tilt the odds and bring the fans out with signs.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Shippori+Mincho+B1:wght@800&display=swap" rel="stylesheet">
@@ -17,12 +18,12 @@ a:hover{color:var(--magenta)}
 header{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;padding:18px 6%;border-bottom:1px solid rgba(255,46,136,.4)}
 header .mark{font-family:'Shippori Mincho B1',serif;font-size:1.5rem;color:var(--magenta);text-shadow:0 0 14px var(--magenta)}
 header div{display:flex;gap:24px}
-main{max-width:960px;margin:0 auto;padding:40px 5% 60px}
+main{max-width:1000px;margin:0 auto;padding:40px 5% 60px}
 h1{font-family:'Shippori Mincho B1',serif;font-size:clamp(2rem,6vw,3.2rem);text-shadow:0 0 18px rgba(255,46,136,.7);line-height:1.1}
-.lede{color:var(--muted);margin:12px 0 26px;max-width:56ch}
+.lede{color:var(--muted);margin:12px 0 26px;max-width:62ch}
 .stage{position:relative;border:2px solid var(--magenta);box-shadow:0 0 30px rgba(255,46,136,.35)}
 canvas{display:block;width:100%;height:auto;image-rendering:pixelated;background:#0c0618}
-#banner{position:absolute;top:8%;left:50%;transform:translateX(-50%);text-align:center;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+#banner{position:absolute;top:7%;left:50%;transform:translateX(-50%);text-align:center;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 #banner.on{opacity:1}
 #banner b{font-family:'Shippori Mincho B1',serif;font-size:clamp(1.6rem,6vw,3rem);color:var(--amber);text-shadow:0 0 18px var(--amber);margin-right:12px}
 #banner span{font-size:clamp(1.1rem,3.5vw,1.8rem);font-weight:700;color:var(--paper);text-shadow:0 0 10px var(--magenta)}
@@ -30,7 +31,9 @@ canvas{display:block;width:100%;height:auto;image-rendering:pixelated;background
 .board div{padding:12px 16px;background:rgba(18,10,36,.8);border:1px solid rgba(39,232,255,.45)}
 .board small{display:block;color:var(--muted)}
 .board i{display:inline-block;width:12px;height:12px;margin-right:8px;border:1px solid var(--paper);vertical-align:-1px}
+.board em{font-style:normal;color:var(--amber);font-weight:700}
 .row{display:flex;justify-content:space-between;align-items:center;margin-top:18px;gap:16px;flex-wrap:wrap}
+.rules{color:var(--muted);font-size:1rem;margin-top:14px}
 button{font:inherit;font-weight:700;padding:10px 24px;background:transparent;color:var(--cyan);border:1px solid var(--cyan);cursor:pointer;transition:.25s}
 button:hover{background:var(--cyan);color:var(--ink);box-shadow:0 0 22px var(--cyan)}
 @media(max-width:560px){.board{grid-template-columns:1fr}}
@@ -39,13 +42,13 @@ button:hover{background:var(--cyan);color:var(--ink);box-shadow:0 0 22px var(--c
 <body>
 <header>
   <span class="mark">相撲</span>
-  <div><a href="https://jowo66.github.io/future/">Neo-Edo</a><a href="https://jowo66.github.io/">Home</a></div>
+  <div><a href="future.html">Neo-Edo</a><a href="index.html">Home</a></div>
 </header>
 <main>
   <h1>Sumo Loop</h1>
-  <p class="lede">Two wrestlers meet on the dohyō. One is pushed out, a new challenger steps in, and the fight starts again. Every wrestler and every result is random.</p>
+  <p class="lede">Two wrestlers meet on the dohyō. One is pushed out, a new challenger steps in, and the fight starts again. Looks, names and results are random, but a hot streak tilts the odds, and the crowd notices.</p>
   <div class="stage">
-    <canvas id="c" width="320" height="180" role="img" aria-label="Pixel-art sumo wrestlers fighting in a ring"></canvas>
+    <canvas id="c" width="480" height="270" role="img" aria-label="Pixel-art sumo wrestlers fighting in a ring while fans cheer and hold up signs"></canvas>
     <div id="banner"><b>勝</b><span id="win"></span></div>
   </div>
   <div class="board" role="status" aria-live="polite">
@@ -53,131 +56,353 @@ button:hover{background:var(--cyan);color:var(--ink);box-shadow:0 0 22px var(--c
     <div><small>East</small><span id="br"></span></div>
   </div>
   <div class="row"><span id="count">Bouts fought: 0</span><button id="pause" type="button">Pause</button></div>
+  <p class="rules" id="rules"></p>
 </main>
 
 <script>
+/* ============ tunables ============ */
+const FAN_MIN_WINS=3;    // wins in a row before fans hold up signs
+const STREAK_BIAS=0.35;  // how much each extra win of streak tilts the odds
+const MAX_EDGE=0.85;     // nobody is ever more than 85% to win (underdog keeps 15%)
+
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+const CW=480,CH=270,GY=200,FLOOR=268;       // canvas size, ring ground line, landing line
 const pick=a=>a[Math.random()*a.length|0];
+const rnd=(a,b)=>a+Math.random()*(b-a);
 const lerp=(a,b,k)=>a+(b-a)*k,clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 const ease=k=>k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+const OUT='#0b0510';
 const SK=['#f6d2b0','#e8b48a','#d09a6a','#b27348','#8a5232','#5e3522'];
 const HR=['#15121a','#3b2314','#8a4b1f','#c0392b','#2f6bff','#ff5fa2','#35d07f','#f2f2f2','#f5c542','#9b5de5'];
 const BL=['#ff2e88','#27e8ff','#ffb347','#7c5cff','#e8e8e8','#2ecc71','#c0392b'];
 const P=['Tora','Kuro','Aka','Ao','Shiro','Kita','Hoshi','Yama','Kaze','Ryu'];
 const S=['fuji','umi','zakura','maru','shima','nada','kaze','hana','yama','ryu'];
-const HOME={L:100,R:220};
-const shade=(h,f)=>{const n=parseInt(h.slice(1),16);return `rgb(${(n>>16)*f|0},${(n>>8&255)*f|0},${(n&255)*f|0})`};
-const R=(c,x,y,w,h)=>{ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),w,h)};
+const HOME={L:150,R:330},HALF=26;
+const RING_L=100,RING_R=380;
 
-function mk(side){return{side,name:pick(P)+pick(S),skin:pick(SK),hair:pick(HR),belt:pick(BL),
-  x:side==='L'?-40:360,y:140,alpha:1,ang:0,streak:0,pose:'down',lean:0,crouch:0,bob:0,air:false,from:0,to:0}}
+/* ---------- colour + pixel helpers ---------- */
+const hx=h=>{const n=parseInt(h.slice(1),16);return[n>>16,n>>8&255,n&255]};
+const rgb=a=>'rgb('+a.map(v=>Math.round(clamp(v,0,255))).join(',')+')';
+const shade=(h,f)=>rgb(hx(h).map(v=>v*f));
+const tint=(h,t)=>rgb(hx(h).map(v=>v+(255-v)*t));
+const R=(c,x,y,w,h)=>{ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.max(0,Math.round(w)),Math.max(0,Math.round(h)))};
+function E(c,cx,cy,rx,ry){
+  ctx.fillStyle=c;
+  const y0=Math.round(cy-ry),y1=Math.round(cy+ry);
+  for(let y=y0;y<=y1;y++){
+    const dy=(y+.5-cy)/ry;if(Math.abs(dy)>1)continue;
+    const w=rx*Math.sqrt(1-dy*dy),x0=Math.round(cx-w),x1=Math.round(cx+w);
+    if(x1>x0)ctx.fillRect(x0,y,x1-x0,1);
+  }
+}
+function Ln(c,x0,y0,x1,y1,r){
+  const n=Math.max(1,Math.ceil(Math.hypot(x1-x0,y1-y0)));
+  for(let i=0;i<=n;i++){const t=i/n;E(c,x0+(x1-x0)*t,y0+(y1-y0)*t,r,r)}
+}
+function blob(cx,cy,rx,ry,base,dark,light){
+  E(OUT,cx,cy,rx+1,ry+1);E(dark,cx,cy,rx,ry);E(base,cx-1,cy-1,rx-1.6,ry-1.6);
+  if(light)E(light,cx-rx*.35,cy-ry*.45,Math.max(1,rx*.28),Math.max(1,ry*.2));
+}
+function limb(x0,y0,x1,y1,r,base,dark){
+  Ln(OUT,x0,y0,x1,y1,r+1);Ln(dark,x0,y0,x1,y1,r);Ln(base,x0-1,y0-1,x1-1,y1-1,r-1.4);
+}
 
-function drawW(w){
-  const f=w.side==='L'?1:-1,cy=w.crouch,bx=w.lean*.5,hx=w.lean;
-  const sk=w.skin,ds=shade(sk,.76),bt=w.belt,hr=w.hair;
+/* ---------- fighters ---------- */
+function mk(side){
+  const skin=pick(SK),belt=pick(BL);
+  return{side,name:pick(P)+pick(S),skin,hair:pick(HR),belt,
+    c:{dk:shade(skin,.68),far:shade(skin,.84),lt:tint(skin,.32),bd:shade(belt,.62),bl:tint(belt,.25)},
+    x:side==='L'?-60:540,y:GY,alpha:1,ang:0,streak:0,
+    arms:'down',lean:0,crouch:0,bob:0,air:false,from:0,to:0,
+    fx:8,fl:0,bx:-9,bl:0,shout:false,vx:0,vy:0,spin:0};
+}
+
+function drawF(w){
+  const f=w.side==='L'?1:-1,cr=w.crouch,ln=w.lean,k=w.c,sk=w.skin;
   ctx.save();ctx.globalAlpha=w.alpha;
-  if(!w.ang)R('rgba(0,0,0,.4)',w.x-20,w.y+1,40,3);
+  if(!w.ang&&!w.air)E('rgba(0,0,0,.38)',Math.round(w.x),GY+1,27,3);
   ctx.translate(Math.round(w.x),Math.round(w.y+w.bob));
-  if(w.ang){ctx.translate(0,-18);ctx.rotate(w.ang);ctx.translate(0,18)}
+  if(w.ang){ctx.translate(0,-36);ctx.rotate(w.ang);ctx.translate(0,36)}
   ctx.scale(f,1);
-  // legs + feet
-  R(sk,-12,-12+cy,9,12-cy);R(sk,3,-12+cy,9,12-cy);
-  R(ds,-13,-2,11,2);R(ds,2,-2,11,2);
-  // torso + belly
-  R(sk,bx-14,-36+cy,28,17);R(sk,bx-17,-31+cy,34,11);
-  R(ds,bx-17,-24+cy,34,2);R(ds,bx+3,-28+cy,2,2);
-  // mawashi belt + hanging strips
-  R(bt,bx-15,-22+cy,30,6);R(shade(bt,.7),bx-15,-17+cy,30,1);
-  for(let i=0;i<4;i++)R(i%2?shade(bt,.7):bt,bx+4+i*3,-16+cy,2,8);
-  // head
-  R(sk,hx-6,-47+cy,12,11);R(ds,hx-6,-38+cy,12,2);
-  R('#15121a',hx+2,-43+cy,2,2);R('#15121a',hx+1,-45+cy,4,1);
-  // hair + topknot
-  R(hr,hx-6,-49+cy,12,3);R(hr,hx-7,-47+cy,2,5);R(hr,hx-9,-53+cy,5,5);
-  // arms
-  if(w.pose==='push'){R(sk,bx+10,-32+cy,14,5);R(ds,bx+22,-32+cy,3,5);R(ds,bx+8,-26+cy,14,4)}
-  else if(w.pose==='ready'){R(sk,bx+13,-30+cy,7,6);R(ds,bx+10,-26+cy,7,5)}
-  else if(w.pose==='up'){R(sk,bx+13,-52+cy,5,17);R(ds,bx-18,-52+cy,5,17)}
-  else{R(sk,bx+13,-32+cy,5,13);R(ds,bx-18,-32+cy,5,13)}
+
+  const hipY=-34+cr*.85;
+  const T={x:ln*.55+2,y:-47+cr*.85},U={x:ln*.8+1,y:-62+cr*.95},Hd={x:ln*1.0+3,y:-79+cr};
+  const SHn={x:U.x+5,y:U.y-3},SHf={x:U.x-5,y:U.y-3};
+
+  function hand(mode,S,near){
+    switch(mode){
+      case'knees':return[S.x+(near?12:6),S.y+25+cr*.3];
+      case'fist': return[S.x+(near?15:9),-3];
+      case'push': return[S.x+(near?24:21),S.y+(near?5:10)];
+      case'grip': return[S.x+(near?22:17),S.y+(near?15:18)];
+      case'brace':return[S.x+(near?15:12),S.y+(near?3:8)];
+      case'up':   return[S.x+(near?8:-4),S.y-28];
+      case'fall': return[S.x+(near?19:-17),S.y-12+(near?0:6)];
+      default:    return[S.x+(near?4:-3),S.y+26];
+    }
+  }
+  function arm(S,near){
+    const h=hand(w.arms,S,near),mx=(S.x+h[0])/2,my=(S.y+h[1])/2;
+    const e=w.arms==='up'?[mx-3,my+1]:[mx-2,my+3];
+    const base=near?sk:k.far,dark=near?k.dk:shade(sk,.64);
+    limb(S.x,S.y,e[0],e[1],4.5,base,dark);
+    limb(e[0],e[1],h[0],h[1],4,base,dark);
+    blob(h[0],h[1],3.4,3.4,base,dark,near?k.lt:null);
+  }
+  function leg(hx,ax,lift,near){
+    const ay=-3-lift,kx=(hx+ax)/2+5+cr*.25+lift*.25,ky=(hipY+ay)/2-(lift>6?lift*.35:0);
+    const base=near?sk:k.far,dark=near?k.dk:shade(sk,.64);
+    limb(hx,hipY,kx,ky,8.2,base,dark);
+    limb(kx,ky,ax,ay,5.6,base,dark);
+    blob(ax+3,ay-1,6.6,3.2,base,dark,null);
+  }
+
+  // far arm + far leg sit behind the body
+  arm(SHf,false);
+  leg(-5,w.bx,w.bl,false);
+  // belly: big rounded torso with a hanging front
+  blob(T.x,T.y,19.5,17.5,sk,k.dk,k.lt);
+  blob(T.x+7,T.y+3,14,13,sk,k.dk,null);
+  R(k.dk,T.x+9,T.y+3,2,2);                  // navel
+  E(k.dk,T.x+2,T.y+9,12,2);                 // underbelly shade
+  // chest above the belly
+  blob(U.x,U.y,16.5,11,sk,k.dk,k.lt);
+  E(k.dk,U.x+4,U.y+3,5,1);                  // pectoral line
+  // mawashi: belt band, front apron and sagari cords
+  E(OUT,T.x-1,hipY+1,21.5,6);E(w.belt,T.x-1,hipY+1,20.5,5);E(k.bl,T.x-3,hipY-1,14,1.6);E(k.bd,T.x+2,hipY+4,19,1.3);
+  // near leg over the belt line
+  leg(5,w.fx,w.fl,true);
+  R(OUT,T.x+5,hipY+3,11,8);R(w.belt,T.x+6,hipY+4,9,6);R(k.bd,T.x+6,hipY+8,9,2);
+  for(let i=0;i<4;i++){R(OUT,T.x+6+i*3,hipY+10,3,9);R(i%2?k.bd:w.belt,T.x+7+i*3,hipY+10,1,8)}
+  // neck + head
+  blob(Hd.x-1,Hd.y+9,6,4,sk,k.dk,null);
+  blob(Hd.x,Hd.y,9,9.6,sk,k.dk,k.lt);
+  E(k.dk,Hd.x-3,Hd.y+2,3.2,3.6);E(sk,Hd.x-3.5,Hd.y+1.5,2,2.4);   // ear
+  R(OUT,Hd.x+8,Hd.y,3,3);R(sk,Hd.x+8,Hd.y,2,2);                    // nose
+  // eye, brow, mouth
+  R(OUT,Hd.x+3,Hd.y-5,5,1);R(OUT,Hd.x+4,Hd.y-3,2,2);R('#fff',Hd.x+4,Hd.y-3,1,1);
+  if(w.shout){R(OUT,Hd.x+4,Hd.y+4,5,3);R('#8a1a2a',Hd.x+5,Hd.y+5,3,1)}else R(OUT,Hd.x+4,Hd.y+5,4,1);
+  // hair: cap + oiled topknot (chonmage) folded forward
+  E(OUT,Hd.x-1,Hd.y-5,9.6,6.4);E(w.hair,Hd.x-1,Hd.y-5,8.6,5.4);E(tint(w.hair,.25),Hd.x-3,Hd.y-7,4,1.6);
+  R(OUT,Hd.x-4,Hd.y-13,10,5);R(w.hair,Hd.x-3,Hd.y-12,8,3);R(tint(w.hair,.3),Hd.x-2,Hd.y-12,5,1);
+  // near arm over the top
+  arm(SHn,true);
   ctx.restore();
 }
 
-function drawBg(){
-  ['#120a2b','#1d0c3d','#2b0f4d','#4a1060','#7a1468','#b01a73','#e0287d','#ff5c8a']
-    .forEach((c,i)=>R(c,0,i*16,320,16));
-  R('#0c0618',0,128,320,52);
-  for(let dy=-28;dy<=28;dy+=2){if(dy>0&&(dy/2)%3===0)continue;const w=Math.sqrt(784-dy*dy);R('#ffb347',230-w,100+dy,w*2,2)}
-  const d='#0c0618';
-  [[0,104,24,24],[250,100,16,28],[270,90,22,38],[296,106,24,22]].forEach(b=>R(d,...b));
-  R(d,30,108,36,20);R(d,32,98,32,6);R(d,38,90,20,6);R(d,36,84,24,3);R(d,42,76,12,6);R(d,46,70,4,6);R(d,47,62,2,8);
-  // dohyo
-  R('#5a3a24',66,144,188,20);R('#d9b26a',66,140,188,4);
-  for(let x=66;x<254;x+=6)R('#b08a4a',x,146,2,16);
-  R('#d9b26a',62,138,8,12);R('#d9b26a',250,138,8,12);R('#8a6a3a',62,148,8,2);R('#8a6a3a',250,148,8,2);
-  R('#0c0618',0,164,320,16);R('#ff2e88',0,164,320,1);
+/* ---------- crowd ---------- */
+const FANSK=['#f6d2b0','#e8b48a','#d09a6a','#b27348','#8a5232'];
+const SHIRT=['#ff2e88','#27e8ff','#ffb347','#7c5cff','#e8e8e8','#2ecc71','#c0392b','#4a6cf7'];
+const back=[],front=[];
+for(let i=0;i<31;i++)back.push({x:15+i*15,base:152,skin:pick(FANSK),hair:pick(HR),shirt:pick(SHIRT),ph:Math.random()*9,row:0,idx:i});
+for(let i=0;i<32;i++)front.push({x:8+i*15,base:182,skin:pick(FANSK),hair:pick(HR),shirt:pick(SHIRT),ph:Math.random()*9,row:1,idx:i});
+// the fans who hold signs: back-row indices, working outward from each side of the ring
+const SIGN_SLOTS={L:[10,7,4,1],R:[20,23,26,29]};
+let signUp={L:[0,0,0,0],R:[0,0,0,0]};
+let cheerSide=null,cheerT=0;
+
+function drawFan(fa,hold){
+  const dim=fa.row===0?.78:1;
+  const sh=shade(fa.shirt,dim),sk=shade(fa.skin,dim),hr=shade(fa.hair,dim);
+  const side=fa.x<240?'L':'R',cheer=cheerSide===side&&cheerT>0;
+  const up=hold||cheer;
+  const bob=Math.round(Math.sin(time*(cheer?10:2)+fa.ph)*(cheer?2.2:.6));
+  const y=fa.base+bob,x=fa.x;
+  if(up){
+    const wig=Math.round(Math.sin(time*9+fa.ph)*(hold?0:1.5));
+    R(OUT,x-8,y-23+wig,4,13);R(sh,x-7,y-22+wig,2,11);R(OUT,x+4,y-23-wig,4,13);R(sh,x+5,y-22-wig,2,11);
+    R(sk,x-7,y-24+wig,2,2);R(sk,x+5,y-24-wig,2,2);
+  }
+  R(OUT,x-7,y-11,14,11);R(sh,x-6,y-10,12,10);R(shade(fa.shirt,dim*.7),x+2,y-10,4,10);
+  E(OUT,x,y-15,5.6,6.2);E(sk,x,y-15,4.6,5.2);
+  E(hr,x,y-18,5,3);R(hr,x-5,y-17,2,3);
+  R(OUT,x+1,y-15,1,1);
 }
 
-// ---- state ----
-const slots={L:mk('L'),R:mk('R')};
-let state='enter',st=0,W=null,Lo=null,c=160,phase=0,bouts=0;
-let paused=matchMedia('(prefers-reduced-motion: reduce)').matches;
-const el=id=>document.getElementById(id);
-const go=s=>{state=s;st=0};
-const chip=w=>`<i style="background:${w.hair}"></i><i style="background:${w.skin}"></i>${w.name} &middot; streak ${w.streak}`;
-const board=()=>{el('bl').innerHTML=chip(slots.L);el('br').innerHTML=chip(slots.R);el('count').textContent='Bouts fought: '+bouts};
-function setWalk(w,to,from){w.from=from??w.x;w.to=to}
-function walk(w,k){w.x=lerp(w.from,w.to,k);w.bob=k<1?-Math.abs(Math.sin(st*12))*2:0;w.pose='down';w.lean=0;w.crouch=0}
+function drawSign(w,side,i,up){
+  const slot=SIGN_SLOTS[side][i],fan=back[slot];
+  const bounce=Math.sin(time*5+i*1.3)*1.6,tilt=Math.sin(time*3+i*1.7)*.07;
+  ctx.save();
+  ctx.globalAlpha=up;
+  ctx.translate(Math.round(fan.x),Math.round(66+(1-up)*40+bounce));
+  ctx.rotate(tilt);
+  R('#8a6a3a',-1,45,2,24);R(OUT,-2,45,1,24);R(OUT,1,45,1,24);
+  R(OUT,-21,-1,42,47);R('#f4ecd8',-20,0,40,45);R(w.belt,-20,0,40,5);
+  // portrait
+  const sk=w.skin;
+  E(OUT,0,19,10.5,11.5);E(shade(sk,.78),0,19,9.5,10.5);E(sk,-1,18,8,9.2);
+  E(OUT,0,11,10,6);E(w.hair,0,11,9,5);R(OUT,-4,3,9,4);R(w.hair,-3,4,7,2);
+  R(OUT,2,18,2,2);R(OUT,-4,18,2,2);R(OUT,-3,26,6,1);R('#fff',2,18,1,1);R('#fff',-4,18,1,1);
+  // name + streak
+  ctx.fillStyle=OUT;ctx.textAlign='center';ctx.textBaseline='alphabetic';
+  let fs=9;ctx.font='700 '+fs+'px Rajdhani,"Segoe UI",sans-serif';
+  while(ctx.measureText(w.name).width>36&&fs>6){fs--;ctx.font='700 '+fs+'px Rajdhani,"Segoe UI",sans-serif'}
+  ctx.fillText(w.name,0,41);
+  ctx.font='700 7px Rajdhani,sans-serif';ctx.fillStyle='#c0392b';ctx.textAlign='right';ctx.fillText('x'+w.streak,18,13);
+  ctx.restore();
+}
 
-setWalk(slots.L,HOME.L,-40);setWalk(slots.R,HOME.R,360);board();
+/* ---------- background ---------- */
+let time=0;
+function drawBg(){
+  ['#120a2b','#1a0b3a','#250e48','#3a1058','#5a1264','#8a1570','#c01c78','#e8307f','#ff6e8a','#ffb08a'].forEach((c,i)=>R(c,0,i*13,CW,13));
+  R('#0c0618',0,150,CW,120);
+  // setting sun
+  for(let dy=-34;dy<=34;dy+=2){if(dy>4&&((dy/2)|0)%3===0)continue;const w=Math.sqrt(34*34-dy*dy);R('#ffb347',352-w,78+dy,w*2,2)}
+  // skyline, pagoda and lit windows
+  const d='#0c0618';
+  [[0,100,34,52],[300,94,24,58],[324,82,34,70],[366,104,30,48],[400,92,26,60],[440,106,40,46],[72,110,28,42],[196,104,26,48]].forEach(b=>{
+    R(d,...b);
+    for(let wy=b[1]+6;wy<150;wy+=8)for(let wx=b[0]+4;wx<b[0]+b[2]-4;wx+=7)if(((wx*7+wy*3)%5)<2)R('#ffb347',wx,wy,2,3);
+  });
+  R(d,100,122,56,30);R(d,104,110,48,12);R(d,110,100,36,10);R(d,106,98,44,3);R(d,114,88,28,10);R(d,110,86,36,3);R(d,120,76,16,10);R(d,116,74,24,3);R(d,126,62,4,12);R(d,127,54,2,8);
+  // stand: tiers, benches, fronts
+  R('#1a0d33',0,152,CW,48);
+  R('#2b1450',0,160,CW,3);R('#140a26',0,163,CW,19);
+  R('#2b1450',0,182,CW,3);R('#100820',0,185,CW,15);
+  // dohyo
+  R('#5a3a24',RING_L-6,206,RING_R-RING_L+12,30);
+  for(let x=RING_L-6;x<RING_R+6;x+=6)R('#74492b',x,208,2,28);
+  R('#d9b26a',RING_L-6,214,RING_R-RING_L+12,3);R('#8a6a3a',RING_L-6,217,RING_R-RING_L+12,2);
+  R('#c9a55f',RING_L-6,200,RING_R-RING_L+12,6);R('#ecd495',RING_L-6,200,RING_R-RING_L+12,1);R('#a8863f',RING_L-6,205,RING_R-RING_L+12,2);
+  for(let i=0;i<60;i++)R('#b08a4a',RING_L+((i*47)%(RING_R-RING_L)),201+(i%4),1,1);
+  // tawara (straw bale) rim at both ends
+  [RING_L-10,RING_R-2].forEach(x=>{R(OUT,x-1,193,14,14);R('#b58a43',x,194,12,12);for(let s=1;s<12;s+=3)R('#8d6a2f',x+s,194,1,12);R('#d8b162',x,194,12,2)});
+  // floor
+  R('#0c0618',0,236,CW,34);R('#ff2e88',0,236,CW,1);
+  R('rgba(255,46,136,.18)',0,237,CW,2);
+}
 
-function update(dt){
-  st+=dt;const L=slots.L,Rr=slots.R;
-  if(state==='enter'||state==='replace'){
-    const k=ease(Math.min(st/1.6,1));walk(L,k);walk(Rr,k);
-    if(k>=1){go('ready')}
-  }else if(state==='ready'){
-    [L,Rr].forEach(w=>{w.pose='ready';w.crouch=3;w.lean=2;w.bob=0});
-    if(st>1){W=Math.random()<.5?'L':'R';Lo=W==='L'?'R':'L';phase=Math.random()*6;go('charge')}
-  }else if(state==='charge'){
-    const k=Math.min(st/.35,1);L.x=lerp(HOME.L,146,k*k);Rr.x=lerp(HOME.R,174,k*k);
-    [L,Rr].forEach(w=>{w.pose='push';w.lean=6;w.crouch=3});
-    if(k>=1){c=160;go('shove')}
-  }else if(state==='shove'){
-    const dir=W==='L'?1:-1;
-    c=clamp(c+(dir*17+42*Math.sin(st*3.1+phase))*dt,70,250);
-    L.x=c-14;Rr.x=c+14;
-    slots[W].lean=9;slots[W].crouch=4;slots[Lo].lean=4;slots[Lo].crouch=2;
-    L.bob=Rr.bob=Math.random()<.4?-1:0;
-    if((W==='L'&&c>=222)||(W==='R'&&c<=98)){
-      const l=slots[Lo];l.air=true;l.vx=dir*85;l.vy=-120;l.spin=dir*5;l.bob=0;slots[W].bob=0;
-      slots[W].streak++;bouts++;board();
-      el('win').textContent=slots[W].name;go('out');
-    }
-  }else if(state==='out'){
-    const dir=W==='L'?1:-1,l=slots[Lo],w=slots[W];
-    if(l.air){
-      l.vy+=450*dt;l.x+=l.vx*dt;l.y+=l.vy*dt;
-      l.ang=dir*Math.min(Math.abs(l.ang+l.spin*dt),1.57);
-      if(l.y>=168){l.y=168;l.air=false}
-    }
-    w.pose=st>.5?'up':'push';w.lean=st>.5?0:6;w.crouch=0;
-    if(st>.4)el('banner').classList.add('on');
-    if(st>2)l.alpha=Math.max(0,1-(st-2)/.6);
-    if(st>2.7){
-      el('banner').classList.remove('on');
-      const n=mk(Lo);slots[Lo]=n;
-      setWalk(n,HOME[Lo],Lo==='L'?-40:360);setWalk(w,HOME[W],w.x);
-      w.pose='down';go('replace');board();
-    }
+function drawLanterns(){
+  for(let i=0;i<9;i++){
+    const x=30+i*54+Math.sin(time*1.2+i)*1.2;
+    R('#2a1840',x,0,1,18);
+    R(OUT,x-9,16,18,26);E('#c8283c',x,29,8,12);E('#e8505a',x-2,27,5,8);R('#f4e6c8',x-8,20,16,2);R('#f4e6c8',x-8,37,16,2);R('#3a1a1a',x-4,42,8,3);
+    R('rgba(255,120,80,.12)',x-14,16,28,28);
   }
 }
 
+/* ---------- state ---------- */
+const slots={L:mk('L'),R:mk('R')};
+let state='enter',st=0,win=null,los=null,c=240,phase=0,bouts=0,pL=.5;
+let paused=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const el=id=>document.getElementById(id);
+const go=s=>{state=s;st=0;if(s==='ready')setOdds()};
+const pct=v=>Math.round(v*100)+'%';
+const chip=(w,p)=>`<i style="background:${w.hair}"></i><i style="background:${w.skin}"></i>${w.name} &middot; streak ${w.streak} &middot; chance <em>${pct(p)}</em>`;
+const board=()=>{el('bl').innerHTML=chip(slots.L,pL);el('br').innerHTML=chip(slots.R,1-pL);el('count').textContent='Bouts fought: '+bouts};
+function setOdds(){
+  // logistic on the streak gap, capped so the underdog always has a real chance
+  const d=slots.L.streak-slots.R.streak;
+  pL=clamp(1/(1+Math.exp(-STREAK_BIAS*d)),1-MAX_EDGE,MAX_EDGE);
+  board();
+}
+el('rules').textContent='Fans hold up signs once a wrestler wins '+FAN_MIN_WINS+' in a row, one more sign for each extra win. Each win in a streak tilts the odds towards that wrestler, capped at '+Math.round(MAX_EDGE*100)+'%.';
+
+function setWalk(w,to,from){w.from=from==null?w.x:from;w.to=to}
+function walk(w,k){
+  w.x=lerp(w.from,w.to,k);
+  const s=Math.sin(st*10+(w.side==='L'?0:Math.PI));
+  w.bob=k<1?-Math.abs(s)*1.3:0;w.arms='down';w.lean=0;w.crouch=0;w.shout=false;
+  w.fx=8+(k<1?s*6:0);w.bx=-9-(k<1?s*6:0);
+  w.fl=k<1?Math.max(0,s)*4:0;w.bl=k<1?Math.max(0,-s)*4:0;
+}
+function stance(w,fx,bx){w.fx=fx;w.bx=bx;w.fl=0;w.bl=0}
+
+const dust=[];
+setWalk(slots.L,HOME.L,-60);setWalk(slots.R,HOME.R,540);board();
+
+function update(dt){
+  st+=dt;time+=dt;
+  if(cheerT>0)cheerT-=dt;
+  const L=slots.L,Rr=slots.R;
+  for(let i=dust.length-1;i>=0;i--){const q=dust[i];q.t+=dt;q.x+=q.vx*dt;q.y+=q.vy*dt;if(q.t>.5)dust.splice(i,1)}
+  if(state==='enter'||state==='replace'){
+    const k=ease(Math.min(st/1.9,1));walk(L,k);walk(Rr,k);
+    if(k>=1)go('ready');
+  }else if(state==='ready'){
+    // shiko stomps, then a low crouch with fists to the ground
+    [L,Rr].forEach((w,i)=>{
+      w.shout=false;w.bob=0;
+      if(st<1.6){
+        // each leg is raised high in turn; the two fighters stomp half a beat apart
+        const u=(st+i*.5)%1;w.arms='knees';w.crouch=6;w.lean=1;
+        if(u<.5){w.fl=14*Math.sin(Math.PI*u/.5);w.bl=0;w.fx=12;w.bx=-14}
+        else{w.bl=14*Math.sin(Math.PI*(u-.5)/.5);w.fl=0;w.fx=8;w.bx=-18}
+      }else{
+        const k=clamp((st-1.6)/.5,0,1);w.arms='fist';w.crouch=lerp(6,13,k);w.lean=lerp(1,7,k);stance(w,13,-15);
+      }
+    });
+    if(st>2.5){win=Math.random()<pL?'L':'R';los=win==='L'?'R':'L';phase=Math.random()*6;go('charge')}
+  }else if(state==='charge'){
+    const k=Math.min(st/.34,1);
+    L.x=lerp(HOME.L,240-HALF,k*k);Rr.x=lerp(HOME.R,240+HALF,k*k);
+    [L,Rr].forEach(w=>{w.arms=k>.75?'push':'fist';w.crouch=13;w.lean=lerp(7,11,k);w.shout=k>.5;stance(w,14+k*3,-15)});
+    if(k>=1){c=240;go('shove')}
+  }else if(state==='shove'){
+    const dir=win==='L'?1:-1;
+    c=clamp(c+(dir*26+60*Math.sin(st*3.1+phase))*dt,RING_L+HALF+8,RING_R-HALF-8);
+    L.x=c-HALF;Rr.x=c+HALF;
+    const wn=slots[win],ls=slots[los];
+    wn.arms='grip';wn.lean=11;wn.crouch=13;wn.shout=true;
+    ls.arms='push';ls.lean=1;ls.crouch=9;ls.shout=true;
+    // suri-ashi: feet shuffle along the clay, loser's heels drag
+    const sh=Math.sin(st*9);
+    stance(wn,16+sh*2.5,-16-sh*2.5);
+    stance(ls,9+sh*2,-17-sh*2);
+    L.bob=Rr.bob=Math.random()<.35?-1:0;
+    if(Math.random()<.5)dust.push({x:ls.x+(ls.side==='L'?-14:14),y:GY-1,vx:(los==='L'?-1:1)*rnd(8,22),vy:-rnd(6,16),t:0});
+    if((win==='L'&&c>=RING_R-HALF-12)||(win==='R'&&c<=RING_L+HALF+12)){
+      ls.air=true;ls.vx=dir*90;ls.vy=-170;ls.spin=dir*5.5;ls.bob=0;wn.bob=0;
+      wn.streak++;bouts++;
+      el('win').textContent=wn.name;cheerSide=win;cheerT=3.2;go('out');board();
+    }
+  }else if(state==='out'){
+    const dir=win==='L'?1:-1,l=slots[los],w=slots[win];
+    if(l.air){
+      l.vy+=700*dt;l.x+=l.vx*dt;l.y+=l.vy*dt;
+      l.ang=dir*Math.min(Math.abs(l.ang+l.spin*dt),1.57);
+      l.arms='fall';l.shout=true;
+      if(l.y>=FLOOR){l.y=FLOOR;l.air=false;l.shout=false}
+    }
+    w.arms=st>.5?'up':'push';w.lean=st>.5?0:11;w.crouch=st>.5?0:8;w.shout=st>.5;
+    stance(w,10,-10);
+    if(st>.4)el('banner').classList.add('on');
+    if(st>2.2)l.alpha=Math.max(0,1-(st-2.2)/.6);
+    if(st>3){
+      el('banner').classList.remove('on');
+      const n=mk(los);slots[los]=n;
+      setWalk(n,HOME[los],los==='L'?-60:540);setWalk(w,HOME[win],w.x);
+      go('replace');board();
+    }
+  }
+  // signs rise while a wrestler is on a hot streak, and sink when it ends
+  ['L','R'].forEach(sd=>{
+    const w=slots[sd],n=w.streak>=FAN_MIN_WINS?Math.min(4,w.streak-FAN_MIN_WINS+1):0;
+    // a beaten wrestler's signs come down as soon as he is thrown out
+    const beaten=state==='out'&&los===sd;
+    for(let i=0;i<4;i++){
+      const target=(!beaten&&i<n)?1:0;
+      signUp[sd][i]+=clamp(target-signUp[sd][i],-3*dt,3*dt);
+    }
+  });
+}
+
 function render(){
-  drawBg();
-  const order=(state==='enter'||state==='replace'||state==='ready')?[slots.L,slots.R]:[slots[Lo],slots[W]];
-  order.forEach(drawW);
+  drawBg();drawLanterns();
+  // fans whose sign is up hold both arms high
+  const hold={};
+  ['L','R'].forEach(sd=>SIGN_SLOTS[sd].forEach((idx,i)=>{hold[idx]=signUp[sd][i]>.3}));
+  back.forEach(fa=>drawFan(fa,!!hold[fa.idx]));
+  ['L','R'].forEach(sd=>{for(let i=0;i<4;i++)if(signUp[sd][i]>.02)drawSign(slots[sd],sd,i,ease(Math.min(1,signUp[sd][i])))});
+  front.forEach(fa=>drawFan(fa,false));
+  const order=(state==='enter'||state==='replace'||state==='ready')?[slots.L,slots.R]:[slots[los],slots[win]];
+  order.forEach(drawF);
+  dust.forEach(q=>{R('rgba(230,210,170,'+(1-q.t*2)+')',q.x,q.y,2,2)});
   if(state==='shove'){
-    for(let i=0;i<3;i++)if(Math.random()<.5)R(['#fff','#27e8ff','#ff2e88'][i],c+Math.random()*12-6,140-24-Math.random()*20,2,2);
+    for(let i=0;i<3;i++)if(Math.random()<.5)R(['#fff','#27e8ff','#ff2e88'][i],c+Math.random()*14-7,GY-56-Math.random()*26,2,2);
+    // sweat flying off the wrestlers
+    [slots.L,slots.R].forEach(w=>{if(Math.random()<.3)R('#bfe9ff',w.x+(w.side==='L'?1:-1)*(10+Math.random()*8),GY-84-Math.random()*8,1,2)});
   }
 }
 
@@ -190,7 +415,9 @@ function loop(t){
 const btn=el('pause');
 const label=()=>btn.textContent=paused?'Play':'Pause';
 btn.onclick=()=>{paused=!paused;label()};
-label();requestAnimationFrame(loop);
+label();
+if(paused)for(let i=0;i<60;i++)update(.05);   // reduced motion: start on a populated ring
+requestAnimationFrame(loop);
 </script>
 </body>
 </html>
