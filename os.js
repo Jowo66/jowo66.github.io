@@ -230,6 +230,16 @@ function initMap(win){
       }
       b._s=s;
     });
+    if(hover&&hover._s){
+      const all=[].concat(hover._s.top,hover._s.left,hover._s.right);
+      const xs=all.map(p=>p[0]),ys=all.map(p=>p[1]-4);
+      const pad=4+Math.sin(t*6)*1.2,x0=Math.min(...xs)-pad,x1=Math.max(...xs)+pad,y0=Math.min(...ys)-pad,y1=Math.max(...ys)+pad,L=7;
+      c.strokeStyle='#19e3ff';c.lineWidth=1;c.beginPath();
+      [[x0,y0,1,1],[x1,y0,-1,1],[x0,y1,1,-1],[x1,y1,-1,-1]].forEach(q=>{c.moveTo(q[0]+q[2]*L,q[1]);c.lineTo(q[0],q[1]);c.lineTo(q[0],q[1]+q[3]*L)});c.stroke();
+      c.globalAlpha=.25;c.fillStyle='#19e3ff';const sy=y0+((t*40)%(y1-y0));c.fillRect(x0,sy,x1-x0,1);c.globalAlpha=1;
+      c.fillStyle='#19e3ff';c.font='6px "Share Tech Mono",monospace';c.textAlign='left';
+      c.fillText('LOCK '+(hover.app?'// OPEN':'// VACANT'),x0,y0-3);
+    }
     if(hover){c.fillStyle='rgba(255,255,255,.9)';c.font='8px "Share Tech Mono",monospace';c.textAlign='center';const p=iso(hover.gx+hover.w/2,hover.gy+hover.dd/2,hover.h+30);
       c.fillStyle='#000';c.fillRect(p[0]-hover.n.length*2.4-3,p[1]-7,hover.n.length*4.8+6,10);c.fillStyle='#ffb347';c.fillText(hover.n,p[0],p[1])}
   }
@@ -244,5 +254,21 @@ function initMap(win){
   let raf;function loop(){t+=.016;draw();if(!document.body.contains(win)){cancelAnimationFrame(raf);return}if(!reduce)raf=requestAnimationFrame(loop)}
   draw();if(!reduce)loop();
 }
+
+/* ---------- system readout ---------- */
+(function(){
+  const t0=performance.now(),hex=$('#hex'),up=$('#up'),wn=$('#wn'),cur=$('#cur'),tg=$('#tg');
+  const rows=[];const rh=()=>Array.from({length:6},()=>Math.floor(Math.random()*65535).toString(16).padStart(4,'0')).join(' ');
+  for(let i=0;i<7;i++)rows.push(rh());
+  addEventListener('pointermove',e=>{cur.textContent=String(Math.round(e.clientX)).padStart(4,'0')+','+String(Math.round(e.clientY)).padStart(4,'0')});
+  setInterval(()=>{
+    const s=Math.floor((performance.now()-t0)/1000);
+    up.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+    wn.textContent=Object.keys(open).length;
+    tg.textContent=(Object.keys(open).pop()||'none').toUpperCase();
+    if(!reduce){rows.shift();rows.push(rh())}
+    hex.textContent=rows.join('\n');
+  },600);
+})();
 window.openApp=openApp;
 })();
