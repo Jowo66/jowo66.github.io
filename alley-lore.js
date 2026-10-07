@@ -233,19 +233,22 @@ const CULT={
    'Ada':['wrote the first computer program, and the world has been debugging it ever since','is the first programmer, who never had to worry about browser compatibility'],
    'Freddie':['had a four-octave vocal range and a lot of cats, who were fed first','sang in a stadium and the stadium sang back']}}
 };
-const CULTKEYS=Object.keys(CULT);
+const OLDKEYS=Object.keys(CULT);
+let CULTKEYS=OLDKEYS;
 const CULTF={filipino:'PH',zulu:'ZA',colombian:'CO',ugandan:'UG',japanese:'JP',korean:'KR',french:'FR',english:'GB'};
 const FIGF={Achilles:'GR',Odysseus:'GR',Icarus:'GR',Sisyphus:'GR',Hercules:'GR',Perseus:'GR',Medusa:'GR',Orpheus:'GR',Pandora:'GR',Midas:'GR',Narcissus:'GR',Prometheus:'GR',Atlas:'GR',Theseus:'GR',Ariadne:'GR',Daedalus:'GR',Persephone:'GR',Hades:'GR',Poseidon:'GR',Zeus:'GR',
  Loki:'IS',Thor:'IS',Odin:'IS',Freya:'IS',Fenrir:'IS',Baldur:'IS',Heimdall:'IS',Tyr:'IS',Anansi:'GH',Maui:'NZ','Sun Wukong':'CN',Gilgamesh:'IQ',Hanuman:'IN',Ganesh:'IN',Susanoo:'JP',Amaterasu:'JP',Anubis:'EG',Isis:'EG',Thoth:'EG',Ra:'EG','Cu Chulainn':'IE',Beowulf:'DK',Gabriel:'VA',
  Shango:'NG',Oya:'NG',Yemoja:'NG',Eshu:'NG',Ogun:'NG',Obatala:'NG',Oshun:'NG',Orunmila:'NG',Chukwu:'NG',Amadioha:'NG',Ala:'NG',Ekwensu:'NG',Anyanwu:'NG',Ikenga:'NG',Idemili:'NG',Agwu:'NG',
  Quetzalcoatl:'MX',Huitzilopochtli:'MX',Tlaloc:'MX',Coatlicue:'MX',Xolotl:'MX',Tezcatlipoca:'MX',Mictlantecuhtli:'MX',Bolivar:'VE'};
 const SURNF={Okonkwo:'NG',Nwosu:'NG',Eze:'NG',Adeyemi:'NG',Balogun:'NG',Okeke:'NG',Obi:'NG',Nnamdi:'NG',Eriksen:'NO',Hernandez:'ES',Xochitl:'MX',Ramirez:'ES',Okafor:'NG',Tanaka:'JP',Petrov:'RU',Haddad:'LB',Kim:'KR',Singh:'IN',Rossi:'IT',Nguyen:'VN',Silva:'PT',Cohen:'US',Jovanovic:'RS',Mensah:'GH',Larsson:'SE',Reyes:'ES',Abdi:'SO',Ivanova:'RU',Chen:'CN',Dlamini:'ZA',Costa:'PT',Yilmaz:'TR',Park:'KR',Moreau:'FR'};
+if(g.XC){Object.keys(g.XC).forEach(k=>{CULT[k]=g.XC[k];CULTF[k]=g.XC[k].cc});}
+const NEWKEYS=Object.keys(CULT).filter(k=>OLDKEYS.indexOf(k)<0);
 const flag=c=>c?String.fromCodePoint(...[...c].map(ch=>127397+ch.charCodeAt(0))):'';
 const MYTHKEYS=Object.keys(MYTH);
 function mythName(){
   const r=Math.random();
   if(r<.42){const k=pick(MYTHKEYS),l=pick(SURN);return{key:k,first:k,last:l,f1:flag(FIGF[k]),f2:flag(SURNF[l]),c1:FIGF[k],c2:SURNF[l]}}
-  const cu=pick(CULTKEYS),C=CULT[cu],cf=flag(CULTF[cu]);
+  const cu=pick(NEWKEYS.length&&Math.random()>.35?NEWKEYS:OLDKEYS),C=CULT[cu],cf=flag(CULTF[cu]);
   if(r<.74){const k=pick(Object.keys(C.fig));return{key:k,first:k,last:pick(C.last),cult:cu,f1:flag(FIGF[k]||CULTF[cu]),f2:cf,c1:FIGF[k]||CULTF[cu],c2:CULTF[cu]}}
   return{key:null,first:pick(C.first),last:pick(C.last),cult:cu,f1:cf,f2:cf,c1:CULTF[cu],c2:CULTF[cu]}
 }
