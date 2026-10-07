@@ -75,7 +75,7 @@ M.ramen=()=>{const L=[];
   L.push({p:[.58,.85,0],s:[.2,.3,.2],c:'#ff3a2a',e:true});L.push({p:[-.58,.85,0],s:[.2,.3,.2],c:'#ffb347',e:true});
   L.push({p:[-.5,0,0],s:[.06,.38,.38],c:'#15101a'});L.push({p:[.5,0,0],s:[.06,.38,.38],c:'#15101a'});
   L.push({p:[0,.7,.31],s:[.7,.1,.02],c:'#19e3ff',e:true});
-  return{parts:L.concat(human({coat:'#e8e4ee',pant:'#222',hair:'#e8e4ee'},-.75)),sp:[.3,.5],h:2.0,bub:['ラーメン!','Ramen!','Рамен!','라멘!','ราเมน!']}};
+  return{parts:L.concat(human({coat:'#e8e4ee',pant:'#222',hair:'#e8e4ee'},-.75)),sp:[.3,.5],h:2.0,bub:['ラーメン!','Ramen!','Рамен!','라멘!','ราเมน!','Nri ọhụrụ!']}};
 M.dealer=()=>{const L=human({coat:'#2a2030',long:true,hat:'wide',hatC:'#17121d',armR:'#ff2a3a',armRe:true,hair:'#111'});
   L.push({p:[0,.95,.14],s:[.3,.4,.02],c:'#ff2e88',e:true});L.push({p:[0,1.52,.12],s:[.2,.05,.03],c:'#ff2a3a',e:true});
   L.push({p:[-.14,.55,.15],s:[.06,.06,.02],c:'#19e3ff',e:true});L.push({p:[.0,.55,.15],s:[.06,.06,.02],c:'#ffb347',e:true});

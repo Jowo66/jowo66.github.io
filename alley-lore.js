@@ -25,6 +25,9 @@ const PROV=[
   ['The squeaky wheel gets the {0}.',['grease','Wi-Fi password','last dumpling','blame']],
   ['Home is where the {0} is.',['heart','charger','noodle cart','spare umbrella']],
   ['Actions speak louder than {0}.',['words','vending machines','karaoke','pigeons']],
+  ['Egbe bere, ugo bere, as the Igbo say: let the kite perch, let the eagle perch, and let the {0} {1}.',[['kite','perch'],['pigeon','queue'],['drone','file a complaint'],['goat','sit politely']]],
+  ['As the Igbo say: when a toad runs in the daytime, either something is after it or it is after {0}.',['something','the last jollof','free Wi-Fi','a very small bus']],
+  ['As the Igbo say: a person who has {0} does not reject the {1}.',[['kola','guest'],['noodles','rain'],['a lantern','dark alley'],['a charger','phone']]],
   ['When the cat is away, the {0} will play.',['mice','drones','accountants','vending machines']]
 ];
 const INTRO=['An old saying:','My grandmother told me:','Listen well:','The ancients say,','So it is written,','Remember this:','A wise noodle once said,','Whisper of the alley:'];
@@ -39,7 +42,7 @@ function parable(){
 }
 
 /* ---------- names and the spoofed myths behind them ---------- */
-const SURN=['Okafor','Tanaka','Petrov','Haddad','Kim','Singh','Rossi','Nguyen','Silva','Cohen','Jovanovic','Mensah','Larsson','Reyes','Abdi','Ivanova','Chen','Dlamini','Costa','Yilmaz','Park','Moreau'];
+const SURN=['Okonkwo','Nwosu','Eze','Adeyemi','Balogun','Okeke','Obi','Nnamdi','Eriksen','Hernandez','Xochitl','Ramirez','Okafor','Tanaka','Petrov','Haddad','Kim','Singh','Rossi','Nguyen','Silva','Cohen','Jovanovic','Mensah','Larsson','Reyes','Abdi','Ivanova','Chen','Dlamini','Costa','Yilmaz','Park','Moreau'];
 const MYTH={
  'Achilles':['tripped over a Lego and has not walked normally since','was dipped in a protein shake as a baby and they missed one spot','won every fight, then retired after a paper cut on the heel'],
  'Odysseus':['took ten years to find the way home from the corner store','tied himself to a lamppost to survive karaoke night','talked his way out of a parking ticket using a wooden horse'],
@@ -78,18 +81,46 @@ const MYTH={
  'Beowulf':['tore off a monster\'s arm and now uses it as a coat rack','only fights things under the bed these days'],
  'Ra':['sails the sun across the sky every day and gets very sunburnt','is always on time, which is unnerving'],
  'Gabriel':['blew a horn at the wrong party and has not been invited back','delivers messages by pigeon and by regret'],
- 'Ganesh':['asked for a pen and got a very large tusk-related invoice','never forgets, which is a problem at family dinners']
+ 'Ganesh':['asked for a pen and got a very large tusk-related invoice','never forgets, which is a problem at family dinners'],
+ 'Shango':['called down lightning for a phone charge and tripped the whole building','dances so hard the drums file noise complaints','keeps a double-headed axe for opening very stubborn jars'],
+ 'Oya':['sends a storm whenever someone says "it\'s only a breeze"','guards the gate of the market and charges a tiny toll in buttons'],
+ 'Yemoja':['mothered all the rivers and still forgets her own birthday','runs a swimming school for people who are already fish'],
+ 'Eshu':['left a stone at the crossroads and it hit two birds that were not there yet','delivers messages that arrive slightly before they are sent'],
+ 'Ogun':['forged a road with a machete and now bills for tolls','invented the shortcut and promptly got lost on it'],
+ 'Obatala':['moulded people from clay and recalls every one that came out a bit wonky','dresses entirely in white and has never once spilled soup'],
+ 'Oshun':['bathes in honey and now cannot get into the bakery','makes the river sweeter and is somewhat insufferable about it'],
+ 'Orunmila':['can read the future and still loses at tic-tac-toe','is present at every birth, and never remembers to RSVP'],
+ 'Freya':['drives a chariot pulled by cats and gets constant parking tickets','cried tears of gold and now sells them online'],
+ 'Fenrir':['bit off a hand and was asked to sign a form','was chained with a ribbon and is still sulking about it'],
+ 'Baldur':['is so lovable nothing can hurt him, except one mistletoe','cannot be harmed by anything, including most compliments'],
+ 'Heimdall':['hears grass grow and has filed a noise complaint','guards the rainbow bridge and checks IDs very slowly'],
+ 'Tyr':['put a hand in a wolf\'s mouth for a friend and now claims it on insurance','is the god of fair play and loses every board game'],
+ 'Quetzalcoatl':['is a feathered snake who now works the night shift as a scarf','invented the calendar, and double-booked himself immediately'],
+ 'Huitzilopochtli':['was born fully armed and has been returning gifts ever since','keeps the sun up, mostly on a timer'],
+ 'Tlaloc':['makes it rain at weddings and has never apologised','keeps four jars of rain and one of mild drizzle'],
+ 'Coatlicue':['wears a skirt of snakes, which is stylish and hard to launder','found a ball of feathers and got an entire war out of it'],
+ 'Xolotl':['guides dogs and the dead and refuses to use a leash','walks the sun through the underworld and is always late for dinner'],
+ 'Tezcatlipoca':['owns a smoking mirror and absolutely nobody asked him to','lost a foot to a monster and now buys only one shoe'],
+ 'Mictlantecuhtli':['runs a nine-level underworld and nobody knows the Wi-Fi password','has a skull-themed office and a very polite waiting room'],
+ 'Chukwu':['made the world and still gets pinged about the bugs','keeps one eye on the sky and one on his inbox'],
+ 'Amadioha':['sends thunder to settle disputes and demands a receipt','is the sky\'s judge, and he has never lost an appeal'],
+ 'Ala':['owns all the land and politely asks you to wipe your feet','is the earth mother and the best neighbour on the block'],
+ 'Ekwensu':['is the bringer of chaos and constantly underestimates a good parking space','started a minor riot over the last jollof and enjoyed it'],
+ 'Anyanwu':['is the sun, and always sunburnt, purely out of principle','has a shift at dawn and sleeps in every other day'],
+ 'Ikenga':['carries a horned shrine of luck and hates being asked to hold coats','holds a machete in one hand and a plantain in the other'],
+ 'Idemili':['is the water spirit and the python of the river, and she rents out the shallows','makes honest people honest and lawyers anxious'],
+ 'Agwu':['gave a healer a gift and a headache in the same box','is the spirit of divination and nobody can reach him by phone']
 };
 const MYTHKEYS=Object.keys(MYTH);
 function mythName(){const k=pick(MYTHKEYS);return{key:k,first:k,last:pick(SURN)}}
 
 /* ---------- made-up details ---------- */
 const GA=['classical','neo','post','doom','baroque','acoustic','lo-fi','cyber','free','death','sea-shanty','math','trans','swamp','smooth','chiptune','tropical','underwater','extreme','disco','lullaby','karaoke','medieval','vapor'];
-const GB=['dubstep','folk','polka','opera','metal','jazz','bossa nova','gospel','techno','country','ska','trap','blues','funk','shoegaze','synthwave','bluegrass','reggae','K-pop','enka','fado','cumbia','qawwali','gamelan','drill','yodelling','grindcore'];
+const GB=['dubstep','folk','polka','opera','metal','jazz','bossa nova','gospel','techno','country','ska','trap','blues','funk','shoegaze','synthwave','bluegrass','reggae','K-pop','enka','fado','cumbia','qawwali','gamelan','drill','yodelling','grindcore','highlife','afrobeat','amapiano','juju','mariachi'];
 const HYPH=new Set(['neo','post','trans','lo-fi','cyber','sea-shanty','math']);
 function genre(){const a=pick(GA),b=pick(GB);return HYPH.has(a)?a+'-'+b:a+' '+b}
 const PA=['competitive','obsessive','secret','professional','amateur','reluctant','award-winning'];
-const PB=['pigeon chess','bonsai','urban beekeeping','speed knitting','napping','cloud naming','noodle sculpting','lantern design','roller disco','lockpicking (legal)','synth repair','kite fighting','stargazing in the rain','pressing flowers','umbrella restoration','karaoke diplomacy','soldering','puddle jumping','map folding','tea ceremonies for robots'];
+const PB=['pigeon chess','bonsai','urban beekeeping','speed knitting','napping','cloud naming','noodle sculpting','lantern design','roller disco','lockpicking (legal)','synth repair','kite fighting','stargazing in the rain','pressing flowers','umbrella restoration','karaoke diplomacy','soldering','puddle jumping','map folding','tea ceremonies for robots','uli body-art','kola-nut etiquette','jollof diplomacy','masquerade dancing'];
 const PC=['collecting {x}','arguing with {x}','befriending {x}','knitting sweaters for {x}'],PX=['vending machines','lost umbrellas','bus tickets','rare pebbles','antique firmware','stray cables','tiny hats','moths'];
 function passion(){return Math.random()<.7?pick(PA)+' '+pick(PB):pick(PC).replace('{x}',pick(PX))}
 const GV=['arm-wrestled','out-sang','befriended','sold insurance to','taught yoga to','raced','married by accident','out-stared','adopted','escaped from','negotiated with','won a duel against'];

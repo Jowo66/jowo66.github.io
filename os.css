@@ -133,6 +133,7 @@ a{color:var(--cyan)}
 .ctm[data-side=L]::before{right:-7px;border-left:0;border-bottom:0}
 .ctm .ch{display:flex;justify-content:space-between;align-items:center;padding:3px 8px;background:var(--cyan);color:#05161c;font-weight:700;letter-spacing:.06em}
 .ctm .ch button{all:unset;cursor:pointer;padding:0 6px;font-size:16px}
+.ctm.pin .ch::after{content:'PINNED';font-size:11px;letter-spacing:.12em;margin-left:auto;margin-right:8px}
 .ctm pre{margin:0;padding:8px 10px 10px;white-space:pre-wrap;word-break:break-word;line-height:1.45;min-height:5.6em}
 .toast{position:fixed;left:50%;top:70px;transform:translateX(-50%) translateY(-8px);z-index:9100;padding:6px 18px;font-family:var(--disp);font-size:30px;letter-spacing:.1em;
   color:var(--paper);background:rgba(10,6,18,.8);border:2px solid var(--pink);box-shadow:4px 4px 0 #000;opacity:0;transition:.4s;pointer-events:none}

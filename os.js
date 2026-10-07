@@ -30,7 +30,7 @@ tick();setInterval(tick,1000);
   let W,H,f,mx=0,my=0,smx=0,smy=0,scroll=0;
   const mouse={x:-1,y:-1,on:false};
   const SEG=3,NSEG=16,WALL=2.4,FLOOR=1.3,TOP=-7;
-  const SIGNS=['酒','夜','龍','電','猫','麺','薬','バー','ラーメン','БАР','ПИВО','주점','한식','ΜΠΑΡ','ΟΥΖΟ','בר','مقهى','بار','बार','ผับ','ยา','PHARMA','NOODLE','SUSHI','CAFÉ','APTEKA','ÇAY','24H','OPEN'];
+  const SIGNS=['酒','夜','龍','電','猫','麺','薬','バー','ラーメン','БАР','ПИВО','주점','한식','ΜΠΑΡ','ΟΥΖΟ','בר','مقهى','بار','बार','ผับ','ยา','PHARMA','NOODLE','SUSHI','CAFÉ','APTEKA','ÇAY','24H','OPEN','Ụlọ Nri','NNỌỌ','ỤLỌ AKWỤKWỌ'];
   const NEON=['#ff2e88','#19e3ff','#ffb347','#7c5cff','#3dff9a'];
   function size(){const s=Math.min(devicePixelRatio||1,1.5)*.8;W=cv.width=Math.floor(innerWidth*s);H=cv.height=Math.floor(innerHeight*s);f=H*.95}
   size();addEventListener('resize',size);
@@ -121,7 +121,7 @@ tick();setInterval(tick,1000);
   const UNIQUE=new Set(['dealer','preacher','robocop','detective','samurai','sage','mascot']);
   const WLIST=Object.keys(WEIGHTS).flatMap(k=>Array(WEIGHTS[k]).fill(k));
   const COMMON=WLIST.filter(k=>!UNIQUE.has(k));
-  const POINT=['YOU!','お前か!','ТЫ!','너!','أنت!','¡TÚ!','DU!'],FRUST=['Hmph!','ふん!','Тьфу!','칫!','Pfft.','Tsk!'];
+  const POINT=['YOU!','お前か!','ТЫ!','너!','أنت!','¡TÚ!','DU!'],FRUST=['Hmph!','ふん!','Тьфу!','칫!','Pfft.','Tsk!','Ewo!','Chai!'];
   /* at most two "unique" characters per alley, and a second one is unlikely */
   function pickType(){
     const nu=chars.filter(q=>UNIQUE.has(q.name)).length;
@@ -134,7 +134,7 @@ tick();setInterval(tick,1000);
     }
     return rndp(COMMON);
   }
-  const SHOUTS=['おい!!','HEY!','¡OYE!','ЭЙ!','야!!','ÇEK!','Hé!','你干嘛!','यार!','أنت!','Oi!','Ντε!'];
+  const SHOUTS=['おい!!','HEY!','¡OYE!','ЭЙ!','야!!','ÇEK!','Hé!','你干嘛!','यार!','أنت!','Oi!','Ντε!','Biko!','Ewo!'];
   let chars=[],spawnT=0,clock=0;
   const rndp=a=>a[Math.floor(Math.random()*a.length)];
   function spawn(initial){
@@ -307,13 +307,14 @@ tick();setInterval(tick,1000);
   const term=document.createElement('div');term.className='ctm';term.hidden=true;
   term.innerHTML='<div class="ch"><span class="tt"></span><button aria-label="Close">×</button></div><pre></pre>';
   document.body.appendChild(term);
-  let termCh=null,termTxt='',termN=0,termT=0,termSide='R';
-  function closeTerm(){term.hidden=true;termCh=null}
+  let termCh=null,termTxt='',termN=0,termSide='R',pinned=false;
+  function closeTerm(){term.hidden=true;termCh=null;pinned=false;term.classList.remove('pin')}
+  term.addEventListener('pointerdown',()=>{pinned=true;term.classList.add('pin')});
   term.querySelector('button').onclick=closeTerm;
-  function showTerm(ch){
-    const p=Lore.profile(ch);termCh=ch;
+  function showTerm(ch,pin){
+    const p=ch.prof||(ch.prof=Lore.profile(ch));termCh=ch;pinned=!!pin;term.classList.toggle('pin',!!pin);
     termTxt='age ........ '+p.age+'\npassion .... '+p.passion+'\ngenre ...... '+p.genre+'\nnote ....... '+p.fact;
-    term.querySelector('.tt').textContent='ID://'+p.name;termN=0;termT=11;term.hidden=false;placeTerm();
+    term.querySelector('.tt').textContent='ID://'+p.name;termN=0;term.hidden=false;placeTerm();
   }
   function placeTerm(){
     if(!termCh||!termCh.bb||term.hidden)return;
@@ -323,17 +324,23 @@ tick();setInterval(tick,1000);
     term.style.left=clamp(left,6,innerWidth-tw-6)+'px';term.style.top=clamp(bb[1]*sy-8,48,innerHeight-190)+'px';
   }
   function updTerm(dt){
-    if(!termCh)return;termT-=dt;termN+=dt*70;
+    if(!termCh)return;termN+=dt*70;
     term.querySelector('pre').textContent=termTxt.slice(0,Math.floor(termN))+(termN<termTxt.length||Math.floor(clock*2)%2?'█':' ');
-    if(termT<=0||termCh.dead||termCh.ent.z<1.6||!chars.includes(termCh))closeTerm();
+    if(termCh.dead||termCh.ent.z<1.6||!chars.includes(termCh))closeTerm();
   }
   const hitAt=(px,py)=>chars.filter(q=>q.vis&&q.bb&&px>=q.bb[0]&&px<=q.bb[2]&&py>=q.bb[1]&&py<=q.bb[3]).sort((a,b)=>a.ent.z-b.ent.z)[0];
   cv.addEventListener('pointerdown',e=>{
     const hit=hitAt(e.clientX*W/innerWidth,e.clientY*H/innerHeight);
-    if(hit){makeIrate(hit,null,true);showTerm(hit)}
+    if(hit){makeIrate(hit,null,true);if(termCh===hit){pinned=true;term.classList.add('pin')}else showTerm(hit,true)}
     else{boost=Math.min(3,boost+1.2);closeTerm()}
   });
-  addEventListener('pointermove',e=>{cv.style.cursor=(e.target===cv&&hitAt(e.clientX*W/innerWidth,e.clientY*H/innerHeight))?'pointer':'default'});
+  addEventListener('pointermove',e=>{
+    if(e.target!==cv)return;
+    const hit=hitAt(e.clientX*W/innerWidth,e.clientY*H/innerHeight);
+    cv.style.cursor=hit?'pointer':'default';
+    if(pinned)return;
+    if(hit){if(termCh!==hit)showTerm(hit,false)}else if(termCh)closeTerm();
+  });
   if(/[?&]debug/.test(location.search))window.__alley={chars:()=>chars,turn:()=>{nextTurn=0},J:()=>J,pan:()=>pan,alleyNo:()=>alleyNo};
   let last=0;
   function loop(t){
