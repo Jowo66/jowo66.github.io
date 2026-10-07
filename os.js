@@ -42,7 +42,80 @@ tick();setInterval(tick,1000);
   const P=(x,y,z)=>[cx+x*f/z,cy+y*f/z];
   function quad(a,b,c2,d){c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.lineTo(c2[0],c2[1]);c.lineTo(d[0],d[1]);c.closePath()}
   const rain=Array.from({length:45},()=>({x:Math.random(),y:Math.random(),l:.03+Math.random()*.05,s:.9+Math.random()*.9}));
-  function wall(side,id,z1,z2){
+
+  /* ---- little shops set into the walls; customers wander in and out ---- */
+  const SHOPS=[
+    {k:'ラーメン',s:'RAMEN · 麺 · рамен',col:'#ff2e88',it:['#ffb347','#ff2e88','#f5efe0']},
+    {k:'薬局 24H',s:'PHARMA · аптека',col:'#3dff9a',it:['#3dff9a','#f5efe0','#19e3ff']},
+    {k:'Ụlọ Nri',s:'IGBO KITCHEN · jollof',col:'#ffb347',it:['#e0352b','#ffb347','#3dff9a']},
+    {k:'КИОСК',s:'KIOSK · キヨスク',col:'#19e3ff',it:['#ff2e88','#ffb347','#7c5cff']},
+    {k:'修理',s:'REPAIR · ремонт · 수리',col:'#7c5cff',it:['#19e3ff','#9a96a8','#ffb347']},
+    {k:'ゲーム',s:'ARCADE · 오락실',col:'#ff2e88',it:['#19e3ff','#ff2e88','#3dff9a']},
+    {k:'ÇAY EVİ',s:'TEA · 茶 · شاي',col:'#ffb347',it:['#c47a2a','#f5efe0','#3dff9a']},
+    {k:'義体',s:'CYBERWARE · 改造',col:'#19e3ff',it:['#9a96a8','#ff2e88','#19e3ff']},
+    {k:'LIBROS',s:'BOOKS · 本 · كتب',col:'#7c5cff',it:['#ffb347','#e0352b','#19e3ff']},
+    {k:'TACOS',s:'TAQUERÍA · タコス',col:'#3dff9a',it:['#ffb347','#e0352b','#3dff9a']}
+  ];
+  const shopAt=(id,side)=>{
+    if(J&&J.id===id)return null;
+    if(hash(id*41+side*3+5)<.5)return null;
+    const d=SHOPS[Math.floor(hash(id*19+side*11+1)*SHOPS.length)];
+    return Object.assign({},d,{kp:hash(id*7+side)});
+  };
+  const doorZ=id=>id*SEG+1.6-scroll;
+  /* map a 100x(100*hh/ww) text space onto a rectangle of the wall plane */
+  function wallAff(side,xx,zA,zB,ya,yb,w,h){
+    const zl=side<0?zA:zB,zr=side<0?zB:zA,TL=P(xx,ya,zl),TR=P(xx,ya,zr),BL=P(xx,yb,zl);
+    if(Math.hypot(TR[0]-TL[0],TR[1]-TL[1])<10)return false;
+    c.setTransform((TR[0]-TL[0])/w,(TR[1]-TL[1])/w,(BL[0]-TL[0])/h,(BL[1]-TL[1])/h,TL[0],TL[1]);return true;
+  }
+  function drawShop(sh,side,id,zu,fog){
+    const x=side*WALL,xx=x-side*.02,zA=zu+1.0,zB=zu+2.2;
+    if(zA<1.2)return;
+    const al=.55+.45*fog,col=sh.col;
+    /* door recess with a warm interior */
+    c.globalAlpha=al;
+    c.fillStyle='#120914';quad(P(xx,-.7,zA),P(xx,FLOOR,zA),P(xx,FLOOR,zB),P(xx,-.7,zB));c.fill();
+    c.save();
+    if(wallAff(side,xx,zA,zB,-.7,FLOOR,120,240)){
+      const g=c.createLinearGradient(0,0,0,240);g.addColorStop(0,col+'88');g.addColorStop(1,'#ffcf8a55');
+      c.fillStyle=g;c.fillRect(6,6,108,228);
+      /* shelves with goods */
+      for(let r=0;r<4;r++){
+        const y=40+r*48;c.fillStyle='#0a0612';c.fillRect(6,y+26,108,4);
+        for(let k=0;k<6;k++){const hh=hash(id*9+r*13+k*5+side);c.fillStyle=sh.it[Math.floor(hh*sh.it.length)];
+          const bw=10+hh*8,bh=10+hash(k+r*3+id)*14;c.fillRect(10+k*17,y+26-bh,bw,bh)}
+      }
+      /* shopkeeper silhouette */
+      if(sh.kp>.35){c.fillStyle='#0a0612';c.beginPath();c.arc(60,150,11,0,7);c.fill();c.fillRect(46,160,28,60)}
+      c.strokeStyle='#05030a';c.lineWidth=5;c.strokeRect(3,3,114,234);
+    }
+    c.restore();
+    /* striped awning sticking out over the door */
+    for(let k=0;k<6;k++){
+      const za=zA-.1+k*(zB-zA+.2)/6,zb=za+(zB-zA+.2)/6;
+      c.fillStyle=k%2?'#1a0f22':col;c.globalAlpha=al*.9;
+      quad(P(xx,-.78,za),P(xx-side*.55,-.5,za),P(xx-side*.55,-.5,zb),P(xx,-.78,zb));c.fill();
+    }
+    /* sign board above the awning */
+    c.globalAlpha=al;
+    c.fillStyle='#0a0612';quad(P(xx,-1.95,zA-.15),P(xx,-.85,zA-.15),P(xx,-.85,zB+.15),P(xx,-1.95,zB+.15));c.fill();
+    c.strokeStyle=col;c.lineWidth=Math.max(1,f/zu*.025);c.shadowColor=col;c.shadowBlur=fog>.35?10:0;
+    quad(P(xx,-1.95,zA-.15),P(xx,-.85,zA-.15),P(xx,-.85,zB+.15),P(xx,-1.95,zB+.15));c.stroke();c.shadowBlur=0;
+    c.save();
+    if(wallAff(side,xx,zA-.15,zB+.15,-1.95,-.85,150,80)){
+      c.fillStyle=col;c.textAlign='center';c.textBaseline='middle';
+      const fs=Math.min(40,130/Math.max(2.6,[...sh.k].length*.95));
+      c.font=`800 ${fs}px "Zen Kaku Gothic New","Noto Sans",sans-serif`;c.fillText(sh.k,75,30);
+      c.globalAlpha=al*.85;c.font='600 11px "Share Tech Mono",monospace';c.fillText(sh.s,75,62);
+    }
+    c.restore();
+    /* light spilling onto the wet street */
+    c.globalAlpha=(.08+.1*fog);c.fillStyle=col;
+    quad(P(x,FLOOR,zA),P(x,FLOOR,zB),P(side*.35,FLOOR,zB+.9),P(side*.35,FLOOR,zA-.2));c.fill();
+    c.globalAlpha=1;
+  }
+  function wall(side,id,z1,z2,zu){
     const x=side*WALL,fog=clamp(1-z1/(SEG*NSEG),0,1);
     const h=hash(id*2+(side>0?1:0));
     const tone=Math.floor(10+h*14);
@@ -64,7 +137,9 @@ tick();setInterval(tick,1000);
     quad(P(x,FLOOR-.35,z1),P(x,FLOOR,z1),P(x,FLOOR,z2),P(x,FLOOR-.35,z2));c.fill();
     /* neon sign */
     const sg=hash(id*13+(side>0?9:2));
-    if(sg>.5){
+    const shop=shopAt(id,side);
+    if(shop)drawShop(shop,side,id,zu,fog);
+    if(sg>.5&&!shop){
       const col=NEON[Math.floor(hash(id*5+side)*NEON.length)],zc=z1+(z2-z1)*.5,sy0=-3.8+hash(id)*1.2,sy1=sy0+1.6,zw=.28;
       const p0=P(x-side*.04,sy0,zc-zw),p1=P(x-side*.04,sy1,zc-zw),p2=P(x-side*.04,sy1,zc+zw),p3=P(x-side*.04,sy0,zc+zw);
       c.fillStyle='#0a0612';quad(p0,p1,p2,p3);c.fill();
@@ -137,8 +212,8 @@ tick();setInterval(tick,1000);
   const SHOUTS=['おい!!','HEY!','¡OYE!','ЭЙ!','야!!','ÇEK!','Hé!','你干嘛!','यार!','أنت!','Oi!','Ντε!','Biko!','Ewo!'];
   let chars=[],spawnT=0,clock=0;
   const rndp=a=>a[Math.floor(Math.random()*a.length)];
-  function spawn(initial){
-    const name=pickType(),def=LP.MODELS[name==='sage'&&Math.random()<.5?'sageF':name]();
+  function spawn(initial,force){
+    const name=force||pickType(),def=LP.MODELS[name==='sage'&&Math.random()<.5?'sageF':name]();
     const stat=!!def.stat;
     const toward=stat?false:Math.random()<.65;
     const sp=stat?0:def.sp[0]+Math.random()*(def.sp[1]-def.sp[0]);
@@ -153,8 +228,29 @@ tick();setInterval(tick,1000);
     if(!force&&ch.cool>0)return;
     ch.irate=2.6;ch.cool=5;ch.wait=0;say(ch,txt||rndp(SHOUTS),'irate',2.4);
   }
+  /* customers drift into shops, or step out of them */
+  let shopT=3;
+  const NOSHOP=n=>UNIQUE.has(n)||n==='drone'||n==='sage';
+  function visibleShops(){
+    const out=[],b0=Math.floor(scroll/SEG);
+    for(let id=b0;id<=b0+NSEG;id++)for(const side of [-1,1]){const sh=shopAt(id,side),z=doorZ(id);if(sh&&z>8&&z<20)out.push({id,side,sh,z})}
+    return out;
+  }
+  function shopTraffic(dt){
+    shopT-=dt;if(shopT>0||pan)return;shopT=2.2+Math.random()*2.5;
+    const vs=visibleShops();if(!vs.length)return;const s=rndp(vs);
+    if(Math.random()<.5&&chars.length<11){
+      let n='';for(let i=0;i<12;i++){const t=rndp(COMMON);if(!NOSHOP(t)&&!LP.MODELS[t]().fly&&!LP.MODELS[t]().stat){n=t;break}}
+      if(!n)return;spawn(false,n);const ch=chars[chars.length-1],e=ch.ent;
+      ch.stat=false;ch.toward=Math.random()<.5;e.z=s.z;e.x=s.side*(WALL-.4);e.yaw=s.side>0?-Math.PI/2:Math.PI/2;
+      ch.emerge=1.8;ch.ex=s.side*(.5+Math.random()*.9);ch.age=0;
+    }else{
+      const c2=chars.filter(q=>!q.stat&&!q.def.fly&&!NOSHOP(q.name)&&!q.shop&&!q.emerge&&q.irate<=0&&q.wait<=0&&q.ent.z>6&&q.ent.z<22&&Math.abs(q.ent.z-s.z)<5)[0];
+      if(c2)c2.shop={id:s.id,side:s.side};
+    }
+  }
   function updChars(dt){
-    clock+=dt;spawnT-=dt;
+    clock+=dt;spawnT-=dt;shopTraffic(dt);
     if(spawnT<=0&&chars.length<9){spawn(false);spawnT=1+Math.random()*2}
     for(const ch of chars){
       const e=ch.ent;ch.age+=dt;e.clock=clock;ch.cool=Math.max(0,ch.cool-dt);
@@ -166,6 +262,13 @@ tick();setInterval(tick,1000);
       if(!ch.stat&&ch.wait<=0)e.ph+=dt*Math.min(ch.sp,6)*3.4*(ch.hurry?1.5:1);
       if(!ch.stat&&!ch.def.fly&&ch.wait<=0)e.x+=Math.sin(clock*.6+ch.seed)*.01*dt*10;
       e.bob=ch.def.fly?Math.sin(clock*2+ch.seed)*.08:0;
+      if(ch.emerge>0){ch.emerge-=dt;e.x+=(ch.ex-e.x)*Math.min(1,dt*1.6);
+        e.yaw+=((ch.toward?Math.PI:0)-e.yaw)*Math.min(1,dt*2.5);if(ch.emerge<=0)e.yaw=ch.toward?Math.PI:0}
+      if(ch.shop&&ch.irate>0&&!ch.vanish)ch.shop=null;
+      if(ch.shop){const zd=doorZ(ch.shop.id),sd=ch.shop.side,tx=sd*(WALL-.35);
+        e.z+=(zd-e.z)*Math.min(1,dt*2.2);e.x+=(tx-e.x)*Math.min(1,dt*1.2);
+        if(Math.abs(e.z-zd)<1.4)e.yaw+=((sd>0?Math.PI/2:-Math.PI/2)-e.yaw)*Math.min(1,dt*4);
+        if(Math.abs(e.x)>WALL-.5){ch.vanish=(ch.vanish||0)+dt/.5;if(ch.vanish>=1)ch.dead=true}}
       /* preacher gesticulates, samurai stays calm */
       if(ch.stat&&ch.wait<=0&&ch.irate<=0){
         if(ch.name==='preacher'){e.arms.R=-2.5+Math.sin(clock*3)*.35;e.arms.L=-1.2+Math.sin(clock*2.4)*.5}
@@ -220,7 +323,7 @@ tick();setInterval(tick,1000);
     CAM.f=f;
     list.forEach(ch=>{const e=ch.ent;ch.vis=false;if(e.z<1.4)return;
       const fogk=CAM.fogK(e.z);
-      const fade=clamp(Math.min((33-e.z)/3,1,ch.age/.6,ch.stat?ch.life/1.2:1),0,1)*clamp((e.z-1.4)/1.2,0,1);
+      const fade=(1-(ch.vanish||0))*clamp(Math.min((33-e.z)/3,1,ch.age/.6,ch.stat?ch.life/1.2:1),0,1)*clamp((e.z-1.4)/1.2,0,1);
       if(fade<=0)return;
       const m=Object.assign({},e,{mir:true});LP.drawEnt(c,m,CAM,.16*(1-fogk)*fade);
       /* contact shadow */
@@ -267,7 +370,7 @@ tick();setInterval(tick,1000);
     const base=Math.floor(scroll/SEG),off=scroll-base*SEG;
     for(let k=NSEG;k>=0;k--){
       const z1=Math.max(.8,k*SEG-off),z2=(k+1)*SEG-off;if(z2<=.8)continue;
-      const id=base+k;wall(-1,id,z1,z2);wall(1,id,z1,z2);if(J&&id===J.id)opening(J.side,z1);
+      const id=base+k;wall(-1,id,z1,z2,k*SEG-off);wall(1,id,z1,z2,k*SEG-off);if(J&&id===J.id)opening(J.side,z1);
       if((id&1)===0)lantern(id,z1+SEG*.5);
     }
     /* distance fog */
