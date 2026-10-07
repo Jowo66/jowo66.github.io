@@ -105,8 +105,8 @@ footer{text-align:center;padding:50px 20px;border-top:1px solid rgba(255,46,136,
 footer a{color:var(--cyan)}
 html.beach:not(.embed) body{background:radial-gradient(ellipse at 80% 10%,rgba(255,214,120,.35),transparent 55%),radial-gradient(ellipse at 10% 90%,rgba(80,200,255,.22),transparent 50%),#15324f}
 </style>
-<script src="lp3d.js?v=20261007zc"></script>
-<script src="house.js?v=20261007zc"></script>
+<script src="lp3d.js?v=20261007zd"></script>
+<script src="house.js?v=20261007zd"></script>
 <script>(function(){if(/[?&]embed/.test(location.search)){document.documentElement.className="embed";var e=document.createElement("style");e.textContent="header,header.bar,main>:not(.stage),footer,.rules,.districts{display:none!important}html,body{background:#05020a!important}body{padding:6px!important;margin:0!important;min-height:0!important}main{padding:0!important;margin:0 auto!important;max-width:none!important}";document.head.appendChild(e)}})()</script>
 </head>
 
@@ -135,7 +135,7 @@ html.beach:not(.embed) body{background:radial-gradient(ellipse at 80% 10%,rgba(2
     </div>
     <div class="status" role="status" aria-live="off">
       <span>In the club: <b id="who">0</b>/28 &nbsp;&middot;&nbsp; Mode: <b id="mode">pogo</b> &nbsp;&middot;&nbsp; BPM: <b id="bpm">124</b> &nbsp;&middot;&nbsp; Track: <b id="trk">Rain Groove</b> &nbsp;&middot;&nbsp; Plays: <b id="plays">0</b> &nbsp;&middot;&nbsp; Drops: <b id="drops">0</b></span>
-      <span class="btns"><button id="battle" type="button" aria-pressed="false" title="Two dancers battle in the middle while everyone cheers">🥊 Battle: off</button> <button id="dance" type="button" title="Change the dancing style">💃 Style: Mosh</button> <button id="hype" type="button" title="Bring one more person into the club">&#128293; Hype</button> <button id="shf" type="button" title="Generate a new house track">&#10551; Shuffle</button> <button id="fav" type="button" aria-pressed="false" title="Save this track to your playlist">&#9825; Save</button> <select id="pl" aria-label="Your playlist"><option value="">Playlist (0)</option></select> <button id="beachbtn" type="button" aria-pressed="false" title="Switch between Casa Sofia and the beach version, Playa Sofia">&#127958; Beach</button> <button id="snd" type="button" aria-pressed="false">&#9834; Sound: off</button> <button id="pause" type="button">Pause</button></span>
+      <span class="btns"><button id="battle" type="button" aria-pressed="false" title="Two dancers battle in the middle while everyone cheers">🥊 Battle: off</button> <button id="dance" type="button" title="Change the dancing style">💃 Style: Mosh</button> <button id="hype" type="button" title="Bring one more person into the club">&#128293; Hype</button> <button id="rep" type="button" aria-pressed="false" title="Repeat on: keep looping this track. Repeat off: the DJ shuffles to a new track every 30 seconds">&#128257; Repeat: off</button> <button id="shf" type="button" title="Generate a new house track">&#10551; Shuffle</button> <button id="fav" type="button" aria-pressed="false" title="Save this track to your playlist">&#9825; Save</button> <select id="pl" aria-label="Your playlist"><option value="">Playlist (0)</option></select> <button id="beachbtn" type="button" aria-pressed="false" title="Switch between Casa Sofia and the beach version, Playa Sofia">&#127958; Beach</button> <button id="snd" type="button" aria-pressed="false">&#9834; Sound: off</button> <button id="pause" type="button">Pause</button></span>
     </div>
   </div>
 
@@ -901,6 +901,19 @@ addEventListener('storage',e=>{if(e.key==='jowo.beach'){setBeach(e.newValue==='1
 const snd=el('snd');
 const hb=el('hype');
 if(hb)hb.onclick=()=>{const r=hype();hb.textContent=r==='full'?'\u{1F6AB} Full! Security\u2026':'\u{1F525} Hype';if(r==='full')setTimeout(()=>{hb.textContent='\u{1F525} Hype'},1600)};
+/* repeat: on = loop the current track; off = the DJ shuffles to a new one every 30 seconds */
+let repeat=false,autoT=0,autoId=null;
+try{repeat=localStorage.getItem('jowo.repeat')==='1'}catch(e){}
+const rpb=el('rep');
+function syncRep(){if(rpb){rpb.textContent='\u{1F501} Repeat: '+(repeat?'on':'off');rpb.setAttribute('aria-pressed',repeat?'true':'false')}}
+if(rpb)rpb.onclick=()=>{repeat=!repeat;autoT=0;try{localStorage.setItem('jowo.repeat',repeat?'1':'0')}catch(e){}syncRep()};
+syncRep();
+function autoShuffle(dt){
+  if(!AUDIO||!AUDIO.track)return;
+  const id=trackId(AUDIO.track);if(id!==autoId){autoId=id;autoT=0;return}
+  if(repeat){autoT=0;return}
+  autoT+=dt;if(autoT>=30){autoT=0;AUDIO.shuffle();autoId=trackId(AUDIO.track);burst(PIT.x,PIT.z-.6,pick(['NEXT TRACK!','\u6b21\u306e\u66f2!','NEXT!']))}
+}
 const shf=el('shf');
 if(shf)shf.onclick=()=>{if(!AUDIO)return;AUDIO.shuffle();if(!AUDIO.on)AUDIO.toggle()};
 /* ---------- playlist: saved tracks are stored as tiny seeds in localStorage AND a long-lived cookie ---------- */
@@ -951,7 +964,7 @@ if(document.fonts&&document.fonts.load){document.fonts.load('800 40px "Shippori 
 let last=performance.now(),stat=0;
 function loop(t){
   const dt=Math.min(.05,(t-last)/1000);last=t;
-  if(!paused){update(dt);stat-=dt;if(stat<=0){stat=.5;syncFav();el('who').textContent=total();el('mode').textContent=battle.on?'battle':style==='mosh'?mode:STYLE_NAMES[styleI].toLowerCase();el('drops').textContent=drops;el('bpm').textContent=bpmNow();el('trk').textContent=(AUDIO&&AUDIO.track&&AUDIO.track.name)||'Rain Groove'}}
+  if(!paused){update(dt);autoShuffle(dt);stat-=dt;if(stat<=0){stat=.5;syncFav();el('who').textContent=total();el('mode').textContent=battle.on?'battle':style==='mosh'?mode:STYLE_NAMES[styleI].toLowerCase();el('drops').textContent=drops;el('bpm').textContent=bpmNow();el('trk').textContent=(AUDIO&&AUDIO.track&&AUDIO.track.name)||'Rain Groove'}}
   render();requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
