@@ -33,20 +33,25 @@ function hold(side,x,shY,items,mode,o){
     if(i.e)q.e=true;if(o.psw){q.psw=o.psw;q.pph=o.ph||0}return q;
   });
 }
+function cyHead(L,y,dz){L.push({p:[0,y,dz+.115],s:[.2,.05,.03],c:CYC,e:true});L.push({p:[.08,y+.2,dz-.05],s:[.02,.2,.02],c:'#9aa4b8'});L.push({p:[.08,y+.4,dz-.05],s:[.04,.04,.04],c:'#ff2a3a',e:true})}
 function human(o,dz){
   dz=dz||0;const L=[];
   const pant=o.pant||'#15101f',coat=o.coat||'#1a1f3a',skin=o.skin||'#c98f6b',hair=o.hair||'#0d0a14',lg=o.legW||.16;
-  L.push({p:[-.11,0,dz],s:[lg,.82,.18],c:pant,sw:o.legSw||.55,ph:0,tp:o.legTp});
+  L.push({p:[-.11,0,dz],s:[lg,.82,.18],c:CY?'#8a93a8':pant,sw:o.legSw||.55,ph:0,tp:o.legTp});
   L.push({p:[.11,0,dz],s:[lg,.82,.18],c:pant,sw:o.legSw||.55,ph:Math.PI,tp:o.legTp});
-  L.push({p:[0,.78,dz],s:[.46,.72,.26],c:coat,tp:.88});
+  const fem=!!o.fem;
+  L.push({p:[0,.78,dz],s:[fem?.4:.46,.72,.26],c:coat,tp:.88});
   if(o.long)L.push({p:[0,.3,dz],s:[.5,.62,.3],c:coat,tp:.82});
+  else if(fem)L.push({p:[0,.44,dz],s:[.46,.34,.3],c:o.skirt||coat,tp:.74});
   const as=o.armSw||.5,j=o.j||'';
   [['L',-.3,o.armL,o.armLe,Math.PI],['R',.3,o.armR,o.armRe,0]].forEach(a=>{
-    const col=a[2]||coat;
+    const col=(CY&&a[0]==='L')?'#9aa4b8':(a[2]||coat);
     if(j==='both'||j===a[0])arm(a[0],a[1],1.48,col,{dz:dz,skin:skin,sw:as,psw:as,ph:a[4],e:!!a[3]}).forEach(q=>L.push(q));
     else L.push({p:[a[1],.76,dz],s:[.12,.72,.14],c:col,sw:as,ph:a[4],ak:a[0],e:!!a[3]});
   });
   L.push({p:[0,1.5,dz],s:[.22,.26,.22],c:skin,tp:.82});
+  if(CY){cyHead(L,1.57,dz);L.push({p:[0,1.12,dz+.14],s:[.1,.1,.02],c:CYC,e:true});L.push({p:[-.3,.9,dz+.02],s:[.13,.04,.16],c:CYC,e:true})}
+  if(fem){L.push({p:[0,1.02,dz-.12],s:[.25,.6,.08],c:hair});L.push({p:[0,1.55,dz+.11],s:[.07,.025,.02],c:'#ff2e88',e:true})}
   if(o.hat==='fedora'){L.push({p:[0,1.72,dz],s:[.44,.04,.44],c:o.hatC||'#3a3028'});L.push({p:[0,1.74,dz],s:[.26,.15,.26],c:o.hatC||'#3a3028',tp:.85})}
   else if(o.hat==='cap'){L.push({p:[0,1.72,dz],s:[.25,.1,.25],c:o.hatC||'#d6246e'});L.push({p:[0,1.72,dz+.16],s:[.22,.03,.14],c:o.hatC||'#d6246e'})}
   else if(o.hat==='wide'){L.push({p:[0,1.72,dz],s:[.52,.04,.52],c:o.hatC||'#222'});L.push({p:[0,1.74,dz],s:[.3,.16,.3],c:o.hatC||'#222',tp:.8})}
@@ -70,21 +75,21 @@ function seated(o){
   if(o.visor)L.push({p:[0,1.34,.11],s:[.21,.06,.04],c:o.acc||'#19e3ff',e:true});
   return L;
 }
-const M={};
-M.umbrella=()=>{const L=human({coat:'#202a52',long:true,hair:'#15101f',j:'R'});
+const M={};let CY=false,CYC='#19e3ff';
+M.umbrella=(f)=>{const L=human({coat:f?'#3a2a66':'#202a52',long:true,hair:f?'#2a1020':'#15101f',j:'R',fem:f});
   /* umbrella held in the right fist, pole vertical through it */
   hold('R',.3,1.48,[{dy:.25,w:.03,h:1.3,d:.03,c:'#8a8a99'},{dy:-.12,w:.05,h:.12,d:.05,c:'#4a4a58'},
     {dy:.76,w:1.2,h:.05,d:1.2,c:'#ff7ab6',e:true},{dy:.8,w:1.12,h:.07,d:1.12,c:'#d6246e'},{dy:.87,w:.84,h:.07,d:.84,c:'#d6246e'},
     {dy:.94,w:.5,h:.07,d:.5,c:'#d6246e'},{dy:1.02,w:.1,h:.1,d:.1,c:'#8a8a99'}],'f').forEach(q=>L.push(q));
   return{parts:L,sp:[1.1,1.9],h:2.1,arms:{R:0,eR:-1.57},bub:['…','雨','Rain.','Дождь','비'],gk:'L'}};
-M.courier=()=>{const L=human({coat:'#0e1d2a',armRe:true,armR:'#19e3ff',pant:'#0a0a12',hair:'#ff2e88'});
+M.courier=(f)=>{const L=human({coat:'#0e1d2a',armRe:true,armR:'#19e3ff',pant:'#0a0a12',hair:f?'#19e3ff':'#ff2e88',fem:f,skirt:'#19e3ff'});
   L.push({p:[0,1.55,.11],s:[.2,.07,.05],c:'#19e3ff',e:true});L.push({p:[0,.9,-.19],s:[.36,.5,.16],c:'#222338'});
   L.push({p:[0,1.2,-.28],s:[.3,.05,.02],c:'#ffb347',e:true});return{parts:L,sp:[1.6,2.4],h:1.9,bub:['配達!','Move!','Быстро!','빨리!']}};
 M.kimono=()=>{const L=[];
   L.push({p:[0,.05,0],s:[.55,1.1,.42],c:'#7d1330',tp:.55,sw:.04,ph:0});L.push({p:[0,.85,0],s:[.52,.2,.42],c:'#ffb347',e:true});
   L.push({p:[0,1.3,0],s:[.38,.18,.28],c:'#7d1330',tp:.7});
   L.push({p:[0,1.42,0],s:[.2,.25,.2],c:'#ece8f4',tp:.85});L.push({p:[0,1.65,0],s:[.26,.16,.26],c:'#0d0a14',tp:.7});
-  L.push({p:[0,1.5,.1],s:[.1,.03,.02],c:'#19e3ff',e:true});
+  L.push({p:[0,1.5,.1],s:[.1,.03,.02],c:'#19e3ff',e:true});if(CY)cyHead(L,1.52,0);
   const sk={skin:'#ece8f4',w:.13};
   arm('L',-.27,1.4,'#7d1330',Object.assign({sw:.06,psw:.06,ph:Math.PI},sk)).forEach(q=>L.push(q));
   arm('R',.27,1.4,'#7d1330',sk).forEach(q=>L.push(q));
@@ -102,21 +107,60 @@ M.drone=()=>{const L=[];
   L.push({p:[0,0,0],s:[.42,.16,.42],c:'#30344a',tp:.6});L.push({p:[0,-.04,0],s:[.14,.05,.14],c:'#ffb347',e:true});
   [[-.3,-.3],[.3,-.3],[-.3,.3],[.3,.3]].forEach(q=>{L.push({p:[q[0],.13,q[1]],s:[.3,.02,.07],c:'#99aadd',sp:1});L.push({p:[q[0]*.5,.05,q[1]*.5],s:[.05,.05,.05],c:'#222'})});
   return{parts:L,sp:[.8,1.5],h:.3,fly:true,bub:['BZZT','ビビ','ЖЖЖ']}};
-M.ramen=()=>{const L=[];
+M.ramen=(f)=>{const L=[];
   L.push({p:[0,.4,0],s:[.95,.55,.6],c:'#5a3a22'});L.push({p:[0,.95,0],s:[1.1,.3,.75],c:'#20161a',tp:.7});
   L.push({p:[.58,.85,0],s:[.2,.3,.2],c:'#ff3a2a',e:true});L.push({p:[-.58,.85,0],s:[.2,.3,.2],c:'#ffb347',e:true});
   L.push({p:[-.5,0,0],s:[.06,.38,.38],c:'#15101a'});L.push({p:[.5,0,0],s:[.06,.38,.38],c:'#15101a'});
   L.push({p:[0,.7,.31],s:[.7,.1,.02],c:'#19e3ff',e:true});
-  return{parts:L.concat(human({coat:'#e8e4ee',pant:'#222',hair:'#e8e4ee',j:'both',armSw:.15},-.75)),sp:[.3,.5],h:2.0,arms:{L:-1.0,R:-1.15,eL:-.5,eR:-.4},bub:['ラーメン!','Ramen!','Рамен!','라멘!','ราเมน!','Nri ọhụrụ!']}};
-M.dealer=()=>{const L=human({coat:'#2a2030',long:true,hat:'wide',hatC:'#17121d',armR:'#ff2a3a',armRe:true,hair:'#111'});
+  return{parts:L.concat(human({coat:'#e8e4ee',pant:'#222',hair:f?'#3a2418':'#e8e4ee',j:'both',armSw:.15,fem:f},-.75)),sp:[.3,.5],h:2.0,arms:{L:-1.0,R:-1.15,eL:-.5,eR:-.4},bub:['ラーメン!','Ramen!','Рамен!','라멘!','ราเมน!','Nri ọhụrụ!']}};
+M.hotdog=(f)=>{const L=[];
+  L.push({p:[0,.35,0],s:[.95,.55,.6],c:'#c8ccd8'});L.push({p:[0,.9,0],s:[1.0,.08,.66],c:'#8a8fa0'});
+  L.push({p:[-.5,0,0],s:[.06,.36,.36],c:'#15101a'});L.push({p:[.5,0,0],s:[.06,.36,.36],c:'#15101a'});
+  L.push({p:[-.2,.98,.1],s:[.4,.09,.12],c:'#d9a05b'});L.push({p:[-.2,1.04,.1],s:[.44,.06,.08],c:'#c8402a'});
+  L.push({p:[.25,.98,.1],s:[.3,.09,.12],c:'#d9a05b'});L.push({p:[.25,1.04,.1],s:[.34,.06,.08],c:'#c8402a'});
+  L.push({p:[.4,1.0,-.1],s:[.1,.14,.1],c:'#ffd42a',e:true});L.push({p:[-.4,1.0,-.1],s:[.1,.14,.1],c:'#ff3a2a',e:true});
+  L.push({p:[0,.58,.31],s:[.7,.12,.02],c:'#ffb347',e:true});
+  L.push({p:[.46,.9,-.2],s:[.03,1.0,.03],c:'#6a5a4a'});
+  L.push({p:[.46,1.82,-.2],s:[1.5,.05,1.1],c:'#ff7a4a',e:true});L.push({p:[.46,1.86,-.2],s:[1.4,.1,1.0],c:'#e0352b',tp:.75});L.push({p:[.46,1.95,-.2],s:[.9,.08,.6],c:'#ffd42a'});
+  return{parts:L.concat(human({coat:'#e0352b',pant:'#222',hair:f?'#2a1a14':'#111',hat:'cap',hatC:'#ffd42a',j:'both',armSw:.15,fem:f},-.75)),sp:[.3,.5],h:2.1,arms:{L:-1.0,R:-1.15,eL:-.5,eR:-.4},bub:['Hot dogs!','ホットドッグ','Хот-доги!','핫도그!','Suya!','Akara!']}};
+M.lover=(f)=>{const L=human(f?{coat:'#ff7ab6',pant:'#3a2a5a',hair:'#2a1020',fem:true,skirt:'#ff7ab6',legSw:.4,armSw:.25}:{coat:'#2a4a8a',pant:'#1a1f3a',hair:'#15101f',legSw:.4,armSw:.25});
+  /* a floating heart that pulses above them */
+  [[-.06,2.12,.08,.08],[.06,2.12,.08,.08],[0,2.04,.2,.08],[0,1.97,.12,.07],[0,1.92,.05,.05]].forEach(q=>L.push({p:[q[0],q[1],0],s:[q[2],q[3],.05],c:'#ff2e88',e:true,bn:.05}));
+  return{parts:L,sp:[.5,.7],h:2.1,bub:['♥','好きだよ','Люблю','사랑해','Ife m','Je t\'aime','♡']}};
+M.ripperdoc=(f)=>{CY=true;CYC='#ffb347';const L=human({coat:'#24303e',pant:'#1a1f2a',hair:f?'#c8d0e0':'#2a2a30',hat:'cap',hatC:'#3a4a5a',fem:f,armSw:.4});CY=false;
+  /* two extra mechanical arms, a toolbox on the back and a welding torch */
+  [[-.4,.5,Math.PI],[.4,.5,0]].forEach(q=>{L.push({p:[q[0],.98,.02],s:[.06,.55,.07],c:'#9aa4b8',sw:q[1],ph:q[2]+1.2,ak:'X'+(q[0]<0?'L':'R')});L.push({p:[q[0],.9,.02],s:[.07,.08,.09],c:'#ffb347',e:true,sw:q[1],ph:q[2]+1.2,ak:'X'+(q[0]<0?'L':'R')})});
+  L.push({p:[0,.85,-.21],s:[.34,.28,.14],c:'#cc3a2a'});L.push({p:[0,1.12,-.21],s:[.14,.04,.05],c:'#8a93a8'});
+  L.push({p:[0,1.58,.12],s:[.24,.05,.03],c:'#ffb347',e:true});
+  return{parts:L,sp:[.5,.9],h:2.0,bub:['Upgrade?','改造どう?','Апгрейд?','개조 해요?','Nwere m ike!','Chrome, cheap.']}};
+M.netrunner=(f)=>{CY=true;CYC='#ff2e88';const L=human({coat:'#1a0f2a',pant:'#0a0a12',hair:'#19e3ff',fem:f,armSw:.3});CY=false;
+  L.push({p:[0,1.38,0],s:[.32,.4,.3],c:'#1a0f2a',tp:.8});
+  /* jack cable down the back and a floating holo-deck */
+  L.push({p:[0,.5,-.16],s:[.03,.9,.03],c:'#ff2e88',e:true});
+  L.push({p:[.5,1.1,.22],s:[.5,.34,.025],c:'#19e3ff',e:true,bn:.04});L.push({p:[.5,1.1,.2],s:[.56,.4,.02],c:'#10142a',bn:.04});
+  [[.3,.1],[.2,.2],[.28,.3]].forEach((q,i)=>L.push({p:[.36+(i%2)*.04,1.14+q[1]*.6,.24],s:[q[0]*.5,.025,.02],c:'#ff2e88',e:true,bn:.04}));
+  return{parts:L,sp:[.6,1.0],h:1.9,bub:['jacking in…','接続中','Подключаюсь','접속 중','010101','Ping 12ms']}};
+M.monk=()=>{const L=[];
+  L.push({p:[-.12,0,0],s:[.16,.5,.2],c:'#8a6a3a',sw:.35,ph:0});L.push({p:[.12,0,0],s:[.16,.5,.2],c:'#8a6a3a',sw:.35,ph:Math.PI});
+  L.push({p:[0,.3,0],s:[.62,1.0,.4],c:'#d6781e',tp:.6});L.push({p:[0,1.2,0],s:[.5,.3,.3],c:'#d6781e',tp:.78});L.push({p:[0,.74,.12],s:[.5,.1,.2],c:'#ffb347',e:true});
+  arm('L',-.32,1.42,'#d6781e',{skin:'#9aa4b8',sw:.3,psw:.3,ph:Math.PI}).forEach(q=>L.push(q));
+  arm('R',.32,1.42,'#d6781e',{skin:'#9aa4b8'}).forEach(q=>L.push(q));
+  hold('R',.32,1.42,[{dy:-.25,w:.03,h:.6,d:.03,c:'#6a5a4a'},{dy:.1,w:.16,h:.16,d:.16,c:'#ffb347',e:true}],'f').forEach(q=>{if(q.s[1]===.16||q.s[2]===.16)q.sp=1;L.push(q)});
+  L.push({p:[0,1.42,0],s:[.23,.28,.23],c:'#9aa4b8',tp:.85});L.push({p:[0,1.58,.115],s:[.05,.05,.03],c:'#ffb347',e:true});
+  L.push({p:[-.06,1.5,.115],s:[.04,.03,.02],c:'#19e3ff',e:true});L.push({p:[.06,1.5,.115],s:[.04,.03,.02],c:'#19e3ff',e:true});
+  /* halo of light that spins above the head */
+  L.push({p:[0,1.86,0],s:[.5,.02,.05],c:'#ffb347',e:true,sp:1});L.push({p:[0,1.86,0],s:[.05,.02,.5],c:'#ffb347',e:true,sp:1});
+  return{parts:L,sp:[.4,.7],h:2.1,arms:{R:0,eR:-1.57},gk:'L',bub:['om…','無','Ом…','옴…','Chi.exe','404 ego']}};
+M.dealer=(f)=>{const L=human({coat:f?'#3a1f40':'#2a2030',long:true,hat:'wide',hatC:'#17121d',armR:'#ff2a3a',armRe:true,hair:'#111',fem:f});
   L.push({p:[0,.95,.14],s:[.3,.4,.02],c:'#ff2e88',e:true});L.push({p:[0,1.52,.12],s:[.2,.05,.03],c:'#ff2a3a',e:true});
   L.push({p:[-.14,.55,.15],s:[.06,.06,.02],c:'#19e3ff',e:true});L.push({p:[.0,.55,.15],s:[.06,.06,.02],c:'#ffb347',e:true});
   return{parts:L,sp:[0,0],h:1.9,stat:true,bub:['Psst…','チップ?','Чипы?','칩 팔아요','شريحة؟','Chips?']}};
-M.preacher=()=>{const L=[];
+M.preacher=(f)=>{const L=[];
+  if(f){L.push({p:[0,1.0,-.13],s:[.27,.62,.08],c:'#2a1a14'});L.push({p:[0,1.5,.11],s:[.07,.025,.02],c:'#ff2e88',e:true})}
   L.push({p:[0,.05,0],s:[.6,1.3,.4],c:'#d8d0c0',tp:.6});L.push({p:[0,1.3,0],s:[.46,.2,.3],c:'#d8d0c0',tp:.8});
   arm('R',.34,1.45,'#d8d0c0',{skin:'#b88a6a'}).forEach(q=>L.push(q));
   arm('L',-.34,1.45,'#d8d0c0',{skin:'#b88a6a'}).forEach(q=>L.push(q));
-  L.push({p:[0,1.45,0],s:[.22,.26,.22],c:'#b88a6a',tp:.82});L.push({p:[0,1.62,0],s:[.28,.1,.28],c:'#d8d0c0',tp:.8});
+  L.push({p:[0,1.45,0],s:[.22,.26,.22],c:'#b88a6a',tp:.82});L.push({p:[0,1.62,0],s:[.28,.1,.28],c:'#d8d0c0',tp:.8});if(CY)cyHead(L,1.55,0);
   /* placard held up in the left hand */
   hold('L',-.34,1.45,[{dy:-.05,w:.04,h:1.7,d:.04,c:'#6a5a4a'},{dy:.6,x:-.2,w:.8,h:.52,d:.04,c:'#e8e4ee'},
     {dy:.72,x:-.2,dz:.03,w:.62,h:.07,d:.02,c:'#ff2a2a',e:true},{dy:.6,x:-.2,dz:.03,w:.44,h:.05,d:.02,c:'#ff2a2a',e:true}],'f').forEach(q=>L.push(q));
@@ -148,7 +192,7 @@ M.mascot=()=>{const L=[];
   L.push({p:[-.2,1.18,.54],s:[.14,.14,.02],c:'#fff',e:true});L.push({p:[.2,1.18,.54],s:[.14,.14,.02],c:'#fff',e:true});
   L.push({p:[0,1.0,.55],s:[.4,.05,.02],c:'#c8283c',e:true});
   return{parts:L,sp:[.5,.8],h:1.8,bub:['I\'m lovin\' it…','バーガー…','Бургер…','버거…','برغر…']}};
-M.kidball=()=>{const L=human({coat:'#2b6fd6',pant:'#222',hair:'#111',hat:'cap',hatC:'#e0352b',legSw:.7,armSw:.6,j:'R'});
+M.kidball=(f)=>{const L=human({coat:f?'#d6246e':'#2b6fd6',pant:'#222',hair:'#111',hat:'cap',hatC:f?'#19e3ff':'#e0352b',legSw:.7,armSw:.6,j:'R',fem:f});
   /* basketball: orange body with black seams (all parts bounce together) */
   const bx=.32,by=.5,bz=.42,B=.2,K='#241208';
   L.push({p:[bx,by,bz],s:[B,B,B],c:'#ff8a2a',bn:.2,tp:.88});
@@ -156,7 +200,7 @@ M.kidball=()=>{const L=human({coat:'#2b6fd6',pant:'#222',hair:'#111',hat:'cap',h
   L.push({p:[bx,by,bz],s:[.026,B,B+.012],c:K,bn:.2});
   L.push({p:[bx,by,bz],s:[B+.012,B,.026],c:K,bn:.2});
   return{parts:L,sp:[.6,1.0],h:1.1,sc:.62,age:[8,12],arms:{R:-.3,eR:-.5},drib:true,bub:['バスケ!','Swish!','Мяч!','농구!']}};
-M.detective=()=>{const L=human({coat:'#8a7a5a',pant:'#2a2620',long:true,hat:'fedora',hatC:'#4a3a2a',armR:'#8a7a5a',j:'R'});
+M.detective=(f)=>{const L=human({coat:f?'#6a5a7a':'#8a7a5a',pant:'#2a2620',long:true,hat:'fedora',hatC:'#4a3a2a',armR:f?'#6a5a7a':'#8a7a5a',j:'R',fem:f,hair:'#4a2a1a'});
   hold('R',.3,1.48,[{dy:.1,dz:.02,w:.16,h:.22,d:.03,c:'#e8e4d0'},{dy:.2,dz:.03,w:.12,h:.02,d:.01,c:'#19e3ff',e:true}],'f').forEach(q=>L.push(q));
   L.push({p:[0,1.44,.12],s:[.2,.04,.02],c:'#19e3ff',e:true});
   return{parts:L,sp:[.6,1.0],h:1.9,det:true,arms:{R:0,eR:-1.57},gk:'L',bub:['Seen this face?','この顔を?','Вы видели?','본 적 있나요?','هل رأيته؟','¿La viste?']}};
@@ -169,7 +213,7 @@ M.sage=()=>{const L=[];
   L.push({p:[0,.05,0],s:[.66,1.3,.44],c:'#4f6a8c',tp:.62});L.push({p:[0,1.3,0],s:[.5,.2,.32],c:'#4f6a8c',tp:.8});
   L.push({p:[-.36,.9,0],s:[.12,.55,.14],c:'#4f6a8c',ak:'L'});
   arm('R',.36,1.45,'#4f6a8c',{skin:'#d8b090'}).forEach(q=>L.push(q));
-  L.push({p:[0,1.45,0],s:[.22,.26,.22],c:'#d8b090',tp:.82});L.push({p:[0,1.62,0],s:[.32,.14,.32],c:'#4f6a8c',tp:.8});
+  L.push({p:[0,1.45,0],s:[.22,.26,.22],c:'#d8b090',tp:.82});L.push({p:[0,1.62,0],s:[.32,.14,.32],c:'#4f6a8c',tp:.8});if(CY)cyHead(L,1.55,0);
   L.push({p:[0,1.12,.13],s:[.2,.42,.08],c:'#f2f2f6',tp:.4});L.push({p:[0,1.62,.12],s:[.22,.04,.04],c:'#f2f2f6'});
   /* staff planted on the ground, held in the right hand */
   hold('R',.36,1.45,[{dy:-.13,w:.045,h:1.96,d:.045,c:'#6a4a2a'},{dy:.93,w:.15,h:.15,d:.15,c:'#19e3ff',e:true}],'f').forEach(q=>L.push(q));
@@ -178,12 +222,12 @@ M.sageF=()=>{const L=[];
   L.push({p:[0,.05,0],s:[.7,1.25,.46],c:'#7a4f8a',tp:.6});L.push({p:[0,1.25,0],s:[.56,.22,.34],c:'#a07ab0',tp:.8});
   L.push({p:[-.36,.9,0],s:[.12,.55,.14],c:'#7a4f8a',ak:'L'});
   arm('R',.36,1.45,'#7a4f8a',{skin:'#c89a78'}).forEach(q=>L.push(q));
-  L.push({p:[0,1.42,0],s:[.22,.26,.22],c:'#c89a78',tp:.82});L.push({p:[0,1.62,0],s:[.26,.1,.26],c:'#f2f2f6',tp:.85});L.push({p:[0,1.72,-.03],s:[.14,.12,.14],c:'#f2f2f6'});
+  L.push({p:[0,1.42,0],s:[.22,.26,.22],c:'#c89a78',tp:.82});L.push({p:[0,1.62,0],s:[.26,.1,.26],c:'#f2f2f6',tp:.85});L.push({p:[0,1.72,-.03],s:[.14,.12,.14],c:'#f2f2f6'});if(CY)cyHead(L,1.5,0);
   L.push({p:[0,1.52,.12],s:[.2,.05,.03],c:'#ffb347',e:true});
   /* lantern cane */
   hold('R',.36,1.45,[{dy:-.5,w:.04,h:1.1,d:.04,c:'#6a4a2a'},{dy:.14,w:.13,h:.2,d:.13,c:'#ffb347',e:true}],'f').forEach(q=>L.push(q));
   return{parts:L,sp:[0,0],h:2.0,stat:true,age:[84,420],arms:{R:0,eR:-1.57},gk:'L',bub:['Ah…','あらあら','Ох…','어이구']}};
-M.kidrun=()=>{const L=human({coat:'#ffd42a',pant:'#2a3a6a',hair:'#3a2418',legSw:1.1,armSw:1.0,legW:.18});
+M.kidrun=(f)=>{const L=human({coat:f?'#ff7ab6':'#ffd42a',pant:'#2a3a6a',hair:'#3a2418',legSw:1.1,armSw:1.0,legW:.18,fem:f});
   L.push({p:[0,.9,-.17],s:[.26,.3,.1],c:'#ffd42a'});
   return{parts:L,sp:[5,6.5],h:1.1,sc:.62,age:[7,11],run:true,bub:['速っ!','Zoom!','Бегу!','달려!']}};
 
@@ -294,5 +338,6 @@ function bubble(c,x,y,text,s,kind){
   }
   c.restore();
 }
-g.LP={hex,human,seated,MODELS:M,compile,build,drawEnt,bubble};
+function make(name,fem,cy){CY=!!cy;CYC=['#19e3ff','#ff2e88','#3dff9a','#ffb347'][Math.floor(Math.random()*4)];try{return M[name](fem)}finally{CY=false}}
+g.LP={hex,human,seated,make,MODELS:M,compile,build,drawEnt,bubble};
 })(typeof window!=='undefined'?window:globalThis);
