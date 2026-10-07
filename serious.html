@@ -6,30 +6,57 @@
 <title>Ejovwo Obahor | Computer Science Student</title>
 <meta name="description" content="Ejovwo Obahor: computer science student in Toronto. Web, canvas graphics and audio programming.">
 <style>
-:root{--bg:#f7f6f2;--fg:#17171c;--mut:#5b5b66;--line:#dcdad2;--acc:#1b4fd8;--card:#fff}
-@media (prefers-color-scheme:dark){:root{--bg:#121216;--fg:#ececf1;--mut:#a0a0ad;--line:#2a2a33;--acc:#8fb0ff;--card:#1a1a20}}
+@view-transition{navigation:auto}
+:root{--bg:#f7f6f2;--fg:#17171c;--mut:#5b5b66;--line:#dcdad2;--acc:#1b4fd8;--acc2:#7c5cff;--card:#fff;--shadow:0 6px 24px rgba(20,20,40,.07)}
+@media (prefers-color-scheme:dark){:root{--bg:#121216;--fg:#ececf1;--mut:#a0a0ad;--line:#2a2a33;--acc:#8fb0ff;--acc2:#a58bff;--card:#1a1a20;--shadow:0 6px 24px rgba(0,0,0,.35)}}
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;animation:pagein .6s ease both}
+@keyframes pagein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 a{color:var(--acc)}
-.wrap{max-width:760px;margin:0 auto;padding:0 20px}
-header{border-bottom:1px solid var(--line)}
-header .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:14px;padding-bottom:14px;flex-wrap:wrap}
-nav a{margin-right:18px;text-decoration:none;color:var(--mut);font-size:15px}
-nav a:hover{color:var(--fg)}
-.fun{font:600 14px system-ui,sans-serif;letter-spacing:.06em;text-decoration:none;color:#fff;background:linear-gradient(90deg,#ff2e88,#7c5cff);padding:8px 16px;border-radius:999px}
-.fun:hover,.fun:focus-visible{filter:brightness(1.12);outline:2px solid var(--fg);outline-offset:2px}
-h1{font-size:2.2rem;line-height:1.15;margin:44px 0 6px}
-.lead{color:var(--mut);margin:0 0 8px;font-size:1.1rem}
-h2{font-size:1.15rem;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin:44px 0 12px;border-top:1px solid var(--line);padding-top:24px}
+.wrap{max-width:780px;margin:0 auto;padding:0 22px}
+header{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:12px;padding-bottom:12px;flex-wrap:wrap}
+nav a{margin-right:6px;text-decoration:none;color:var(--mut);font-size:15px;padding:6px 10px;border-radius:8px;transition:color .25s,background .25s}
+nav a:hover{color:var(--fg);background:color-mix(in srgb,var(--fg) 7%,transparent)}
+nav a.on{color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,transparent)}
+.fun{font:600 14px system-ui,sans-serif;letter-spacing:.08em;text-decoration:none;color:#fff;background:linear-gradient(90deg,#ff2e88,#7c5cff);padding:9px 18px;border-radius:999px;transition:transform .25s,box-shadow .25s}
+.fun:hover,.fun:focus-visible{transform:translateY(-2px);box-shadow:0 8px 22px rgba(124,92,255,.4);outline:none}
+.hero{display:grid;grid-template-columns:auto 1fr;gap:34px;align-items:center;padding:56px 0 18px}
+.photo{position:relative;width:168px;height:168px;border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--acc2));padding:4px;box-shadow:var(--shadow)}
+.photo .in{width:100%;height:100%;border-radius:50%;background:var(--card);display:grid;place-items:center;overflow:hidden;position:relative;color:var(--mut);text-align:center}
+.photo .ph{font:700 44px/1 system-ui,sans-serif;letter-spacing:.04em;color:var(--acc)}
+.photo .ph small{display:block;font:500 11px/1.3 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin-top:6px}
+.photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+h1{font-size:clamp(2rem,5vw,2.9rem);line-height:1.1;margin:0 0 8px;letter-spacing:-.01em}
+.lead{color:var(--mut);margin:0 0 18px;font-size:1.12rem}
+.cta{display:flex;flex-wrap:wrap;gap:10px}
+.btn{display:inline-block;text-decoration:none;font:600 15px system-ui,sans-serif;padding:10px 18px;border-radius:10px;border:1px solid var(--line);color:var(--fg);background:var(--card);transition:transform .25s,border-color .25s,box-shadow .25s}
+.btn:hover{transform:translateY(-2px);border-color:var(--acc);box-shadow:var(--shadow)}
+.btn.p{background:var(--acc);border-color:var(--acc);color:var(--bg)}
+section{margin-top:56px}
+h2{font-size:.95rem;text-transform:uppercase;letter-spacing:.14em;color:var(--mut);margin:0 0 16px;display:flex;align-items:center;gap:14px}
+h2::after{content:"";flex:1;height:1px;background:var(--line)}
 .chips{display:flex;flex-wrap:wrap;gap:8px;padding:0;margin:0;list-style:none}
-.chips li{border:1px solid var(--line);background:var(--card);padding:4px 12px;border-radius:999px;font-size:15px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin:14px 0}
-.card h3{margin:0 0 4px;font-size:1.1rem}
+.chips li{border:1px solid var(--line);background:var(--card);padding:5px 14px;border-radius:999px;font-size:15px;transition:transform .2s,border-color .2s}
+.chips li:hover{transform:translateY(-2px);border-color:var(--acc)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:14px 0;transition:transform .3s,box-shadow .3s,border-color .3s}
+.card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:color-mix(in srgb,var(--acc) 40%,var(--line))}
+.card h3{margin:0 0 4px;font-size:1.12rem}
 .card .meta{color:var(--mut);font-size:14px;margin:0 0 8px}
 .card ul{margin:8px 0 0;padding-left:20px}
-.todo{border:1px dashed var(--line);color:var(--mut);padding:10px 14px;border-radius:8px;font-size:15px;margin-top:12px}
-footer{margin:60px 0 40px;color:var(--mut);font-size:14px}
+.card li{margin:4px 0}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cols .card{margin:0}
+.todo{border:1px dashed var(--line);color:var(--mut);padding:10px 14px;border-radius:10px;font-size:15px;margin-top:12px}
+.note{color:var(--mut);font-size:15px;margin:12px 0 0}
+footer{margin:72px 0 44px;color:var(--mut);font-size:14px}
+/* sections ease in as they scroll into view */
+.rv{opacity:0;transform:translateY(22px);transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1)}
+.rv.in{opacity:1;transform:none}
+.rv.d1{transition-delay:.08s}.rv.d2{transition-delay:.16s}
+@media (max-width:640px){.hero{grid-template-columns:1fr;justify-items:center;text-align:center;padding-top:36px}.cta{justify-content:center}.cols{grid-template-columns:1fr}nav a{padding:6px 7px;font-size:14px}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}body{animation:none}.rv{opacity:1;transform:none;transition:none}*{transition:none!important}}
 </style>
 </head>
 <body>
@@ -40,43 +67,80 @@ footer{margin:60px 0 40px;color:var(--mut);font-size:14px}
   </div>
 </header>
 <main class="wrap">
-  <h1>Ejovwo Obahor</h1>
-  <p class="lead">Computer science student in Toronto, Canada.</p>
-
-  <h2 id="about">About</h2>
-  <p>I build interactive software for the browser: graphics, audio and small simulations. I like writing things from first principles, and I would rather understand the rendering loop than import a library to hide it. I am looking to apply that approach to larger, collaborative projects.</p>
-
-  <h2 id="education">Education</h2>
-  <div class="card">
-    <h3>Computer Science</h3>
-    <p class="meta">Toronto, Ontario</p>
-    <div class="todo">School, program and expected graduation year to be added.</div>
+  <div class="hero">
+    <div class="photo" aria-label="Portrait placeholder">
+      <div class="in">
+        <div class="ph">EO<small>photo goes here</small></div>
+        <img src="photo.jpg" alt="Portrait of Ejovwo Obahor" onerror="this.remove()">
+      </div>
+    </div>
+    <div>
+      <h1>Ejovwo Obahor</h1>
+      <p class="lead">Computer science student in Toronto, Canada. I build interactive software for the browser: graphics, audio and small simulations.</p>
+      <div class="cta"><a class="btn p" href="#projects">See my work</a><a class="btn" href="https://github.com/Jowo66">GitHub</a><a class="btn" href="#contact">Contact</a></div>
+    </div>
   </div>
 
-  <h2 id="skills">Skills</h2>
-  <ul class="chips">
-    <li>JavaScript</li><li>HTML</li><li>CSS</li><li>Canvas 2D graphics</li><li>Web Audio API</li><li>Git and GitHub</li><li>Python</li><li>Linux</li>
-  </ul>
-  <p style="color:var(--mut);font-size:15px;margin-top:10px">JavaScript, HTML, CSS, Canvas and Web Audio are demonstrated in the project below. Python, Linux and course work to be confirmed.</p>
+  <section id="about" class="rv">
+    <h2>About me</h2>
+    <p>I am a computer science student who learns by building. I would rather understand the rendering loop, the audio graph or the scheduler than import a library to hide it, and most of what I know came from making something work end to end and then fixing what was wrong with it.</p>
+    <div class="cols">
+      <div class="card"><h3>What I enjoy</h3><ul><li>Graphics and creative coding</li><li>Generative music and sound design</li><li>Simulations with lots of small moving parts</li></ul></div>
+      <div class="card"><h3>Outside of code</h3><ul><li>House music, from soul to latin to afro</li><li>Cyberpunk worlds and city design</li><li>Folklore and names from many cultures</li></ul></div>
+    </div>
+    <p class="note">I am looking for opportunities to apply this approach to larger, collaborative projects: internships, co-ops and open source.</p>
+  </section>
 
-  <h2 id="projects">Projects</h2>
-  <article class="card">
-    <h3>Neo-Jowo OS (this portfolio, in its playful form)</h3>
-    <p class="meta">JavaScript, Canvas 2D, Web Audio API. No frameworks, no build step, no external assets. Hosted on GitHub Pages.</p>
-    <ul>
-      <li>A custom flat-shaded low-poly 3D renderer on a 2D canvas: boxes with taper, jointed limbs, painter's-algorithm sorting, fog and lighting.</li>
-      <li>A generative house-music synthesiser using the Web Audio API: seeded tracks across four styles (club, soul, latin and afro house), with drums, bass and chord voices built from oscillators and filtered noise.</li>
-      <li>Agent simulations: alley inhabitants with small state machines (walking, arguing, shopping, fleeing), a nightclub crowd with a moshpit and a dance-battle mode, and an isometric district map.</li>
-      <li>A window manager, a persistent playlist stored locally, and a day and night mode.</li>
+  <section id="education" class="rv">
+    <h2>Education</h2>
+    <div class="card">
+      <h3>Computer Science</h3>
+      <p class="meta">Toronto, Ontario</p>
+      <div class="todo">School, program and expected graduation year to be added.</div>
+    </div>
+  </section>
+
+  <section id="skills" class="rv">
+    <h2>Skills</h2>
+    <ul class="chips">
+      <li>JavaScript</li><li>HTML</li><li>CSS</li><li>Canvas 2D graphics</li><li>Web Audio API</li><li>Git and GitHub</li><li>Python</li><li>Linux</li>
     </ul>
-    <p style="margin:10px 0 0"><a href="https://github.com/Jowo66/jowo66.github.io">Source on GitHub</a> &middot; <a href="index.html">Open the live version</a></p>
-  </article>
-  <div class="todo">More projects, with repository links, to be added.</div>
+    <p class="note">JavaScript, HTML, CSS, Canvas and Web Audio are demonstrated in the project below. Python, Linux and course work to be confirmed.</p>
+  </section>
 
-  <h2 id="contact">Contact</h2>
-  <p><a href="https://github.com/Jowo66">github.com/Jowo66</a></p>
-  <div class="todo">Email and LinkedIn to be added.</div>
+  <section id="projects" class="rv">
+    <h2>Projects</h2>
+    <article class="card">
+      <h3>Neo-Jowo OS (this portfolio, in its playful form)</h3>
+      <p class="meta">JavaScript, Canvas 2D, Web Audio API. No frameworks, no build step, no external assets. Hosted on GitHub Pages.</p>
+      <ul>
+        <li>A custom flat-shaded low-poly 3D renderer on a 2D canvas: boxes with taper, jointed limbs, painter's-algorithm sorting, fog and lighting.</li>
+        <li>A generative house-music synthesiser using the Web Audio API: seeded tracks across four styles (club, soul, latin and afro house), with drums, bass and chord voices built from oscillators and filtered noise.</li>
+        <li>Agent simulations: alley inhabitants with small state machines (walking, arguing, shopping, fleeing), a nightclub crowd with a moshpit and a dance-battle mode, and an isometric district map.</li>
+        <li>A window manager, a persistent playlist stored locally, and a day and night mode.</li>
+      </ul>
+      <p style="margin:12px 0 0"><a href="https://github.com/Jowo66/jowo66.github.io">Source on GitHub</a> &middot; <a href="index.html">Open the live version</a></p>
+    </article>
+    <div class="todo">More projects, with repository links, to be added.</div>
+  </section>
+
+  <section id="contact" class="rv">
+    <h2>Contact</h2>
+    <p><a href="https://github.com/Jowo66">github.com/Jowo66</a></p>
+    <div class="todo">Email and LinkedIn to be added.</div>
+  </section>
 </main>
 <footer class="wrap">&copy; Ejovwo Obahor &middot; <a href="classic.html">Classic site</a></footer>
+<script>
+(function(){
+  var rv=document.querySelectorAll('.rv'),links=[].slice.call(document.querySelectorAll('nav a'));
+  if(!('IntersectionObserver' in window)){rv.forEach(function(e){e.classList.add('in')});return}
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.12});
+  rv.forEach(function(e){io.observe(e)});
+  var secs=links.map(function(a){return document.querySelector(a.getAttribute('href'))});
+  var so=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id)})}})},{rootMargin:'-40% 0px -55% 0px'});
+  secs.forEach(function(e){if(e)so.observe(e)});
+})();
+</script>
 </body>
 </html>
