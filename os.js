@@ -594,6 +594,27 @@ function initMap(win){
       }
       b._s=s;
     });
+    /* the queue out of the nightclub door, shuffling forward */
+    {
+      const cl=B[0],dp=iso(3,1.78,0),dq=iso(3,2.22,0);
+      c.fillStyle=Math.floor(t*3)%9?'#ff2e88':'#ffe14a';
+      poly([iso(3,1.78,0),iso(3,2.22,0),iso(3,2.22,10),iso(3,1.78,10)],c.fillStyle,'#000');
+      const n=7+Math.floor(1.5+1.5*Math.sin(t*.15)),sh=(t*.35)%1;
+      for(let i=n;i>=0;i--){
+        const gy=1.62-(i-sh)*.2;if(gy<.1)continue;
+        const p=iso(3.32+Math.sin(i*5)*.04,gy,0),fem=(i*7)%3===0,col=['#ff2e88','#19e3ff','#ffb347','#7c5cff','#3dff9a','#e8e8f0'][(i*5)%6];
+        const bob=Math.sin(t*3+i)*.5;
+        c.fillStyle='#07040d';c.fillRect(p[0]-1,p[1]-1+bob*0,3,1);
+        c.fillStyle=col;c.fillRect(p[0]-1,p[1]-4,2,fem?3:3);if(fem)c.fillRect(p[0]-2,p[1]-2,4,1);
+        c.fillStyle='#f0c9a5';c.fillRect(p[0]-1,p[1]-6+bob*.4,2,2);
+        if(i===n)c.globalAlpha=.4;
+        c.globalAlpha=1;
+      }
+      /* velvet rope posts and a bouncer by the door */
+      for(let g=.3;g<=1.7;g+=.35){const p=iso(3.15,g,0);c.fillStyle='#c8a24a';c.fillRect(p[0],p[1]-3,1,3);if(g<1.6){const q=iso(3.15,g+.35,0);c.strokeStyle='#ff2e88';c.beginPath();c.moveTo(p[0],p[1]-3);c.lineTo(q[0],q[1]-3);c.stroke()}}
+      const bp=iso(3.12,2.4,0);c.fillStyle='#0c0c12';c.fillRect(bp[0]-1,bp[1]-6,3,6);c.fillStyle='#ff2e88';c.fillRect(bp[0],bp[1]-5,1,3);
+      c.font='5px "Share Tech Mono",monospace';c.fillStyle='#ffb347';c.textAlign='left';const lp=iso(3.5,.15,0);c.fillText('QUEUE',lp[0]+4,lp[1]);
+    }
     if(hover&&hover._s){
       const all=[].concat(hover._s.top,hover._s.left,hover._s.right);
       const xs=all.map(p=>p[0]),ys=all.map(p=>p[1]-4);

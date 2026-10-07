@@ -128,8 +128,8 @@ footer a{color:var(--cyan)}
         aria-label="Animated low-poly 3D cyberpunk nightclub. A hologram DJ in headphones plays behind a booth between two speaker stacks while a crowd moshes and circles on a pulsing tiled dance floor under lasers."></canvas>
     </div>
     <div class="status" role="status" aria-live="off">
-      <span>In the pit: <b id="who">0</b> &nbsp;&middot;&nbsp; Mode: <b id="mode">pogo</b> &nbsp;&middot;&nbsp; BPM: <b id="bpm">124</b> &nbsp;&middot;&nbsp; Track: <b id="trk">Rain Groove</b> &nbsp;&middot;&nbsp; Drops: <b id="drops">0</b></span>
-      <span class="btns"><button id="shf" type="button" title="Generate a new house track">&#10551; Shuffle</button> <button id="fav" type="button" aria-pressed="false" title="Save this track to your playlist">&#9825; Save</button> <select id="pl" aria-label="Your playlist"><option value="">Playlist (0)</option></select> <button id="snd" type="button" aria-pressed="false">&#9834; Sound: off</button> <button id="pause" type="button">Pause</button></span>
+      <span>In the club: <b id="who">0</b>/28 &nbsp;&middot;&nbsp; Mode: <b id="mode">pogo</b> &nbsp;&middot;&nbsp; BPM: <b id="bpm">124</b> &nbsp;&middot;&nbsp; Track: <b id="trk">Rain Groove</b> &nbsp;&middot;&nbsp; Drops: <b id="drops">0</b></span>
+      <span class="btns"><button id="hype" type="button" title="Bring one more person into the club">&#128293; Hype</button> <button id="shf" type="button" title="Generate a new house track">&#10551; Shuffle</button> <button id="fav" type="button" aria-pressed="false" title="Save this track to your playlist">&#9825; Save</button> <select id="pl" aria-label="Your playlist"><option value="">Playlist (0)</option></select> <button id="snd" type="button" aria-pressed="false">&#9834; Sound: off</button> <button id="pause" type="button">Pause</button></span>
     </div>
   </div>
 
@@ -228,14 +228,24 @@ function bake(){
 const SKIN=['#f2c9a5','#e0a981','#c68863','#9a6240','#6d4430','#4a2d22','#9fd6c6','#c9b6e8'];
 const HAIR=['#1a1423','#ff2e88','#27e8ff','#ffb347','#7c5cff','#e8e8e8','#35d07f','#c0392b'];
 const COAT=['#2b3a67','#5b2a86','#8c1d4f','#1f6f78','#7a4a1e','#3a3a46','#a8324a','#2d5a3d','#161320','#d6246e'];
-const walkParts=l=>LP.compile(LP.human({coat:l.coat,pant:l.pant,skin:l.skin,hair:l.hair,hat:l.hat}));
-function newLook(){return{skin:pick(SKIN),hair:pick(HAIR),coat:pick(COAT),pant:pick(['#14101e','#262033','#1d2b3a','#2a1a36']),hat:pick([null,null,null,'cap'])}}
+const COATF=['#d6246e','#7c5cff','#19c9d6','#ff9f1c','#2ec27e','#c0392b','#e8e8f0','#ff2e88'];
+function walkParts(l){
+  const L=LP.human({coat:l.coat,pant:l.pant,skin:l.skin,hair:l.hair,hat:l.hat,long:l.fem});
+  if(l.fem){
+    if(l.bun)L.push(box(0,1.82,-.08,.16,.16,.16,l.hair));
+    else L.push(box(0,1.1,-.13,.27,.66,.1,l.hair,{tp:.85}));
+    L.push(box(-.14,1.48,.08,.03,.08,.03,'#ffb347',{e:true}),box(.14,1.48,.08,.03,.08,.03,'#ffb347',{e:true}));
+  }
+  return LP.compile(L);
+}
+function newLook(){const fem=Math.random()<.5;return{fem,bun:Math.random()<.35,skin:pick(SKIN),hair:pick(HAIR),coat:fem?pick(COATF):pick(COAT),pant:pick(['#14101e','#262033','#1d2b3a','#2a1a36']),hat:fem?null:pick([null,null,null,'cap'])}}
 const BANGS=['ドン!','BAM!','OOF!','쾅!','БАМ!','¡PUM!','Ewo!','OI!','ぐっ','AIE!'];
 const PIT={x:0,z:6.6};
-let dancers=[],edge=[],mode='pogo',modeT=6,spinDir=1,bursts=[],drops=0,flash=0;
+const CAP=28,QUOTA=Math.round(CAP*.3),DOOR={x:4.95,z:11.2};
+let dancers=[],edge=[],bn=null,sweeping=false,mode='pogo',modeT=6,spinDir=1,bursts=[],drops=0,flash=0;
 function mkDancer(i,isEdge){
   const look=newLook(),a=Math.random()*TAU,r=Math.sqrt(Math.random())*1.9;
-  const d={look,x:PIT.x+Math.cos(a)*r,z:PIT.z+Math.sin(a)*r*.8,vx:0,vz:0,ang:a,rad:.7+Math.random()*1.3,seed:Math.random()*9,lunge:0,tgt:null,nextL:rnd(.5,3),spin:0,e:null};
+  const d={look,x:PIT.x+Math.cos(a)*r,z:PIT.z+Math.sin(a)*r*.8,vx:0,vz:0,ang:a,rad:.7+Math.random()*1.3,seed:Math.random()*9,lunge:0,tgt:null,nextL:rnd(.5,3),spin:0,e:null,state:'dance',alpha:1};
   if(isEdge){d.x=(Math.random()<.5?-1:1)*rnd(3.6,5.3);d.z=rnd(4.3,9.3);d.home=[d.x,d.z]}
   d.e=ent(walkParts(look),d.x,d.z,{sc:rnd(.95,1.06),yaw:rnd(0,TAU)});
   return d;
@@ -248,8 +258,10 @@ function updCrowd(dt){
     if(mode==='circle')spinDir=Math.random()<.5?-1:1;modeT=mode==='circle'?rnd(5,8):rnd(7,12);
   }
   const jump=Math.abs(Math.sin(beat*Math.PI));
+  const live=dancers.filter(o=>o.state==='dance');
   dancers.forEach(d=>{
     const e=d.e;e.clock=time;
+    if(d.state!=='dance'){movers(d,dt,jump);return}
     if(mode==='circle'){
       d.ang+=dt*1.5*spinDir*(1.2-d.rad*.25);
       const tx=PIT.x+Math.cos(d.ang)*(d.rad+.35),tz=PIT.z+Math.sin(d.ang)*(d.rad+.35)*.75;
@@ -258,13 +270,13 @@ function updCrowd(dt){
     }else{
       /* pogo mosh: spring to the pit, push apart, lunge at neighbours */
       let ax=(PIT.x-d.x)*1.1,az=(PIT.z-d.z)*1.1;
-      dancers.forEach(o=>{if(o===d)return;const dx=d.x-o.x,dz=d.z-o.z,q=Math.hypot(dx,dz);if(q<.62&&q>.001){ax+=dx/q*(.62-q)*14;az+=dz/q*(.62-q)*14}});
+      live.forEach(o=>{if(o===d)return;const dx=d.x-o.x,dz=d.z-o.z,q=Math.hypot(dx,dz);if(q<.62&&q>.001){ax+=dx/q*(.62-q)*14;az+=dz/q*(.62-q)*14}});
       ax+=Math.sin(time*2.1+d.seed)*1.4;az+=Math.cos(time*1.7+d.seed*1.3)*1.4;
       d.nextL-=dt;
-      if(d.lunge>0){d.lunge-=dt;if(d.tgt){const dx=d.tgt.x-d.x,dz=d.tgt.z-d.z,q=Math.hypot(dx,dz);
+      if(d.lunge>0){d.lunge-=dt;if(d.tgt&&d.tgt.state==='dance'){const dx=d.tgt.x-d.x,dz=d.tgt.z-d.z,q=Math.hypot(dx,dz);
           if(q>.01){ax+=dx/q*40;az+=dz/q*40;e.yaw=Math.atan2(dx,dz)}
           if(q<.52&&!d.hit){d.hit=true;const t=d.tgt;t.vx+=dx/(q||1)*4.2;t.vz+=dz/(q||1)*4.2;t.spin=.5;t.e.arms.L=-2.8;burst((d.x+t.x)/2,(d.z+t.z)/2);d.lunge=Math.min(d.lunge,.08)}}}
-      else if(d.nextL<=0){d.tgt=pick(dancers.filter(o=>o!==d));d.lunge=.34;d.nextL=rnd(1.2,3.6);d.hit=false}
+      else if(d.nextL<=0){d.tgt=pick(live.filter(o=>o!==d))||null;d.lunge=.34;d.nextL=rnd(1.2,3.6);d.hit=false}
       d.vx=(d.vx+ax*dt)*Math.pow(.04,dt);d.vz=(d.vz+az*dt)*Math.pow(.04,dt);
       d.x+=d.vx*dt;d.z+=d.vz*dt;
       if(d.lunge<=0){e.yaw+=Math.sin(time*.9+d.seed)*dt*.8}
@@ -276,9 +288,60 @@ function updCrowd(dt){
     e.arms.L=-2.5+Math.sin(beat*Math.PI*2+d.seed)*.5;e.arms.R=-2.6+Math.cos(beat*Math.PI*2+d.seed*1.3)*.5;
     if(d.spin>0)e.arms.L=-2.8;
   });
-  edge.forEach(d=>{const e=d.e;e.clock=time;e.x=d.home[0];e.z=d.home[1]+Math.sin(time*.7+d.seed)*.15;e.elev=jump*.16;e.ph+=dt*2.4;e.yaw=Math.PI*.5*(d.home[0]<0?1:-1)*.5+Math.sin(time+d.seed)*.5;
+  edge.forEach(d=>{const e=d.e;e.clock=time;if(d.state!=='dance'){movers(d,dt,jump);return}e.x=d.home[0];e.z=d.home[1]+Math.sin(time*.7+d.seed)*.15;e.elev=jump*.16;e.ph+=dt*2.4;e.yaw=Math.PI*.5*(d.home[0]<0?1:-1)*.5+Math.sin(time+d.seed)*.5;
     e.arms.L=-1.2+Math.sin(beat*Math.PI*2+d.seed)*1.3;e.arms.R=-1.0+Math.sin(beat*Math.PI*2+d.seed+1.5)*1.1});
   bursts.forEach(b=>b.t+=dt);bursts=bursts.filter(b=>b.t<.9);
+  dancers=dancers.filter(d=>!d.dead);edge=edge.filter(d=>!d.dead);
+  updBouncer(dt);
+}
+/* ---------- hype, capacity and the bouncer ---------- */
+const OUTS=['OUT!','出て行け!','ВЫХОД!','나가!','خارج!','¡FUERA!','Biko, no!','AWW!'];
+const total=()=>dancers.length+edge.length;
+function stepTo(o,tx,tz,sp,dt){const dx=tx-o.x,dz=tz-o.z,d=Math.hypot(dx,dz);if(d>.05){const k=Math.min(1,sp*dt/d);o.x+=dx*k;o.z+=dz*k;o.yaw=Math.atan2(dx,dz);o.ph+=dt*sp*3.6}return d}
+/* newcomers walk in from the door; escorted guests are marched out of it */
+function movers(d,dt,jump){
+  const e=d.e;e.clock=time;
+  if(d.state==='enter'){
+    d.alpha=Math.min(1,d.alpha+dt*1.5);
+    if(stepTo(e,d.tx,d.tz,2.3,dt)<.12){d.state='dance';d.x=e.x;d.z=e.z;d.vx=d.vz=0;d.home=d.home?[e.x,e.z]:null}
+    e.elev=0;e.arms.L=-2.2+Math.sin(time*9)*.4;e.arms.R=-2.2;
+  }else if(d.state==='out'){
+    const dist=stepTo(e,DOOR.x,DOOR.z-.05,2.0,dt);
+    d.alpha=clamp((dist-.1)/1.3,0,1);if(dist<.2)d.dead=true;
+    e.elev=0;e.arms.L=-.4+Math.sin(time*10)*.6;e.arms.R=-.2-Math.sin(time*10)*.6;
+  }
+}
+function hype(){
+  flash=Math.max(flash,.35);
+  if(total()>=CAP)return 'full';
+  const d=mkDancer(0);d.state='enter';d.alpha=0;d.e.x=DOOR.x;d.e.z=DOOR.z-.1;d.e.yaw=Math.PI;
+  d.tx=PIT.x+rnd(-1.6,1.6);d.tz=PIT.z+rnd(-1,1);d.x=d.e.x;d.z=d.e.z;dancers.push(d);burst(DOOR.x,DOOR.z-.4,pick(['WOO!','乾杯!','УРА!','야호!','¡VAMOS!','Ayo!']));return 'ok';
+}
+const BN_PARTS=LP.compile(LP.human({coat:'#0c0c12',pant:'#0c0c12',skin:'#7a4a30',hair:'#0c0c12'}).concat([
+  box(0,1.36,0,.66,.14,.3,'#0c0c12'),box(0,.92,.14,.3,.5,.03,'#ff2e88',{e:true}),box(0,1.56,.12,.25,.06,.04,'#000'),box(.13,1.5,0,.03,.1,.04,'#27e8ff',{e:true})]));
+function pickVictim(){const pool=dancers.concat(edge).filter(d=>d.state==='dance');return pool.length?pick(pool):null}
+function updBouncer(dt){
+  if(!bn&&!sweeping&&total()>=CAP){
+    sweeping=true;bn={e:ent(BN_PARTS,DOOR.x,DOOR.z-.1,{sc:1.2,yaw:Math.PI}),left:QUOTA,state:'pick',alpha:0,v:null};
+    burst(DOOR.x-.6,DOOR.z-.6,'FULL!');
+  }
+  if(!bn)return;
+  const e=bn.e;e.clock=time;e.elev=0;
+  if(bn.state!=='leave')bn.alpha=Math.min(1,bn.alpha+dt*1.5);
+  if(bn.state==='pick'){bn.v=pickVictim();bn.state=bn.v?'go':'leave'}
+  if(bn.state==='go'){
+    const v=bn.v;if(!v||v.state!=='dance'||v.dead){bn.state='pick';return}
+    e.arms.R=-.3;e.arms.L=-.3;
+    if(stepTo(e,v.e.x,v.e.z-.55,2.6,dt)<.25){v.state='out';v.dying=true;v.e.arms.L=-1;burst(v.e.x,v.e.z,pick(OUTS));bn.state='escort'}
+  }else if(bn.state==='escort'){
+    const v=bn.v;e.arms.R=-1.35;e.arms.L=-.3;
+    const dx=DOOR.x-v.e.x,dz=DOOR.z-v.e.z,L=Math.hypot(dx,dz)||1;
+    stepTo(e,v.e.x-dx/L*.62,v.e.z-dz/L*.62,2.9,dt);e.yaw=Math.atan2(dx,dz);
+    if(v.dead){bn.left--;bn.state=bn.left>0?'pick':'leave'}
+  }else if(bn.state==='leave'){
+    e.arms.R=-.3;bn.alpha=clamp((Math.hypot(DOOR.x-e.x,DOOR.z-e.z)-.1)/1.3,0,1);
+    if(stepTo(e,DOOR.x,DOOR.z-.1,2.2,dt)<.2){bn=null;sweeping=false}
+  }
 }
 
 /* ---------- hologram DJ ---------- */
@@ -420,11 +483,13 @@ function render(){
   items.push({z:DJZ-.05,f:()=>{LP.drawEnt(ctx,ent(BOOTH_PARTS,0,DJZ+.1,{y:FLOOR}),CAM,1)}});
   items.push({z:DJZ-.45,f:()=>{LP.drawEnt(ctx,ent(DESK_PARTS,0,DJZ-.45,{y:BOOTH_Y}),CAM,1);drawDecks()}});
   [-1,1].forEach(sd=>items.push({z:10.2,f:()=>{LP.drawEnt(ctx,ent(SPK_PARTS,sd*4.1,10.2,{}),CAM,1);woofers(sd*4.1,10.2,FLOOR)}}));
-  dancers.concat(edge).forEach(d=>items.push({z:d.e.z,f:()=>LP.drawEnt(ctx,d.e,CAM,1)}));
+  dancers.concat(edge).forEach(d=>items.push({z:d.e.z,f:()=>LP.drawEnt(ctx,d.e,CAM,d.alpha)}));
+  if(bn)items.push({z:bn.e.z,f:()=>LP.drawEnt(ctx,bn.e,CAM,bn.alpha)});
   items.sort((x,y)=>y.z-x.z).forEach(i=>i.f());
   drawLasers();
   bursts.forEach(b=>{const q=P(b.x,FLOOR-1.9-b.t*.5,b.z);ctx.save();ctx.translate(q[0],q[1]);ctx.rotate(b.r);ctx.globalAlpha=Math.max(0,1-b.t/.9);
     ctx.font='800 '+Math.round(F/b.z*.38)+'px '+SERIF;ctx.textAlign='center';ctx.lineWidth=4;ctx.strokeStyle='#000';ctx.strokeText(b.txt,0,0);ctx.fillStyle='#ffe14a';ctx.fillText(b.txt,0,0);ctx.restore()});
+  if(bn){ctx.save();ctx.textAlign='center';ctx.font='800 22px '+SERIF;ctx.fillStyle='#ffe14a';ctx.shadowColor='#ff2e88';ctx.shadowBlur=14;ctx.globalAlpha=.65+.35*Math.sin(time*8);ctx.fillText('CAPACITY \u00b7 \u6e80\u54e1 \u00b7 \u0430\u0448\u0430\u043b\u0442\u0430 \u00b7 SECURITY ESCORTING GUESTS OUT \u00b7 '+bn.left+' TO GO',W/2,H-20);ctx.restore()}
   drawHaze();
   if(flash>0){ctx.fillStyle=`rgba(255,255,255,${flash*.45})`;ctx.fillRect(0,0,W,H)}
   drawGrain();
@@ -437,6 +502,8 @@ let paused=reduce;
 const btn=el('pause'),label=()=>{btn.textContent=paused?'Play':'Pause'};
 btn.onclick=()=>{paused=!paused;label()};label();
 const snd=el('snd');
+const hb=el('hype');
+if(hb)hb.onclick=()=>{const r=hype();hb.textContent=r==='full'?'\u{1F6AB} Full! Security\u2026':'\u{1F525} Hype';if(r==='full')setTimeout(()=>{hb.textContent='\u{1F525} Hype'},1600)};
 const shf=el('shf');
 if(shf)shf.onclick=()=>{if(!AUDIO)return;AUDIO.shuffle();if(!AUDIO.on)AUDIO.toggle()};
 /* ---------- playlist: saved tracks live in this browser (localStorage) ---------- */
@@ -464,7 +531,7 @@ if(document.fonts&&document.fonts.load){document.fonts.load('800 40px "Shippori 
 let last=performance.now(),stat=0;
 function loop(t){
   const dt=Math.min(.05,(t-last)/1000);last=t;
-  if(!paused){update(dt);stat-=dt;if(stat<=0){stat=.5;el('who').textContent=dancers.length;el('mode').textContent=mode;el('drops').textContent=drops;el('bpm').textContent=bpmNow();el('trk').textContent=(AUDIO&&AUDIO.track&&AUDIO.track.name)||'Rain Groove'}}
+  if(!paused){update(dt);stat-=dt;if(stat<=0){stat=.5;el('who').textContent=total();el('mode').textContent=mode;el('drops').textContent=drops;el('bpm').textContent=bpmNow();el('trk').textContent=(AUDIO&&AUDIO.track&&AUDIO.track.name)||'Rain Groove'}}
   render();requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
