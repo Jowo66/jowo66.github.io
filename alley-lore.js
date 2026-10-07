@@ -309,9 +309,10 @@ function body(name,fem,a,def){
   return{cm,kg,sh,sw};
 }
 const clamp2=(v,m)=>Math.max(-m,Math.min(m,v)),clampN=(v,a,b)=>Math.max(a,Math.min(b,v));
+const ftin=cm=>{const t=Math.round(cm/2.54);return Math.floor(t/12)+"'"+(t%12)+'"'};
 function profile(ch){
   const m=ch.myth,def=ch.def,a=ch.agev!=null?ch.agev:age(def,ch.name),b=ch.body,unit=(def&&def.ageUnit)||(AGEB[ch.name]&&AGEB[ch.name][2])||'';
-  return{name:(m?m.first+' '+m.last:'Unknown').toUpperCase(),flags:m?(m.f1===m.f2?m.f1:m.f1+' '+m.f2):'',codes:m?(m.c1===m.c2?[m.c1]:[m.c1,m.c2]):[],age:a+unit,body:b?(b.cm?b.cm+' cm \u00b7 ':'')+b.kg+' kg':'',passion:passion(),genre:genre(),fact:fact(m)};
+  return{name:(m?m.first+' '+m.last:'Unknown').toUpperCase(),flags:m?(m.f1===m.f2?m.f1:m.f1+' '+m.f2):'',codes:m?(m.c1===m.c2?[m.c1]:[m.c1,m.c2]):[],age:a+unit,body:b?(b.cm?ftin(b.cm)+' \u00b7 ':'')+Math.round(b.kg*2.2046)+' lbs':'',passion:passion(),genre:genre(),fact:fact(m)};
 }
 g.Lore={parable,mythName,profile,genre,passion,fact,age,body};
 })(typeof window!=='undefined'?window:globalThis);
