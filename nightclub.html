@@ -228,17 +228,44 @@ function bake(){
 const SKIN=['#f2c9a5','#e0a981','#c68863','#9a6240','#6d4430','#4a2d22','#9fd6c6','#c9b6e8'];
 const HAIR=['#1a1423','#ff2e88','#27e8ff','#ffb347','#7c5cff','#e8e8e8','#35d07f','#c0392b'];
 const COAT=['#2b3a67','#5b2a86','#8c1d4f','#1f6f78','#7a4a1e','#3a3a46','#a8324a','#2d5a3d','#161320','#d6246e'];
-const COATF=['#d6246e','#7c5cff','#19c9d6','#ff9f1c','#2ec27e','#c0392b','#e8e8f0','#ff2e88'];
-function walkParts(l){
-  const L=LP.human({coat:l.coat,pant:l.pant,skin:l.skin,hair:l.hair,hat:l.hat,long:l.fem});
-  if(l.fem){
-    if(l.bun)L.push(box(0,1.82,-.08,.16,.16,.16,l.hair));
-    else L.push(box(0,1.1,-.13,.27,.66,.1,l.hair,{tp:.85}));
-    L.push(box(-.14,1.48,.08,.03,.08,.03,'#ffb347',{e:true}),box(.14,1.48,.08,.03,.08,.03,'#ffb347',{e:true}));
-  }
-  return LP.compile(L);
+const hsl=(h,s,l)=>{s/=100;l/=100;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l),f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));return'#'+[f(0),f(8),f(4)].map(v=>Math.round(v*255).toString(16).padStart(2,'0')).join('')};
+const rcol=()=>hsl(Math.floor(Math.random()*360),70+Math.random()*25,45+Math.random()*20);
+/* a patterned garment is built from thin extra boxes slightly proud of the base, so it shows from front and back */
+function garment(L,kind,y0,h,w,d,c,pat,pc){
+  L.push({p:[0,y0,0],s:[w,h,d],c});
+  if(!pat)return;
+  const W2=w+.014,D2=d+.014;
+  if(pat==='stripes'||pat==='plaid')for(let k=0;k<4;k++)L.push({p:[0,y0+h*(2*k+.5)/8,0],s:[W2,h/8,D2],c:pc});
+  if(pat==='vstripes'||pat==='plaid')for(let k=0;k<4;k++)L.push({p:[-w*.375+k*w*.25,y0,0],s:[w*.07,h,D2],c:pc});
+  if(pat==='polka')for(let k=0;k<7;k++){const x=(Math.random()-.5)*(w-.12),y=y0+.03+Math.random()*(h-.1);[-1,1].forEach(sd=>L.push({p:[x,y,sd*(d/2+.004)],s:[.07,.07,.02],c:pc}))}
 }
-function newLook(){const fem=Math.random()<.5;return{fem,bun:Math.random()<.35,skin:pick(SKIN),hair:pick(HAIR),coat:fem?pick(COATF):pick(COAT),pant:pick(['#14101e','#262033','#1d2b3a','#2a1a36']),hat:fem?null:pick([null,null,null,'cap'])}}
+function femParts(l){
+  const L=[],sk=l.skin,lg=.15;
+  L.push({p:[-.11,0,0],s:[lg,.82,.18],c:sk,sw:.55,ph:0},{p:[.11,0,0],s:[lg,.82,.18],c:sk,sw:.55,ph:Math.PI});
+  if(l.outfit==='crop'){
+    L.push({p:[0,.78,0],s:[.42,.26,.24],c:sk});                       /* bare midriff */
+    garment(L,'top',1.0,.5,.46,.26,l.c1,null);                         /* crop top */
+    garment(L,'skirt',.5,.34,.5,.3,l.c2,l.pat,l.pc);                   /* mini skirt */
+  }else{
+    L.push({p:[0,1.3,0],s:[.44,.2,.25],c:sk});                         /* bare shoulders */
+    garment(L,'bodice',.9,.4,.46,.26,l.c1,l.pat,l.pc);                 /* strapless bodice */
+    garment(L,'skirt',.4,.52,.54,.32,l.c1,l.pat,l.pc);                 /* knee-length skirt */
+  }
+  L.push({p:[-.3,.76,0],s:[.12,.72,.14],c:sk,sw:.5,ph:Math.PI,ak:'L'},{p:[.3,.76,0],s:[.12,.72,.14],c:sk,sw:.5,ph:0,ak:'R'});
+  L.push({p:[0,1.5,0],s:[.22,.26,.22],c:sk,tp:.82},{p:[0,1.74,0],s:[.25,.09,.25],c:l.hair,tp:.9});
+  if(l.bun)L.push({p:[0,1.82,-.08],s:[.16,.16,.16],c:l.hair});else L.push({p:[0,1.1,-.13],s:[.27,.66,.1],c:l.hair,tp:.85});
+  L.push({p:[-.14,1.48,.08],s:[.03,.08,.03],c:'#ffb347',e:true},{p:[.14,1.48,.08],s:[.03,.08,.03],c:'#ffb347',e:true});
+  return L;
+}
+function walkParts(l){
+  if(l.fem)return LP.compile(femParts(l));
+  return LP.compile(LP.human({coat:l.coat,pant:l.pant,skin:l.skin,hair:l.hair,hat:l.hat}));
+}
+function newLook(){
+  const fem=Math.random()<.5,l={fem,bun:Math.random()<.35,skin:pick(SKIN),hair:pick(HAIR),coat:pick(COAT),pant:pick(['#14101e','#262033','#1d2b3a','#2a1a36']),hat:fem?null:pick([null,null,null,'cap'])};
+  if(fem){l.outfit=Math.random()<.5?'crop':'dress';l.c1=rcol();l.c2=rcol();l.pat=Math.random()<.45?pick(['stripes','vstripes','polka','plaid']):null;l.pc=pick(['#ffffff','#111018','#ffe14a',rcol()])}
+  return l;
+}
 const BANGS=['ドン!','BAM!','OOF!','쾅!','БАМ!','¡PUM!','Ewo!','OI!','ぐっ','AIE!'];
 const PIT={x:0,z:6.6};
 const CAP=28,QUOTA=Math.round(CAP*.3),DOOR={x:4.95,z:11.2};
