@@ -159,7 +159,7 @@ tick();setInterval(tick,1000);
   function wall(side,id,z1,z2,zu){
     const x=side*WALL,fog=clamp(1-z1/(SEG*NSEG),0,1);
     const h=hash(id*2+(side>0?1:0));
-    const tone=Math.floor((10+h*14)*(1-dayK)+(150+h*45)*dayK);
+    const tone=Math.floor((10+h*14)*(1-dayK)+(125+h*38)*dayK);
     c.fillStyle=`rgb(${tone+8},${tone},${tone+22})`;
     quad(P(x,TOP,z1),P(x,FLOOR,z1),P(x,FLOOR,z2),P(x,TOP,z2));c.fill();
     /* windows */
@@ -498,7 +498,8 @@ tick();setInterval(tick,1000);
   schedMonster();
   function startMonster(kind){
     if(MON.on)return;
-    const ks=Object.keys(MONS).filter(k=>k!==MON.prev);MON.type=kind&&MONS[kind]?kind:ks[Math.floor(Math.random()*ks.length)];MON.prev=MON.type;MON.on=true;MON.t=0;MON.last=skyClock;BLD.forEach(b=>{b.hit=null});MON.ended=false;
+    const ks=Object.keys(MONS).filter(k=>k!==MON.prev);MON.type=kind&&MONS[kind]?kind:ks[Math.floor(Math.random()*ks.length)];MON.prev=MON.type;
+    if(!dayOn){flashT=0;boltPts=[[0,-.5],[.03,-.3],[-.02,-.15],[.01,-.03]]}MON.on=true;MON.t=0;MON.last=skyClock;BLD.forEach(b=>{b.hit=null});MON.ended=false;
     const a=document.querySelector('.toast');
   }
   function bFactor(b){
@@ -534,18 +535,35 @@ tick();setInterval(tick,1000);
     dust.forEach(d=>{d.t+=dt;d.x+=d.vx*dt;d.y+=d.vy*dt;d.vy+=.01*dt});dust=dust.filter(d=>d.t<d.l);
     if(!MON.on&&skyClock>MON.end+31)BLD.forEach(b=>{b.hit=null});
   }
+  /* every alley gets its own hologram on the distant tower */
+  const LSHAPES=['octa','cube','pyramid','prism','stella','rings'],LTXT=['NJ','OBA','夜','都','電','光','雨','Ω','∞','Ụ','EJ','NEO','7','龍','星','2099','AI'];
+  const LPAL=[['#19e3ff','#ff2e88'],['#3dff9a','#ffb347'],['#7c5cff','#19e3ff'],['#ffb347','#ff3a3a'],['#ff2e88','#f5efe0'],['#19e3ff','#3dff9a'],['#ffd42a','#ff2e88']];
+  let LOGO=null;
+  function newLogo(){const pl=LPAL[Math.floor(Math.random()*LPAL.length)];LOGO={shape:LSHAPES[Math.floor(Math.random()*LSHAPES.length)],txt:LTXT[Math.floor(Math.random()*LTXT.length)],c1:pl[0],c2:pl[1],spin:(Math.random()<.5?-1:1)*(1.1+Math.random()*1.2),tilt:.2+Math.random()*.5}}
+  newLogo();
+  const LG={
+    octa:{V:[[1,0,0],[-1,0,0],[0,1.35,0],[0,-1.35,0],[0,0,1],[0,0,-1]],E:[[0,2],[0,3],[0,4],[0,5],[1,2],[1,3],[1,4],[1,5],[4,2],[4,3],[5,2],[5,3]]},
+    cube:{V:[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]].map(v=>v.map(n=>n*.85)),E:[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]]},
+    pyramid:{V:[[-1,-.9,-1],[1,-.9,-1],[1,-.9,1],[-1,-.9,1],[0,1.6,0]],E:[[0,1],[1,2],[2,3],[3,0],[0,4],[1,4],[2,4],[3,4]]},
+    prism:{V:(()=>{const v=[];for(let k=0;k<6;k++){const a=k*Math.PI/3;v.push([Math.cos(a),-1.1,Math.sin(a)]);v.push([Math.cos(a),1.1,Math.sin(a)])}return v})(),E:(()=>{const e=[];for(let k=0;k<6;k++){const n=(k+1)%6;e.push([2*k,2*n],[2*k+1,2*n+1],[2*k,2*k+1])}return e})()},
+    stella:{V:[[1,1,1],[1,-1,-1],[-1,1,-1],[-1,-1,1],[-1,-1,-1],[-1,1,1],[1,-1,1],[1,1,-1]].map(v=>v.map(n=>n*.85)),E:[[0,1],[0,2],[0,3],[1,2],[1,3],[2,3],[4,5],[4,6],[4,7],[5,6],[5,7],[6,7]]},
+    rings:{V:[],E:[]}
+  };
   function holoLogo(x,y,r,al){
-    const a=skyClock*1.5,ca=Math.cos(a),sa=Math.sin(a),V=[[1,0,0],[-1,0,0],[0,1.35,0],[0,-1.35,0],[0,0,1],[0,0,-1]];
-    const pr=V.map(v=>{const X=v[0]*ca+v[2]*sa,Z=-v[0]*sa+v[2]*ca;return[x+X*r,y-v[1]*r*.9-r*1.4+Z*r*.15]});
-    const E=[[0,2],[0,3],[0,4],[0,5],[1,2],[1,3],[1,4],[1,5],[4,2],[4,3],[5,2],[5,3]];
+    const a=skyClock*LOGO.spin,ca=Math.cos(a),sa=Math.sin(a),ct=Math.cos(LOGO.tilt),st=Math.sin(LOGO.tilt),cy0=y-r*1.4,G=LG[LOGO.shape];
     c.save();c.globalCompositeOperation='lighter';c.globalAlpha=al;
-    const g=c.createLinearGradient(0,y-r*.6,0,y+r*2.5);g.addColorStop(0,'rgba(25,227,255,.35)');g.addColorStop(1,'rgba(25,227,255,0)');
+    const g=c.createLinearGradient(0,y-r*.6,0,y+r*2.5);g.addColorStop(0,LOGO.c1+'59');g.addColorStop(1,LOGO.c1+'00');
     c.fillStyle=g;c.beginPath();c.moveTo(x-r*.3,y-r*.5);c.lineTo(x+r*.3,y-r*.5);c.lineTo(x+r*.9,y+r*2.5);c.lineTo(x-r*.9,y+r*2.5);c.fill();
-    c.strokeStyle='#19e3ff';c.shadowColor='#19e3ff';c.shadowBlur=8;c.lineWidth=Math.max(1,r*.07);
-    c.beginPath();E.forEach(e=>{c.moveTo(pr[e[0]][0],pr[e[0]][1]);c.lineTo(pr[e[1]][0],pr[e[1]][1])});c.stroke();
-    c.strokeStyle='#ff2e88';c.beginPath();c.ellipse(x,y-r*1.4,r*1.4,r*.3,0,0,7);c.stroke();
-    c.shadowBlur=0;c.fillStyle='#bff8ff';c.font=`800 ${Math.round(r*.9)}px "Share Tech Mono",monospace`;c.textAlign='center';c.textBaseline='middle';
-    c.save();c.translate(x,y-r*1.4);c.scale(Math.max(.12,Math.abs(ca)),1);c.fillText('NJ',0,0);c.restore();
+    c.strokeStyle=LOGO.c1;c.shadowColor=LOGO.c1;c.shadowBlur=8;c.lineWidth=Math.max(1,r*.07);
+    if(LOGO.shape==='rings'){
+      for(let k=0;k<3;k++){c.beginPath();c.ellipse(x,cy0,r*1.25*Math.abs(Math.cos(a+k*1.0472)),r*1.25,k*.55-.55+Math.sin(a*.3)*.2,0,7);c.stroke()}
+    }else{
+      const pr=G.V.map(v=>{const X=v[0]*ca+v[2]*sa,Z=-v[0]*sa+v[2]*ca,Y=v[1]*ct-Z*st;return[x+X*r,cy0-Y*r*.9]});
+      c.beginPath();G.E.forEach(e=>{c.moveTo(pr[e[0]][0],pr[e[0]][1]);c.lineTo(pr[e[1]][0],pr[e[1]][1])});c.stroke();
+    }
+    c.strokeStyle=LOGO.c2;c.beginPath();c.ellipse(x,cy0,r*1.45,r*.3,0,0,7);c.stroke();
+    c.shadowBlur=0;c.fillStyle='#e8fbff';const L=[...LOGO.txt].length;c.font=`800 ${Math.round(r*(L>2?.55:.9))}px "Share Tech Mono","Zen Kaku Gothic New",monospace`;c.textAlign='center';c.textBaseline='middle';
+    c.save();c.translate(x,cy0);c.scale(Math.max(.12,Math.abs(ca)),1);c.fillText(LOGO.txt,0,0);c.restore();
     c.restore();
   }
   function drawMonster(mx,base,hh){
@@ -617,9 +635,11 @@ tick();setInterval(tick,1000);
     }
     c.restore();
   }
+  let pendLogo=null;
   function drawSkyline(){
+    pendLogo=null;
     const base=cy+H*.03,span=H*SPAN,k=dayK;
-    const lit=(flashT<.08?1:flashT<.16?.15:flashT<.3?.95:flashT<.9?Math.max(0,.9*(1-(flashT-.3)/.6)):0)*(1-k);
+    const lit=Math.max((flashT<.08?1:flashT<.16?.15:flashT<.3?.95:flashT<.9?Math.max(0,.9*(1-(flashT-.3)/.6)):0),MON.on?.5:0)*(1-k);
     const showAmt=Math.max(.32,k,lit);   /* skyline is dim at night until lightning shows it */
     let mainTop=null;
     for(const b of BLD){
@@ -645,7 +665,7 @@ tick();setInterval(tick,1000);
       if(b.main)mainTop=[x,y-(b.ant?H*.06:0),q];
     }
     /* holographic spinning logo above the tallest tower */
-    if(mainTop&&mainTop[2]>.5){const rep=mainTop[2]<1?Math.random()*.6:1;holoLogo(mainTop[0],mainTop[1]-H*.01,H*.034,(.9-.25*k)*rep)}
+    if(mainTop&&mainTop[2]>.5){const rep=mainTop[2]<1?Math.random()*.6:1;pendLogo=[mainTop[0],mainTop[1]-H*.01,H*.034,.95*rep]}
     /* the monster */
     if(MON.on)drawMon(base);
     /* dust and rubble */
@@ -695,6 +715,8 @@ tick();setInterval(tick,1000);
     /* speed lines while the viewer hurries */
     if(boost>.15){c.strokeStyle='rgba(255,200,230,'+Math.min(.28,boost*.12)+')';c.lineWidth=1.5;c.beginPath();
       for(let i=0;i<18;i++){const a=i/18*Math.PI*2+clock*.2,r0=H*(.25+.1*((i*7)%5)/5),r1=r0+H*.35;c.moveTo(cx+Math.cos(a)*r0*1.5,cy+Math.sin(a)*r0);c.lineTo(cx+Math.cos(a)*r1*1.5,cy+Math.sin(a)*r1)}c.stroke()}
+    if(dayK>.01){c.save();c.globalCompositeOperation='multiply';c.globalAlpha=dayK;c.fillStyle='rgb(160,166,186)';c.fillRect(0,0,W,H);c.restore()}
+    if(pendLogo)holoLogo(pendLogo[0],pendLogo[1],pendLogo[2],pendLogo[3])
     if(pan){c.fillStyle='rgba(6,2,12,'+(Math.sin(Math.PI*pan.t/PAN)*.92)+')';c.fillRect(0,0,W,H)}
   }
   /* a side alley opens off the wall; we will turn into it */
@@ -712,7 +734,7 @@ tick();setInterval(tick,1000);
   for(let i=0;i<4;i++)spawn(true);
   /* turning into a new alley that looks just like this one */
   function swapWorld(){
-    SALT++;alleyNo++;J=null;nextTurn=95+Math.random()*70;scroll=10+Math.random()*60;chars=[];splashes.length=0;closeTerm();
+    SALT++;alleyNo++;newLogo();J=null;nextTurn=95+Math.random()*70;scroll=10+Math.random()*60;chars=[];splashes.length=0;closeTerm();
     for(let i=0;i<4;i++)spawn(true);
     const t=document.querySelector('.toast');if(t){t.textContent='ALLEY '+String(alleyNo).padStart(2,'0')+' · 路地 · '+['زقاق','골목','переулок','σοκάκι','गली'][alleyNo%5];t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
   }
@@ -756,10 +778,14 @@ tick();setInterval(tick,1000);
     if(pinned)return;
     if(hit){if(termCh!==hit)showTerm(hit,false)}else if(termCh)closeTerm();
   });
+  const mbtn=document.getElementById('mon');let cdEnd=0;
+  if(mbtn){const msync=()=>{const left=Math.ceil((cdEnd-performance.now())/1000);mbtn.disabled=left>0||MON.on;mbtn.textContent=MON.on?'\u2604 INCOMING\u2026':left>0?'\u2604 WAIT '+left+'s':'\u2604 MONSTER'};
+    mbtn.addEventListener('click',()=>{if(MON.on||performance.now()<cdEnd)return;startMonster();cdEnd=performance.now()+30000;msync()});
+    setInterval(msync,250);msync()}
   const dbtn=document.getElementById('day');
   if(dbtn){const sync=()=>{dbtn.textContent=dayOn?'\u263E NIGHT':'\u2600 DAY';dbtn.setAttribute('aria-pressed',dayOn?'true':'false');document.documentElement.classList.toggle('day',dayOn)};
     dbtn.addEventListener('click',()=>{dayOn=!dayOn;try{localStorage.setItem('jowo.day',dayOn?'1':'0')}catch(e){}sync();if(reduce){dayK=dayOn?1:0;updSky(0);frame(0)}});sync()}
-  if(/[?&]debug/.test(location.search))window.__alley={couple:spawnCouple,day:v=>{dayOn=v},monster:(k)=>{dayOn=true;dayK=1;startMonster(k)},sky:()=>({dayK,mon:MON.on,t:MON.t,last:MON.last,next:MON.next,clock:skyClock}),bolt:()=>{flashT=0;nextBolt=99;boltPts=[[0,-.5],[.03,-.3],[-.02,-.15],[.01,-.03]]},spawn:spawn,chars:()=>chars,turn:()=>{nextTurn=0},J:()=>J,pan:()=>pan,alleyNo:()=>alleyNo};
+  if(/[?&]debug/.test(location.search))window.__alley={couple:spawnCouple,day:v=>{dayOn=v},monster:(k)=>{dayOn=true;dayK=1;startMonster(k)},logo:()=>LOGO,newLogo:newLogo,sky:()=>({dayK,mon:MON.on,t:MON.t,last:MON.last,next:MON.next,clock:skyClock}),bolt:()=>{flashT=0;nextBolt=99;boltPts=[[0,-.5],[.03,-.3],[-.02,-.15],[.01,-.03]]},spawn:spawn,chars:()=>chars,turn:()=>{nextTurn=0},J:()=>J,pan:()=>pan,alleyNo:()=>alleyNo};
   let last=0;
   function loop(t){
     const dt=Math.min((t-last)/1000||0,.05);last=t;
@@ -781,7 +807,7 @@ const apps={
   skills:{jp:'技',t:'SKILLS',t2:'навыки · 技能 · कौशल',w:420},
   map:{jp:'地',t:'DISTRICT MAP',t2:'خريطة · 지도 · Карта',w:null,init:initMap,x:.4,y:80,w:600},
   contact:{jp:'連',t:'CONTACT',t2:'связь · 連絡 · اتصال',w:380},
-  club:{jp:'踊',t:'THE RUSTY KOI NIGHTCLUB',t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007f',cls:'app-win',ar:1.5}
+  club:{jp:'踊',t:'THE RUSTY KOI NIGHTCLUB',t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007g',cls:'app-win',ar:1.5}
 };
 const open={};let zTop=100,n=0;
 function openApp(id){

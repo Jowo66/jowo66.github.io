@@ -147,3 +147,5 @@ a{color:var(--cyan)}
 @media (max-width:760px){.hud .snd{font-size:15px;padding:0 6px}}
 
 .tt .flg{height:.85em;width:auto;margin-left:4px;vertical-align:-1px;border-radius:2px;box-shadow:0 0 0 1px rgba(255,255,255,.25)}
+.hud .snd[disabled]{opacity:.45;cursor:not-allowed}
+.hud .snd[disabled]:hover{background:none;color:var(--cyan)}
