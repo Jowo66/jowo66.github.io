@@ -22,7 +22,7 @@ main{max-width:1000px;margin:0 auto;padding:40px 5% 60px}
 h1{font-family:'Shippori Mincho B1',serif;font-size:clamp(2rem,6vw,3.2rem);text-shadow:0 0 18px rgba(255,46,136,.7);line-height:1.1}
 .lede{color:var(--muted);margin:12px 0 26px;max-width:62ch}
 .stage{position:relative;border:2px solid var(--magenta);box-shadow:0 0 30px rgba(255,46,136,.35)}
-canvas{display:block;width:100%;height:auto;image-rendering:pixelated;background:#0c0618}
+canvas{display:block;width:100%;height:auto;background:#0c0618}
 #banner{position:absolute;top:7%;left:50%;transform:translateX(-50%);text-align:center;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 #banner.on{opacity:1}
 #banner b{font-family:'Shippori Mincho B1',serif;font-size:clamp(1.6rem,6vw,3rem);color:var(--amber);text-shadow:0 0 18px var(--amber);margin-right:12px}
@@ -37,6 +37,7 @@ canvas{display:block;width:100%;height:auto;image-rendering:pixelated;background
 .board .who:hover .odds,.board .who:focus .odds{display:inline}
 .board .co{color:var(--amber)}
 .row{display:flex;justify-content:space-between;align-items:center;margin-top:18px;gap:16px;flex-wrap:wrap}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
 .rules{color:var(--muted);font-size:1rem;margin-top:14px}
 button{font:inherit;font-weight:700;padding:10px 24px;background:transparent;color:var(--cyan);border:1px solid var(--cyan);cursor:pointer;transition:.25s}
 button:hover{background:var(--cyan);color:var(--ink);box-shadow:0 0 22px var(--cyan)}
@@ -53,14 +54,14 @@ button:hover{background:var(--cyan);color:var(--ink);box-shadow:0 0 22px var(--c
   <h1>Sumo Loop</h1>
   <p class="lede">Two wrestlers meet on the dohyō. One is pushed out, a new challenger steps in, and the fight starts again. Looks, names and results are random, but a hot streak tilts the odds, and the crowd notices.</p>
   <div class="stage">
-    <canvas id="c" width="480" height="270" role="img" aria-label="Pixel-art sumo wrestlers fighting in a ring while fans cheer and hold up signs"></canvas>
+    <canvas id="c" width="960" height="540" role="img" aria-label="Sumo wrestlers fighting in a ring while fans cheer and hold up signs, shown as a documentary photo or as black silhouettes"></canvas>
     <div id="banner"><b>勝</b><span id="win"></span></div>
   </div>
   <div class="board" role="status" aria-live="polite">
     <div><small>West</small><span id="bl"></span></div>
     <div><small>East</small><span id="br"></span></div>
   </div>
-  <div class="row"><span id="count">Bouts fought: 0</span><button id="pause" type="button">Pause</button></div>
+  <div class="row"><span id="count">Bouts fought: 0</span><span class="btns"><button id="look" type="button"></button> <button id="pause" type="button">Pause</button></span></div>
   <p class="rules" id="rules"></p>
 </main>
 
@@ -71,8 +72,15 @@ const COSTUME_EVERY=7;   // every Nth bout, one wrestler turns up in a real-worl
 const STREAK_BIAS=0.35;  // how much each extra win of streak tilts the odds
 const MAX_EDGE=0.85;     // nobody is ever more than 85% to win (underdog keeps 15%)
 
-const cv=document.getElementById('c'),ctx=cv.getContext('2d');
-const CW=480,CH=270,GY=200,FLOOR=262;       // canvas size, ring ground line, landing line
+const cv=document.getElementById('c'),dctx=cv.getContext('2d');
+const CW=480,CH=270,GY=200,FLOOR=262;
+/* draw layers: scene is built on small canvases, then styled and scaled onto the display canvas */
+const mkC=()=>{const k=document.createElement('canvas');k.width=CW;k.height=CH;return k};
+const LBG=mkC(),LCR=mkC(),LSG=mkC(),LFT=mkC(),LCP=mkC(),LT1=mkC(),LT2=mkC();
+const cBG=LBG.getContext('2d'),cCR=LCR.getContext('2d'),cSG=LSG.getContext('2d'),cFT=LFT.getContext('2d'),cCP=LCP.getContext('2d'),cT1=LT1.getContext('2d'),cT2=LT2.getContext('2d');
+let ctx=cFT;
+let look='photo',pendingLook='photo',fade=0,frameN=0;
+const CROPS={photo:{x:30,y:36,w:420,h:236},sil:{x:0,y:0,w:480,h:270}};       // canvas size, ring ground line, landing line
 const pick=a=>a[Math.random()*a.length|0];
 const rnd=(a,b)=>a+Math.random()*(b-a);
 const lerp=(a,b,k)=>a+(b-a)*k,clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
@@ -322,7 +330,9 @@ const slots={L:mk('L'),R:mk('R')};
 let state='enter',st=0,win=null,los=null,c=240,phase=0,bouts=0,pL=.5,oddsOk=false,hoverSide=null;
 let paused=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const el=id=>document.getElementById(id);
-const go=s=>{state=s;st=0;oddsOk=(s==='ready'||s==='charge'||s==='shove');if(s==='ready')setOdds()};
+const go=s=>{state=s;st=0;oddsOk=(s==='ready'||s==='charge'||s==='shove');if(s==='ready'){setOdds();if(pendingLook!==look){look=pendingLook;fade=1;syncLook()}}};
+const LOOKN={photo:'Documentary',sil:'Silhouette'};
+function syncLook(){const b=document.getElementById('look');if(b)b.textContent='Look: '+LOOKN[look]+(pendingLook!==look?' \u2192 '+LOOKN[pendingLook]+' next fight':'')}
 const pct=v=>Math.round(v*100)+'%';
 const chip=(w,p)=>`<i style="background:${w.hair}"></i><i style="background:${w.skin}"></i><span class="who" tabindex="0">${w.name}<span class="odds"> &middot; chance <em>${oddsOk?pct(p):'...'}</em></span></span> &middot; streak ${w.streak}${w.costume?' &middot; <b class="co">'+w.costume.label+'</b>':''}`;
 const board=()=>{el('bl').innerHTML=chip(slots.L,pL);el('br').innerHTML=chip(slots.R,1-pL);el('count').textContent='Bouts fought: '+bouts};
@@ -436,7 +446,7 @@ function drawTip(){
   ctx.restore();
 }
 function hv(e){
-  const r=cv.getBoundingClientRect(),mx=(e.clientX-r.left)*CW/r.width,my=(e.clientY-r.top)*CH/r.height;
+  const r=cv.getBoundingClientRect(),K=CROPS[look],mx=K.x+(e.clientX-r.left)*K.w/r.width,my=K.y+(e.clientY-r.top)*K.h/r.height;
   hoverSide=null;
   ['L','R'].forEach(sd=>{const w=slots[sd];if(Math.abs(mx-w.x)<26&&my>w.y-70&&my<w.y+6&&w.alpha>.5&&!w.air)hoverSide=sd});
   cv.style.cursor=hoverSide?'help':'default';
@@ -445,28 +455,104 @@ cv.addEventListener('pointermove',hv);
 cv.addEventListener('pointerdown',hv);
 cv.addEventListener('pointerleave',()=>{hoverSide=null;cv.style.cursor='default'});
 
+function drawBgSil(){
+  const g=ctx.createLinearGradient(0,0,0,200);g.addColorStop(0,'#5a1a3a');g.addColorStop(.55,'#d8604a');g.addColorStop(1,'#ffc27a');
+  ctx.fillStyle=g;ctx.fillRect(0,0,CW,236);
+  const rg=ctx.createRadialGradient(240,150,10,240,150,260);rg.addColorStop(0,'rgba(255,225,160,.65)');rg.addColorStop(1,'rgba(255,225,160,0)');ctx.fillStyle=rg;ctx.fillRect(0,0,CW,236);
+  // shoji lattice
+  ctx.fillStyle='rgba(30,10,24,.85)';
+  for(let x=0;x<=CW;x+=48)ctx.fillRect(x,0,2,236);
+  [60,120,180].forEach(y=>ctx.fillRect(0,y,CW,2));
+  // paper lanterns, glowing
+  for(let i=0;i<10;i++){
+    const x=24+i*48+Math.sin(time*1.1+i)*1.5,y=34+(i%2)*18,col=i%3?'#e8505a':'#ffb347';
+    const h=ctx.createRadialGradient(x,y,2,x,y,34);h.addColorStop(0,'rgba(255,200,120,.7)');h.addColorStop(1,'rgba(255,160,90,0)');ctx.fillStyle=h;ctx.fillRect(x-34,y-34,68,68);
+    ctx.fillStyle='#2a1020';ctx.fillRect(x,0,1,y-14);
+    ctx.fillStyle=col;ctx.beginPath();ctx.ellipse(x,y,10,14,0,0,7);ctx.fill();
+    ctx.fillStyle='rgba(255,240,200,.55)';ctx.beginPath();ctx.ellipse(x-2,y-3,5,8,0,0,7);ctx.fill();
+    ctx.fillStyle='#2a1020';ctx.fillRect(x-8,y-14,16,2);ctx.fillRect(x-8,y+12,16,2);
+  }
+  // floor and dohyo
+  ctx.fillStyle='#120610';ctx.fillRect(0,236,CW,34);ctx.fillStyle='#ffb066';ctx.fillRect(0,236,CW,1);
+  ctx.fillStyle='#1c0c14';ctx.fillRect(RING_L-6,206,RING_R-RING_L+12,30);
+  ctx.fillStyle='#2a1420';ctx.fillRect(RING_L-6,200,RING_R-RING_L+12,6);ctx.fillStyle='#ffd08a';ctx.fillRect(RING_L-6,200,RING_R-RING_L+12,1);
+  [RING_L-10,RING_R-2].forEach(x=>{ctx.fillStyle='#120610';ctx.fillRect(x,194,12,12);ctx.fillStyle='#ffd08a';ctx.fillRect(x,194,12,1)});
+  const sh=ctx.createRadialGradient(240,226,4,240,226,150);sh.addColorStop(0,'rgba(255,220,150,.28)');sh.addColorStop(1,'rgba(255,220,150,0)');ctx.fillStyle=sh;ctx.fillRect(0,170,CW,100);
+}
+/* black silhouette of a layer plus a thin rim light on the edge facing the light */
+function silhouette(src,rim,dx,dy,out){
+  cT1.clearRect(0,0,CW,CH);cT1.globalCompositeOperation='source-over';cT1.drawImage(src,0,0);
+  cT1.globalCompositeOperation='source-in';cT1.fillStyle='#07030a';cT1.fillRect(0,0,CW,CH);cT1.globalCompositeOperation='source-over';
+  cT2.clearRect(0,0,CW,CH);cT2.globalCompositeOperation='source-over';cT2.drawImage(LT1,0,0);
+  cT2.globalCompositeOperation='destination-out';cT2.drawImage(LT1,dx,dy);
+  cT2.globalCompositeOperation='source-in';cT2.fillStyle=rim;cT2.fillRect(0,0,CW,CH);cT2.globalCompositeOperation='source-over';
+  out.drawImage(LT1,0,0);out.drawImage(LT2,0,0);
+}
+/* documentary photograph: desaturate, contrast, overhead light, vignette, film grain, sepia tone */
+function photoGrade(){
+  const img=cCP.getImageData(0,0,CW,CH),d=img.data;
+  for(let y=0;y<CH;y++){
+    const vy=(y-135)/135,ly=(y-205)/80;
+    for(let x=0;x<CW;x++){
+      const i=(y*CW+x)*4;
+      let L=(.299*d[i]+.587*d[i+1]+.114*d[i+2])/255;
+      L=Math.min(1,Math.max(0,(L-.46)*1.5+.5));
+      const vx=(x-240)/240,lx=(x-240)/170;
+      const light=.5+.85*Math.exp(-(lx*lx+ly*ly)*.9);
+      const vig=1-.42*(vx*vx*.8+vy*vy*.6);
+      let h=Math.imul(x,374761393)+Math.imul(y,668265263)+Math.imul(frameN,1442695041)|0;h=Math.imul(h^(h>>>13),1274126177);const g=((h^(h>>>16))>>>0)/4294967296-.5;
+      L=Math.min(1,Math.max(0,L*light*vig+g*.16));
+      d[i]=Math.min(255,L*255*1.04+6);d[i+1]=L*255*.9+3;d[i+2]=L*255*.7;
+    }
+  }
+  cCP.putImageData(img,0,0);
+}
 function render(){
-  drawBg();drawLanterns();
+  const sil=look==='sil';
+  frameN++;
+  [cBG,cCR,cSG,cFT,cCP].forEach(x=>{x.setTransform(1,0,0,1,0,0);x.globalAlpha=1;x.globalCompositeOperation='source-over';x.clearRect(0,0,CW,CH)});
+  ctx=cBG;if(sil)drawBgSil();else{drawBg();drawLanterns()}
   // fans whose sign is up hold both arms high
   const hold={};
   ['L','R'].forEach(sd=>SIGN_SLOTS[sd].forEach((idx,i)=>{hold[idx]=signUp[sd][i]>.3}));
-  back.forEach(fa=>drawFan(fa,!!hold[fa.idx]));
-  ['L','R'].forEach(sd=>{for(let i=0;i<4;i++)if(signUp[sd][i]>.02)drawSign(slots[sd],sd,i,ease(Math.min(1,signUp[sd][i])))});
+  const signs=()=>['L','R'].forEach(sd=>{for(let i=0;i<4;i++)if(signUp[sd][i]>.02)drawSign(slots[sd],sd,i,ease(Math.min(1,signUp[sd][i])))});
+  ctx=cCR;back.forEach(fa=>drawFan(fa,!!hold[fa.idx]));
+  if(!sil)signs();
   front.forEach(fa=>drawFan(fa,false));
+  if(sil){ctx=cSG;signs()}
+  ctx=cFT;
   const order=(state==='enter'||state==='replace'||state==='ready')?[slots.L,slots.R]:[slots[los],slots[win]];
   order.forEach(drawF);
   dust.forEach(q=>{R('rgba(230,210,170,'+(1-q.t*2)+')',q.x,q.y,2,2)});
-  drawTip();
   if(state==='shove'){
     for(let i=0;i<3;i++)if(Math.random()<.5)R(['#fff','#27e8ff','#ff2e88'][i],c+Math.random()*14-7,GY-34-Math.random()*22,2,2);
-    // sweat flying off the wrestlers
     [slots.L,slots.R].forEach(w=>{if(Math.random()<.3)R('#bfe9ff',w.x+(w.side==='L'?1:-1)*(8+Math.random()*7),GY-58-Math.random()*8,1,2)});
   }
+  // compose
+  cCP.drawImage(LBG,0,0);
+  if(sil){
+    silhouette(LCR,'#ff9a5a',0,1,cCP);
+    cCP.drawImage(LSG,0,0);
+    silhouette(LFT,'#ffd9a0',1,1,cCP);
+  }else{
+    cCP.globalAlpha=.6;cCP.drawImage(LCR,0,0);cCP.globalAlpha=.2;
+    [-3,-2,-1,1,2,3].forEach(o=>cCP.drawImage(LCR,o,0));
+    cCP.globalAlpha=1;cCP.drawImage(LFT,0,0);
+    photoGrade();
+  }
+  const K=CROPS[look];
+  dctx.setTransform(1,0,0,1,0,0);dctx.imageSmoothingEnabled=!sil;
+  dctx.drawImage(LCP,K.x,K.y,K.w,K.h,0,0,cv.width,cv.height);
+  // tooltip is drawn on the display canvas so it stays crisp and in colour
+  dctx.save();dctx.scale(cv.width/K.w,cv.height/K.h);dctx.translate(-K.x,-K.y);
+  ctx=dctx;drawTip();dctx.restore();
+  if(fade>0){dctx.fillStyle='rgba(0,0,0,'+Math.min(1,fade)+')';dctx.fillRect(0,0,cv.width,cv.height)}
+  ctx=cFT;
 }
 
 let last=performance.now();
 function loop(t){
-  const dt=Math.min(.05,(t-last)/1000);last=t;
+  const dt=Math.min(.05,(t-last)/1000);last=t;fade=Math.max(0,fade-dt*2.4);
   if(!paused)update(dt);
   render();requestAnimationFrame(loop);
 }
@@ -474,6 +560,8 @@ const btn=el('pause');
 const label=()=>btn.textContent=paused?'Play':'Pause';
 btn.onclick=()=>{paused=!paused;label()};
 label();
+el('look').onclick=()=>{pendingLook=pendingLook==='photo'?'sil':'photo';if(paused){look=pendingLook;fade=1}syncLook()};
+syncLook();
 if(paused)for(let i=0;i<60;i++)update(.05);   // reduced motion: start on a populated ring
 requestAnimationFrame(loop);
 </script>
