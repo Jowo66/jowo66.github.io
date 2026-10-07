@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "editorconfig.editorconfig",
+    "ms-python.python",
+    "ms-python.black-formatter"
+  ]
+}
