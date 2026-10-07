@@ -252,6 +252,9 @@ function build(ent,cam){
       if(a){const pv=pt.po?pt.po[0]:py+h,pw=pt.po?pt.po[1]:pz,yy=y-pv,zz=z-pw;y=pv+yy*Math.cos(a)-zz*Math.sin(a);z=pw+yy*Math.sin(a)+zz*Math.cos(a)}
       if(pt.pk){const a1=arms[pt.pk]!=null?arms[pt.pk]:(pt.psw?Math.sin((ent.ph||0)+(pt.pph||0))*pt.psw:0);if(a1){const pv1=pt.pv[0],pz1=pt.pv[1],y1=y-pv1,z1=z-pz1;y=pv1+y1*Math.cos(a1)-z1*Math.sin(a1);z=pz1+y1*Math.sin(a1)+z1*Math.cos(a1)}}
       if(pt.sp){const a2=clock*25,xx=x-px,zz=z-pz;x=px+xx*Math.cos(a2)-zz*Math.sin(a2);z=pz+xx*Math.sin(a2)+zz*Math.cos(a2)}
+      if(ent.pt||ent.rl){const hv=.82;
+        if(ent.pt){const yy=y-hv,cp=Math.cos(ent.pt),sp=Math.sin(ent.pt);y=hv+yy*cp-z*sp;z=yy*sp+z*cp}
+        if(ent.rl){const yy=y-hv,cr=Math.cos(ent.rl),sr=Math.sin(ent.rl);const nx=x*cr-yy*sr;y=hv+x*sr+yy*cr;x=nx}}
       const X=x*cos+z*sin,Z=-x*sin+z*cos;
       vs.push([ent.x+X*sc*sw,mir?(baseY+(y+el)*sc*sh):(baseY-(y+el)*sc*sh),zc+Z*sc*sw]);
     }
