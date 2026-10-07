@@ -35,7 +35,7 @@ function makeTrack(first){
   const note=(d,oct)=>root+sc[d%7]+12*Math.floor(d/7)+oct;
   const chords=prog.map(d=>({b:(()=>{let b=note(d,12);while(b>51)b-=12;while(b<38)b+=12;return b})(),ch:[note(d,24),note(d+2,24),note(d+4,24),note(d+6,24)]}));
   nTrack++;
-  return{name:(first?'Rain Groove':pick(ADJ)+' '+pick(NOUN)),no:nTrack,key:KEYS[key]+' '+(mode==='minor'?'min':mode),bpm,chords,
+  return{id:first?'default':Date.now().toString(36)+Math.random().toString(36).slice(2,6),name:(first?'Rain Groove':pick(ADJ)+' '+pick(NOUN)),no:nTrack,key:KEYS[key]+' '+(mode==='minor'?'min':mode),bpm,chords,
     bass:first?BASSP[0]:pick(BASSP),stab:first?STABP[0]:pick(STABP),cut:first?1100:700+Math.random()*1100,
     wave:first?'sawtooth':pick(['sawtooth','sawtooth','square']),hats:Math.random()<.5,wet:.2+Math.random()*.25,
     arp:first?2:Math.floor(Math.random()*4),kickp:first?KICKP[0]:pick(KICKP),hatp:first?HATP[0]:pick(HATP),percp:first?null:pick(PERCP),bwave:first?'sawtooth':pick(['sawtooth','square','triangle']),bcut:first?900:500+Math.random()*1400,clap:first?[4,12]:pick([[4,12],[4,12],[4,12,15],[4,10,12]]),open:first?true:Math.random()<.8,swing:first?0:Math.random()*.012};
@@ -106,6 +106,11 @@ function swoosh(){
   s.connect(f);f.connect(gn);gn.connect(master);s.start(t);s.stop(t+.6);
 }
 function tick(){while(nextT<ac.currentTime+.14){sched(step,nextT);nextT+=S16;step++}}
+function apply(nt){
+  T=nt;setTempo();if(ac&&on)swoosh();
+  if(ac&&on){step=0;nextT=Math.max(nextT,ac.currentTime+.05);t0=nextT;if(House._wet)House._wet.gain.value=T.wet}
+  tsubs.forEach(f=>{try{f(T)}catch(e){}});return T;
+}
 const House={
   get bpm(){return T.bpm},
   get track(){return T},
@@ -124,11 +129,8 @@ const House={
     }
     subs.forEach(f=>{try{f(on)}catch(e){}});return on;
   },
-  shuffle(){
-    T=makeTrack(false);setTempo();if(ac&&on)swoosh();
-    if(ac&&on){step=0;nextT=Math.max(nextT,ac.currentTime+.05);t0=nextT;if(House._wet)House._wet.gain.value=T.wet}
-    tsubs.forEach(f=>{try{f(T)}catch(e){}});return T;
-  }
+  shuffle(){return apply(makeTrack(false))},
+  load(t){return apply(JSON.parse(JSON.stringify(t)))}
 };
 g.House=House;
 })(window);
