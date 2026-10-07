@@ -93,12 +93,12 @@ M.robocop=()=>{const L=[];
   L.push({p:[-.46,.72,0],s:[.16,.7,.18],c:'#3a4560',ak:'L',sw:.35,ph:Math.PI});L.push({p:[.46,.72,0],s:[.16,.7,.18],c:'#3a4560',ak:'R',sw:.35,ph:0});
   L.push({p:[0,1.48,0],s:[.32,.32,.32],c:'#56688e',tp:.9});L.push({p:[0,1.58,.17],s:[.26,.08,.02],c:'#ffb347',e:true});
   L.push({p:[.18,1.1,.2],s:[.1,.08,.02],c:'#19e3ff',e:true});L.push({p:[-.3,.62,.1],s:[.05,.5,.05],c:'#222'});
-  return{parts:L,sp:[.5,.9],h:2.0,bub:['STOP!','止まれ','СТОЙ!','멈춰!','قف!','Halt.']}};
+  return{parts:L,sp:[.5,.9],h:2.0,age:[2,9],ageUnit:' (serial yrs)',bub:['STOP!','止まれ','СТОЙ!','멈춰!','قف!','Halt.']}};
 M.oldlady=()=>{const L=human({coat:'#5b7a52',pant:'#3a3030',skin:'#d8b090',hair:'#e8e4ee',long:true,legSw:.3,armSw:.2});
   L.push({p:[0,1.74,0],s:[.28,.1,.28],c:'#7d3a6a',tp:.9});
   L.push({p:[.36,.3,.05],s:[.24,.34,.18],c:'#c8a46a'});L.push({p:[.36,.62,.05],s:[.04,.2,.04],c:'#4cc54a'});L.push({p:[.4,.62,.05],s:[.05,.14,.04],c:'#e8a23a'});
   L.push({p:[-.36,.35,.05],s:[.2,.3,.18],c:'#c8a46a'});
-  return{parts:L,sp:[.4,.7],h:1.8,sc:.88,bub:['あらまぁ','My knees…','Ох уж…','아이고','يا ساتر','उफ़']}};
+  return{parts:L,sp:[.4,.7],h:1.8,sc:.88,age:[68,93],bub:['あらまぁ','My knees…','Ох уж…','아이고','يا ساتر','उफ़']}};
 M.mascot=()=>{const L=[];
   L.push({p:[-.13,0,0],s:[.18,.55,.2],c:'#c8283c',sw:.5,ph:0});L.push({p:[.13,0,0],s:[.18,.55,.2],c:'#c8283c',sw:.5,ph:Math.PI});
   L.push({p:[0,.5,0],s:[.5,.55,.3],c:'#ffd42a',tp:.9});
@@ -111,7 +111,7 @@ M.mascot=()=>{const L=[];
   return{parts:L,sp:[.5,.8],h:1.8,bub:['I\'m lovin\' it…','バーガー…','Бургер…','버거…','برغر…']}};
 M.kidball=()=>{const L=human({coat:'#2b6fd6',pant:'#222',hair:'#111',hat:'cap',hatC:'#e0352b',legSw:.7,armSw:.6});
   L.push({p:[.34,.0,.38],s:[.2,.2,.2],c:'#ff8a2a',bn:.55,tp:.85});
-  return{parts:L,sp:[.6,1.0],h:1.1,sc:.62,bub:['バスケ!','Swish!','Мяч!','농구!']}};
+  return{parts:L,sp:[.6,1.0],h:1.1,sc:.62,age:[8,12],bub:['バスケ!','Swish!','Мяч!','농구!']}};
 M.detective=()=>{const L=human({coat:'#8a7a5a',pant:'#2a2620',long:true,hat:'fedora',hatC:'#4a3a2a',armR:'#8a7a5a'});
   L.push({p:[.36,.52,.2],s:[.14,.2,.03],c:'#e8e4d0'});L.push({p:[0,1.44,.12],s:[.2,.04,.02],c:'#19e3ff',e:true});
   return{parts:L,sp:[.6,1.0],h:1.9,det:true,bub:['Seen this face?','この顔を?','Вы видели?','본 적 있나요?','هل رأيته؟','¿La viste?']}};
@@ -119,9 +119,23 @@ M.samurai=()=>{const L=human({coat:'#eae6f0',pant:'#eae6f0',legW:.26,legTp:.9,ha
   L.push({p:[0,.74,0],s:[.5,.14,.3],c:'#15101a'});L.push({p:[0,1.74,-.04],s:[.1,.14,.1],c:'#0d0a14'});
   L.push({p:[.36,.55,.28],s:[.05,1.05,.05],c:'#a9763c',ya:0});L.push({p:[.36,.62,.28],s:[.16,.04,.04],c:'#2a1a10'});
   return{parts:L,sp:[.7,1.1],h:1.9,arms:{R:-.9},bub:['道','Honor.','Честь','도','شرف']}};
+M.sage=()=>{const L=[];
+  L.push({p:[0,.05,0],s:[.66,1.3,.44],c:'#4f6a8c',tp:.62});L.push({p:[0,1.3,0],s:[.5,.2,.32],c:'#4f6a8c',tp:.8});
+  L.push({p:[-.36,.9,0],s:[.12,.55,.14],c:'#4f6a8c',ak:'L'});L.push({p:[.36,.9,0],s:[.12,.55,.14],c:'#4f6a8c',ak:'R'});
+  L.push({p:[0,1.45,0],s:[.22,.26,.22],c:'#d8b090',tp:.82});L.push({p:[0,1.62,0],s:[.32,.14,.32],c:'#4f6a8c',tp:.8});
+  L.push({p:[0,1.12,.13],s:[.2,.42,.08],c:'#f2f2f6',tp:.4});L.push({p:[0,1.62,.12],s:[.22,.04,.04],c:'#f2f2f6'});
+  L.push({p:[.46,0,.12],s:[.04,1.95,.04],c:'#6a4a2a'});L.push({p:[.46,1.9,.12],s:[.15,.15,.15],c:'#19e3ff',e:true});
+  return{parts:L,sp:[0,0],h:2.1,stat:true,age:[84,420],bub:['Hmm…','ふむ','Хм…','음…']}};
+M.sageF=()=>{const L=[];
+  L.push({p:[0,.05,0],s:[.7,1.25,.46],c:'#7a4f8a',tp:.6});L.push({p:[0,1.25,0],s:[.56,.22,.34],c:'#a07ab0',tp:.8});
+  L.push({p:[-.36,.9,0],s:[.12,.55,.14],c:'#7a4f8a',ak:'L'});L.push({p:[.36,.9,0],s:[.12,.55,.14],c:'#7a4f8a',ak:'R'});
+  L.push({p:[0,1.42,0],s:[.22,.26,.22],c:'#c89a78',tp:.82});L.push({p:[0,1.62,0],s:[.26,.1,.26],c:'#f2f2f6',tp:.85});L.push({p:[0,1.72,-.03],s:[.14,.12,.14],c:'#f2f2f6'});
+  L.push({p:[0,1.52,.12],s:[.2,.05,.03],c:'#ffb347',e:true});
+  L.push({p:[.44,0,.12],s:[.04,1.1,.04],c:'#6a4a2a'});L.push({p:[.44,1.05,.12],s:[.13,.18,.13],c:'#ffb347',e:true});
+  return{parts:L,sp:[0,0],h:2.0,stat:true,age:[84,420],bub:['Ah…','あらあら','Ох…','어이구']}};
 M.kidrun=()=>{const L=human({coat:'#ffd42a',pant:'#2a3a6a',hair:'#3a2418',legSw:1.1,armSw:1.0,legW:.18});
   L.push({p:[0,.9,-.17],s:[.26,.3,.1],c:'#ffd42a'});
-  return{parts:L,sp:[5,6.5],h:1.1,sc:.62,run:true,bub:['速っ!','Zoom!','Бегу!','달려!']}};
+  return{parts:L,sp:[5,6.5],h:1.1,sc:.62,age:[7,11],run:true,bub:['速っ!','Zoom!','Бегу!','달려!']}};
 
 /* ---------- compile + build ---------- */
 function compile(parts){return parts.map(p=>Object.assign({},p,{rgb:hex(p.c)}))}
@@ -202,21 +216,28 @@ function drawEnt(c,ent,cam,alpha){
 /* manga speech bubble in screen space */
 function bubble(c,x,y,text,s,kind){
   s=s||1;c.save();
-  c.font=`700 ${Math.round(15*s)}px "Share Tech Mono","Noto Sans",sans-serif`;
-  const w=Math.max(34*s,c.measureText(text).width+18*s),h=24*s,r=kind==='irate'?4:h/2;
+  const wis=kind==='wisdom';
+  c.font=`${wis?'italic ':''}700 ${Math.round((wis?14:15)*s)}px "Share Tech Mono","Noto Sans",sans-serif`;
+  /* word-wrap long text */
+  const lines=[];const maxW=(wis?210:170)*s;
+  if(c.measureText(text).width<=maxW)lines.push(text);
+  else{let cur='';text.split(' ').forEach(wd=>{const t=cur?cur+' '+wd:wd;if(c.measureText(t).width>maxW&&cur){lines.push(cur);cur=wd}else cur=t});if(cur)lines.push(cur)}
+  const lh=18*s,tw=Math.max(...lines.map(l=>c.measureText(l).width));
+  const w=Math.max(34*s,tw+18*s),h=Math.max(24*s,lines.length*lh+8*s),irate=kind==='irate',r=irate?4:(lines.length>1?10*s:h/2);
   const bx=x-w/2,by=y-h-10*s;
-  c.fillStyle=kind==='irate'?'#fff1f0':'#f4efe4';c.strokeStyle='#0a0612';c.lineWidth=2.2*s;
+  c.fillStyle=irate?'#fff1f0':(wis?'#f1e6c8':'#f4efe4');c.strokeStyle='#0a0612';c.lineWidth=2.2*s;
   c.beginPath();
-  if(kind==='irate'){ /* jagged shout bubble */
+  if(irate){
     const n=14;for(let i=0;i<n*2;i++){const a=i/(n*2)*Math.PI*2,rr=i%2?.8:1.1,px=x+Math.cos(a)*(w/2+4*s)*rr,py=by+h/2+Math.sin(a)*(h/2+6*s)*rr;i?c.lineTo(px,py):c.moveTo(px,py)}
     c.closePath();
   }else{
     c.moveTo(bx+r,by);c.arcTo(bx+w,by,bx+w,by+h,r);c.arcTo(bx+w,by+h,bx,by+h,r);c.arcTo(bx,by+h,bx,by,r);c.arcTo(bx,by,bx+w,by,r);c.closePath();
   }
   c.fill();c.stroke();
-  if(kind!=='irate'){c.beginPath();c.moveTo(x-5*s,by+h-1);c.lineTo(x,by+h+9*s);c.lineTo(x+5*s,by+h-1);c.closePath();c.fillStyle='#f4efe4';c.fill();c.stroke();c.beginPath();c.moveTo(x-5*s,by+h);c.lineTo(x+5*s,by+h);c.strokeStyle='#f4efe4';c.lineWidth=3*s;c.stroke()}
-  c.fillStyle=kind==='irate'?'#c8102e':'#0a0612';c.textAlign='center';c.textBaseline='middle';c.fillText(text,x,by+h/2+1);
-  if(kind==='irate'){ /* anger vein */
+  if(!irate){const f=wis?'#f1e6c8':'#f4efe4';c.beginPath();c.moveTo(x-5*s,by+h-1);c.lineTo(x,by+h+9*s);c.lineTo(x+5*s,by+h-1);c.closePath();c.fillStyle=f;c.fill();c.stroke();c.beginPath();c.moveTo(x-5*s,by+h);c.lineTo(x+5*s,by+h);c.strokeStyle=f;c.lineWidth=3*s;c.stroke()}
+  c.fillStyle=irate?'#c8102e':(wis?'#3a2410':'#0a0612');c.textAlign='center';c.textBaseline='middle';
+  lines.forEach((l,i)=>c.fillText(l,x,by+h/2+(i-(lines.length-1)/2)*lh+1));
+  if(irate){
     const vx=x+w/2-4*s,vy=by-2*s;c.strokeStyle='#e0152b';c.lineWidth=2.4*s;c.lineCap='round';
     [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(q=>{c.beginPath();c.moveTo(vx+q[0]*3*s,vy+q[1]*3*s);c.lineTo(vx+q[0]*8*s,vy+q[1]*8*s);c.stroke()});
   }
