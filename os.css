@@ -117,3 +117,9 @@ a{color:var(--cyan)}
 .win .bar .t{animation:gl 7s infinite}
 @keyframes gl{0%,93%,100%{text-shadow:none;transform:none}94%{text-shadow:2px 0 var(--pink),-2px 0 var(--cyan);transform:translateX(1px)}96%{text-shadow:-2px 0 var(--pink),2px 0 var(--cyan);transform:translateX(-1px) skewX(-6deg)}98%{text-shadow:none;transform:none}}
 @media (max-width:900px){.sys{display:none}}
+
+.hud .tick{flex:1;margin:0 22px;overflow:hidden;white-space:nowrap;color:rgba(243,234,216,.55);font-size:12px;letter-spacing:.06em;
+  -webkit-mask:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);mask:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.hud .tick span{display:inline-block;animation:tk 60s linear infinite}
+@keyframes tk{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.win .bar .t2{font-size:12px;color:#5a4a6a;letter-spacing:.06em;white-space:nowrap}
