@@ -353,7 +353,20 @@ function swoosh(){
   const gn=ac.createGain();gn.gain.setValueAtTime(.0001,t);gn.gain.linearRampToValueAtTime(.35,t+.35);gn.gain.exponentialRampToValueAtTime(.0001,t+.55);
   s.connect(f);f.connect(gn);gn.connect(master);s.start(t);s.stop(t+.6);
 }
-function tick(){while(nextT<ac.currentTime+.14){sched(step,nextT);nextT+=S16;step++}}
+/* background tabs throttle setInterval to ~1/s, which starves the scheduler and makes the audio choppy.
+   A Web Worker's timer is not throttled, so it drives the ticks; and when the tab is hidden we also schedule further ahead. */
+let wk=null;
+function startTicker(){
+  stopTicker();
+  try{const url=URL.createObjectURL(new Blob(['let i=setInterval(()=>postMessage(0),25);onmessage=e=>{if(e.data==="stop"){clearInterval(i);close()}}'],{type:'text/javascript'}));
+    wk=new Worker(url);wk.onmessage=()=>{if(on)tick()};wk._u=url}catch(e){wk=null}
+  if(!wk)timer=setInterval(tick,25);
+}
+function stopTicker(){
+  if(wk){try{wk.postMessage('stop');wk.terminate();URL.revokeObjectURL(wk._u)}catch(e){}wk=null}
+  clearInterval(timer);timer=0;
+}
+function tick(){const ahead=(typeof document!=='undefined'&&document.hidden)?1.6:.14;while(nextT<ac.currentTime+ahead){sched(step,nextT);nextT+=S16;step++}}
 function apply(nt){
   T=nt;setTempo();if(ac&&on)swoosh();
   if(ac&&on){bumpPlay();step=0;nextT=Math.max(nextT,ac.currentTime+.05);t0=nextT;if(House._wet)House._wet.gain.value=T.wet}
@@ -371,9 +384,9 @@ const House={
     if(!on){
       ac.resume();step=0;nextT=ac.currentTime+.1;t0=nextT;on=true;bumpPlay();
       master.gain.cancelScheduledValues(ac.currentTime);master.gain.setValueAtTime(master.gain.value,ac.currentTime);master.gain.linearRampToValueAtTime(.62,ac.currentTime+.4);
-      tick();timer=setInterval(tick,25);
+      tick();startTicker();
     }else{
-      on=false;clearInterval(timer);master.gain.cancelScheduledValues(ac.currentTime);master.gain.setValueAtTime(master.gain.value,ac.currentTime);master.gain.linearRampToValueAtTime(0,ac.currentTime+.25);
+      on=false;stopTicker();master.gain.cancelScheduledValues(ac.currentTime);master.gain.setValueAtTime(master.gain.value,ac.currentTime);master.gain.linearRampToValueAtTime(0,ac.currentTime+.25);
     }
     subs.forEach(f=>{try{f(on)}catch(e){}});return on;
   },

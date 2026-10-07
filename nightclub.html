@@ -105,8 +105,8 @@ footer{text-align:center;padding:50px 20px;border-top:1px solid rgba(255,46,136,
 footer a{color:var(--cyan)}
 html.beach:not(.embed) body{background:radial-gradient(ellipse at 80% 10%,rgba(255,214,120,.35),transparent 55%),radial-gradient(ellipse at 10% 90%,rgba(80,200,255,.22),transparent 50%),#15324f}
 </style>
-<script src="lp3d.js?v=20261007zf"></script>
-<script src="house.js?v=20261007zf"></script>
+<script src="lp3d.js?v=20261007zg"></script>
+<script src="house.js?v=20261007zg"></script>
 <script>(function(){if(/[?&]embed/.test(location.search)){document.documentElement.className="embed";var e=document.createElement("style");e.textContent="header,header.bar,main>:not(.stage),footer,.rules,.districts{display:none!important}html,body{background:#05020a!important}body{padding:6px!important;margin:0!important;min-height:0!important}main{padding:0!important;margin:0 auto!important;max-width:none!important}";document.head.appendChild(e)}})()</script>
 </head>
 
@@ -914,6 +914,7 @@ function autoShuffle(){
   if(id!==autoId||repeat||!autoT){autoId=id;autoT=now;return}
   if(now-autoT>=30000){autoT=now;AUDIO.shuffle();autoId=trackId(AUDIO.track);burst(PIT.x,PIT.z-.6,pick(['NEXT TRACK!','\u6b21\u306e\u66f2!','NEXT!']))}
 }
+setInterval(autoShuffle,1000);   /* keeps shuffling when the tab is in the background (animation frames pause there) */
 const shf=el('shf');
 if(shf)shf.onclick=()=>{if(!AUDIO)return;AUDIO.shuffle();if(!AUDIO.on)AUDIO.toggle()};
 /* ---------- playlist: saved tracks are stored as tiny seeds in localStorage AND a long-lived cookie ---------- */
