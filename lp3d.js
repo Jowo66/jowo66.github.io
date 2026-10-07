@@ -12,7 +12,7 @@ const FACES=[[0,1,2,3],[4,5,6,7],[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7]];
 
 /* ---------- model builders ---------- */
 /* part: p=[x,y,z] bottom-centre, s=[w,h,d], c colour, tp top taper, e emissive, sw swing amp, ph phase,
-   ak 'L'|'R' arm key (poseable), sp spin, bn bounce amplitude, ya yaw offset */
+   ak 'L'|'R' arm key (poseable; any key name works), pk+pv parent joint (child limb: elbow/knee), sp spin, bn bounce amplitude, ya yaw offset */
 function human(o,dz){
   dz=dz||0;const L=[];
   const pant=o.pant||'#15101f',coat=o.coat||'#1a1f3a',skin=o.skin||'#c98f6b',hair=o.hair||'#0d0a14',lg=o.legW||.16;
@@ -156,6 +156,7 @@ function build(ent,cam){
       let a=0;
       if(pt.ak&&arms[pt.ak]!=null)a=arms[pt.ak];else if(pt.sw)a=Math.sin((ent.ph||0)+pt.ph)*pt.sw;
       if(a){const pv=py+h,yy=y-pv,zz=z-pz;y=pv+yy*Math.cos(a)-zz*Math.sin(a);z=pz+yy*Math.sin(a)+zz*Math.cos(a)}
+      if(pt.pk&&arms[pt.pk]!=null){const a1=arms[pt.pk],pv1=pt.pv[0],pz1=pt.pv[1],y1=y-pv1,z1=z-pz1;y=pv1+y1*Math.cos(a1)-z1*Math.sin(a1);z=pz1+y1*Math.sin(a1)+z1*Math.cos(a1)}
       if(pt.sp){const a2=clock*25,xx=x-px,zz=z-pz;x=px+xx*Math.cos(a2)-zz*Math.sin(a2);z=pz+xx*Math.sin(a2)+zz*Math.cos(a2)}
       const X=x*cos+z*sin,Z=-x*sin+z*cos;
       vs.push([ent.x+X*sc,mir?(baseY+(y+el)*sc):(baseY-(y+el)*sc),zc+Z*sc]);
