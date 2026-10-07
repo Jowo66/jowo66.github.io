@@ -145,3 +145,5 @@ a{color:var(--cyan)}
 .hud .snd.on{color:#05161c;background:var(--pink);border-color:var(--pink);box-shadow:0 0 14px var(--pink);animation:sndp .484s infinite}
 @keyframes sndp{50%{box-shadow:0 0 4px var(--pink)}}
 @media (max-width:760px){.hud .snd{font-size:15px;padding:0 6px}}
+
+.tt .flg{height:.85em;width:auto;margin-left:4px;vertical-align:-1px;border-radius:2px;box-shadow:0 0 0 1px rgba(255,255,255,.25)}

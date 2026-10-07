@@ -244,10 +244,10 @@ const flag=c=>c?String.fromCodePoint(...[...c].map(ch=>127397+ch.charCodeAt(0)))
 const MYTHKEYS=Object.keys(MYTH);
 function mythName(){
   const r=Math.random();
-  if(r<.42){const k=pick(MYTHKEYS),l=pick(SURN);return{key:k,first:k,last:l,f1:flag(FIGF[k]),f2:flag(SURNF[l])}}
+  if(r<.42){const k=pick(MYTHKEYS),l=pick(SURN);return{key:k,first:k,last:l,f1:flag(FIGF[k]),f2:flag(SURNF[l]),c1:FIGF[k],c2:SURNF[l]}}
   const cu=pick(CULTKEYS),C=CULT[cu],cf=flag(CULTF[cu]);
-  if(r<.74){const k=pick(Object.keys(C.fig));return{key:k,first:k,last:pick(C.last),cult:cu,f1:flag(FIGF[k]||CULTF[cu]),f2:cf}}
-  return{key:null,first:pick(C.first),last:pick(C.last),cult:cu,f1:cf,f2:cf}
+  if(r<.74){const k=pick(Object.keys(C.fig));return{key:k,first:k,last:pick(C.last),cult:cu,f1:flag(FIGF[k]||CULTF[cu]),f2:cf,c1:FIGF[k]||CULTF[cu],c2:CULTF[cu]}}
+  return{key:null,first:pick(C.first),last:pick(C.last),cult:cu,f1:cf,f2:cf,c1:CULTF[cu],c2:CULTF[cu]}
 }
 
 /* ---------- made-up details ---------- */
@@ -275,7 +275,7 @@ function age(def){
 }
 function profile(ch){
   const m=ch.myth,def=ch.def;
-  return{name:(m?m.first+' '+m.last:'Unknown').toUpperCase(),flags:m?(m.f1===m.f2?m.f1:m.f1+' '+m.f2):'',age:age(def)+(def&&def.ageUnit||''),passion:passion(),genre:genre(),fact:fact(m)};
+  return{name:(m?m.first+' '+m.last:'Unknown').toUpperCase(),flags:m?(m.f1===m.f2?m.f1:m.f1+' '+m.f2):'',codes:m?(m.c1===m.c2?[m.c1]:[m.c1,m.c2]):[],age:age(def)+(def&&def.ageUnit||''),passion:passion(),genre:genre(),fact:fact(m)};
 }
 g.Lore={parable,mythName,profile,genre,passion,fact};
 })(typeof window!=='undefined'?window:globalThis);
