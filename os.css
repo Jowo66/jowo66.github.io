@@ -1,4 +1,4 @@
-/* Neo-Edo OS: manga panels over a 3D neon alley */
+/* Neo-Jowo OS: manga panels over a 3D neon alley */
 :root{
   --ink:#0a0612;--ink2:#150b24;--paper:#f3ead8;--pink:#ff2e88;--cyan:#19e3ff;
   --amber:#ffb347;--verm:#e0352b;--mono:'Share Tech Mono',ui-monospace,monospace;
@@ -17,7 +17,7 @@ a{color:var(--cyan)}
   padding:0 14px;background:linear-gradient(180deg,rgba(10,6,18,.92),rgba(10,6,18,.55));border-bottom:2px solid var(--pink);
   letter-spacing:.12em;font-size:13px;text-transform:uppercase}
 .hud b{font-family:var(--disp);font-size:26px;letter-spacing:.08em;color:var(--pink);font-weight:400;text-shadow:2px 2px 0 #000}
-.hud .r{display:flex;gap:18px;align-items:center;color:var(--cyan)}
+.hud .r{display:flex;gap:10px;align-items:center;color:var(--cyan)}
 .hud .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#3dff9a;box-shadow:0 0 8px #3dff9a;margin-right:6px;animation:bl 2s infinite}
 @keyframes bl{50%{opacity:.3}}
 
