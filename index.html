@@ -1,154 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ejovwo Obahor</title>
-    <meta name="description" content="Portfolio of Ejovwo Obahor.">
-
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ejovwo Obahor | Neo-Edo OS</title>
+<meta name="description" content="Portfolio of Ejovwo Obahor, computer science student in Toronto, presented as a neon-alley operating system.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Share+Tech+Mono&family=Zen+Kaku+Gothic+New:wght@900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="os.css">
 </head>
-
 <body>
+<canvas id="alley" aria-hidden="true"></canvas>
+<div class="vig"></div>
 
-    <canvas id="matrix" aria-hidden="true"></canvas>
+<div class="hud" role="banner">
+  <b>NEO-EDO OS</b>
+  <div class="r"><span class="hide"><span class="dot"></span>ONLINE</span><span class="hide" id="date"></span><span id="clock">--:--:--</span><span class="hide">TORONTO / 東京-2099</span></div>
+</div>
 
-    <nav>
-        <div class="logo">EO://</div>
-        <ul>
-            <li><a href="#about">About</a></li>
-            <li><a href="#skills">Skills</a></li>
-            <li><a href="#projects">Projects</a></li>
-            <li><a href="#contact">Contact</a></li>
-            <li><a href="future.html">Future</a></li>
-            <li><a href="sumo.html">Sumo</a></li>
-        </ul>
-    </nav>
+<section class="hero">
+  <div class="burst"></div>
+  <div class="tag">COMPUTER SCIENCE STUDENT // TORONTO</div>
+  <h1>EJOVWO<br>OBAHOR</h1>
+  <p>Welcome to the alley. Open a window below, or visit the Cabaret and the Dojo.</p>
+  <div class="v" aria-hidden="true">夜の都</div>
+</section>
+<div class="sfx" style="right:9vw;bottom:140px;font-size:54px;transform:rotate(8deg)" aria-hidden="true">ドン!</div>
 
-    <header class="hero" id="home">
-        <div class="hero-content">
-            <p class="status-line">SYSTEM STATUS: ONLINE</p>
-            <h1>EJOVWO OBAHOR</h1>
-            <h2>Developer &amp; Builder of Digital Systems</h2>
-            <p class="intro">
-                I design and build fast, reliable software. Scroll down to see
-                what I work with, what I've made, and how to reach me.
-            </p>
-            <div class="hero-buttons">
-                <a href="#projects">View projects</a>
-                <a href="#contact">Get in touch</a>
-                <a href="future.html">Enter Neo-Edo</a>
-                <a href="sumo.html">Enter the Dojo</a>
-            </div>
-        </div>
-    </header>
+<nav class="dock" aria-label="Applications">
+  <button class="app" data-app="about"><span class="g">我</span>About</button>
+  <button class="app cy" data-app="skills"><span class="g">技</span>Skills</button>
+  <button class="app am" data-app="map"><span class="g">地</span>Map</button>
+  <button class="app vm" data-app="cabaret"><span class="g">酒</span>Cabaret</button>
+  <button class="app" data-app="dojo"><span class="g">相</span>Dojo</button>
+  <button class="app cy" data-app="contact"><span class="g">連</span>Contact</button>
+</nav>
 
-    <main>
+<div id="boot"><pre id="bootText"></pre></div>
 
-        <section id="about">
-            <h2 class="section-header"><span>&gt;</span>About</h2>
-            <div class="terminal-window">
-                <p>&gt; whoami</p>
-                <p>Ejovwo Obahor</p>
-                <p>&gt; cat profile.txt</p>
-                <p>I'm a developer who likes turning ideas into working products.</p>
-                <p>I care about clean code, clear interfaces, and details that hold up.</p>
-                <p>&gt; status</p>
-                <p>Open to new projects and collaborations.</p>
-            </div>
-        </section>
+<noscript><p style="position:fixed;z-index:30000;top:50px;left:20px;background:#000;padding:12px">This page needs JavaScript. <a href="classic.html">Open the classic version</a>.</p></noscript>
 
-        <section id="skills">
-            <h2 class="section-header"><span>&gt;</span>Skills</h2>
-            <div class="tech-grid">
-                <div class="tech-card">HTML</div>
-                <div class="tech-card">CSS</div>
-                <div class="tech-card">JavaScript</div>
-                <div class="tech-card">Python</div>
-                <div class="tech-card">Git</div>
-                <div class="tech-card">Linux</div>
-            </div>
-        </section>
+<!-- window templates -->
+<template id="t-about">
+  <h3>whoami</h3>
+  <p class="cmd">cat profile.txt</p>
+  <p>I'm Ejovwo, a computer science student in Toronto. I build things for the web and for the canvas, and this whole city is hand-coded: no frameworks, no assets, just JavaScript.</p>
+  <p class="cmd">ls apps/</p>
+  <p>The <b style="color:var(--pink)">Cabaret</b> and the <b style="color:var(--pink)">Dojo</b> are small simulations I wrote from scratch. Open the Map to wander the district.</p>
+  <div class="todo">TODO: add school, program and year here.</div>
+</template>
+<template id="t-skills">
+  <h3>Skill tree</h3>
+  <div class="chips">
+    <span class="chip">HTML</span><span class="chip">CSS</span><span class="chip">JavaScript</span>
+    <span class="chip">Canvas / animation</span><span class="chip p">Python</span><span class="chip p">Git</span><span class="chip p">Linux</span>
+  </div>
+  <div class="todo">TODO: replace with languages and tools you actually use, plus course work.</div>
+</template>
+<template id="t-map">
+  <div class="mapwrap"><canvas id="map" width="360" height="260"></canvas></div>
+  <div class="cap" id="cap">Hover a building. The lit ones are open; empty lots are reserved for future projects.</div>
+</template>
+<template id="t-contact">
+  <h3>Signal</h3>
+  <div class="links">
+    <a href="https://github.com/Jowo66" target="_blank" rel="noopener">GitHub<small>github.com/Jowo66</small></a>
+    <a href="classic.html">Classic Matrix site<small>the original green-on-black homepage</small></a>
+  </div>
+  <div class="todo">TODO: add email and LinkedIn once you have the links you want public.</div>
+</template>
 
-        <section id="projects">
-            <h2 class="section-header"><span>&gt;</span>Projects</h2>
-            <div class="project-grid">
-                <article class="project-card">
-                    <h3>Project One</h3>
-                    <p>A short description of what this project does and the problem it solves.</p>
-                </article>
-                <article class="project-card">
-                    <h3>Project Two</h3>
-                    <p>A short description of what this project does and the problem it solves.</p>
-                </article>
-                <article class="project-card">
-                    <h3>Project Three</h3>
-                    <p>A short description of what this project does and the problem it solves.</p>
-                </article>
-            </div>
-        </section>
-
-        <section id="contact">
-            <h2 class="section-header"><span>&gt;</span>Contact</h2>
-            <div class="contact-links">
-                <a href="mailto:you@example.com">Email</a>
-                <a href="https://github.com/" target="_blank" rel="noopener">GitHub</a>
-                <a href="https://www.linkedin.com/" target="_blank" rel="noopener">LinkedIn</a>
-            </div>
-        </section>
-
-    </main>
-
-    <footer>
-        <p>&copy; <span id="year">2026</span> Ejovwo Obahor. All systems operational.</p>
-    </footer>
-
-    <script>
-        // Footer year
-        document.getElementById('year').textContent = new Date().getFullYear();
-
-        // Matrix rain
-        (function () {
-            const canvas = document.getElementById('matrix');
-            const ctx = canvas.getContext('2d');
-            const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノ0123456789'.split('');
-            const size = 16;
-            let columns, drops;
-
-            function resize() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-                columns = Math.floor(canvas.width / size);
-                drops = Array.from({ length: columns }, () => Math.random() * -50);
-            }
-
-            function draw() {
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = '#00ff41';
-                ctx.font = size + 'px "Share Tech Mono", monospace';
-
-                for (let i = 0; i < drops.length; i++) {
-                    const ch = chars[Math.floor(Math.random() * chars.length)];
-                    ctx.fillText(ch, i * size, drops[i] * size);
-                    if (drops[i] * size > canvas.height && Math.random() > 0.975) {
-                        drops[i] = 0;
-                    }
-                    drops[i]++;
-                }
-            }
-
-            resize();
-            window.addEventListener('resize', resize);
-
-            // Respect reduced-motion preferences: draw a single static frame
-            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                for (let i = 0; i < 60; i++) draw();
-            } else {
-                setInterval(draw, 50);
-            }
-        })();
-    </script>
-
+<script src="os.js"></script>
 </body>
 </html>
