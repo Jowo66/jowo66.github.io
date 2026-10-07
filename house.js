@@ -57,6 +57,7 @@ const QR=[[0,0,1,0,0,1,0,1,0,0,1,0,0,1,0,1],[0,1,0,0,1,0,0,1,0,1,0,0,1,0,0,1]];
 const QT=[[0,0,1,0,0,0,0,1,0,0,0,1,0,0,0,0],[0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0]];
 const QB=[[1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0],[1,0,0,1,0,0,0,0,1,0,0,0,0,0,1,0]];
 const QS=[[0,0,0,1,0,0,0,0,0,0,0,1,0,0,1,0],[0,0,1,0,0,0,0,1,0,0,0,0,0,1,0,0]];
+const AWH=[[0,0,0,0,0,0,0,0,1,0,0,1,0,0,2,0],[0,0,1,0,0,0,2,0,0,0,0,0,1,0,0,2],[1,0,0,0,0,1,0,0,2,0,0,0,0,0,0,0]];
 const QPROG=[[0,0,3,0],[0,5,0,5],[0,0,6,5],[0,3,0,4]];
 function chordsFor(sc,root,prog){
   const note=(d,oct)=>root+sc[d%7]+12*Math.floor(d/7)+oct;
@@ -76,7 +77,7 @@ function newKind(t,kr){
     t.bpm=138+Math.floor(R()*5);t.swing=0;t.gk=pick(GK);t.gsub=pick(GSUB);t.gst=pick(GST);t.pad=R()<.6;t.wet=.14+R()*.08;
   }else if(band<.75){
     t.kind='amapiano';t.genre='Amapiano';t.name=pick(MADJ)+' '+pick(MNOUN);const md=R()<.6?'dorian':'minor';retune(t,md,pick(md==='dorian'?AMP:[[0,3,0,4],[0,5,3,4],[0,0,3,4]]),k);
-    t.bpm=108+Math.floor(R()*7);t.swing=.004+R()*.008;t.alog=pick(ALOG);t.apia=pick(APIA);t.pad=R()<.7;t.voice=R()<.6;t.wet=.3+R()*.1;
+    t.bpm=108+Math.floor(R()*7);t.swing=.004+R()*.008;t.alog=pick(ALOG);t.apia=pick(APIA);t.pad=R()<.7;t.voice=R()<.6;t.wet=.3+R()*.1;t.awh=pick(AWH);
   }else{
     t.kind='gqom';t.genre='Gqom';t.name=pick(QADJ)+' '+pick(QNOUN);retune(t,R()<.6?'minor':'phrygian',pick(QPROG),k);
     t.bpm=122+Math.floor(R()*9);t.swing=.002+R()*.006;t.qk=pick(QK);t.qr=pick(QR);t.qt=pick(QT);t.qb=pick(QB);t.qs=pick(QS);t.voice=R()<.5;t.wet=.14+R()*.1;
@@ -261,6 +262,11 @@ function fmep(t,m,vel){const c=ac.createOscillator(),md=ac.createOscillator(),mg
 function logdrum(t,m,len){const o=ac.createOscillator(),gn=ac.createGain(),fq=mtof(m);o.type='sine';o.frequency.setValueAtTime(fq*1.5,t);o.frequency.exponentialRampToValueAtTime(fq,t+.04);
   gn.gain.setValueAtTime(.0001,t);gn.gain.linearRampToValueAtTime(.6,t+.004);gn.gain.exponentialRampToValueAtTime(.0001,t+len);o.connect(gn);gn.connect(duck);o.start(t);o.stop(t+len+.05);
   const h=ac.createOscillator(),hg=ac.createGain();h.type='triangle';h.frequency.value=fq*2;env(hg,t,.002,.12,.08);h.connect(hg);hg.connect(duck);h.start(t);h.stop(t+.12);nz(t,'bandpass',900,3,.1,.02,master)}
+function whistle(t,m,len,up){const o=ac.createOscillator(),lfo=ac.createOscillator(),lg=ac.createGain(),gn=ac.createGain(),fq=mtof(m);o.type='sine';
+  o.frequency.setValueAtTime(fq*(up?.94:1),t);o.frequency.exponentialRampToValueAtTime(fq*(up?1.05:1),t+len*.5);lfo.frequency.value=5.8;lg.gain.value=14;lfo.connect(lg);lg.connect(o.detune);
+  gn.gain.setValueAtTime(.0001,t);gn.gain.linearRampToValueAtTime(.1,t+.03);gn.gain.setTargetAtTime(.0001,t+len*.55,len*.18);
+  o.connect(gn);gn.connect(duck);gn.connect(send);o.start(t);lfo.start(t);o.stop(t+len+.3);lfo.stop(t+len+.3);
+  nz(t,'bandpass',fq*1.5,6,.03,len*.6,duck)}
 let WS=null;
 function gkick(t){if(!WS){WS=ac.createWaveShaper();const c=new Float32Array(256);for(let i=0;i<256;i++)c[i]=Math.tanh((i/128-1)*3);WS.curve=c;WS.connect(master)}
   const o=ac.createOscillator(),gn=ac.createGain();o.type='sine';o.frequency.setValueAtTime(210,t);o.frequency.exponentialRampToValueAtTime(42,t+.09);
@@ -302,6 +308,7 @@ function schedAmapiano(n,t){
   if(T.alog[s]){const v=T.alog[s];logdrum(t,lowm(ch.b)+(v===2?7:v===3?12:0),S16*(v===3?1.4:2.4))}
   if(T.apia[s]&&phrase>=1)piano(t,ch.ext[((s>>1)+bar)%5],.6+(s%3)*.1);
   if(T.voice&&phrase>=2&&s===8&&bar%2===0)voice(t,ch.ch[bar%4],S16*7);
+  if((T.awh||AWH[0])[s]&&phrase>=1&&bar%2===1)whistle(t,ch.ch[0]+24+[0,2,4,7,9][T.mel[(s+bar)%8]],S16*((T.awh||AWH[0])[s]===2?4:2.5),(T.awh||AWH[0])[s]===2);
   if(s===0&&T.pad)padv(t,ch.ch,S16*16);
 }
 function schedGqom(n,t){
