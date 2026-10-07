@@ -3,6 +3,7 @@
 const $=s=>document.querySelector(s);
 const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const DAYST={on:false,k:0,map:null}; /* shared day/night state so the district map can follow the Day button */
 
 /* ---------- clock ---------- */
 function tick(){
@@ -485,6 +486,7 @@ tick();setInterval(tick,1000);
   /* ---- sky: distant skyline, lightning, holo logo, daytime and monster attacks ---- */
   let dayOn=false,dayK=0,flashT=99,boltPts=null,nextBolt=5,shake=0,dust=[];
   try{if(localStorage.getItem('jowo.day')==='1'){dayOn=true;dayK=1}}catch(e){}
+  DAYST.on=dayOn;DAYST.k=dayK;
   const mixc=(a,b,k)=>a.map((v,i)=>v+(b[i]-v)*k),rgb=a=>`rgb(${a[0]|0},${a[1]|0},${a[2]|0})`;
   const BLD=[];
   {let s=11;const rnd=()=>(s=(s*16807)%2147483647)/2147483647;
@@ -510,7 +512,7 @@ tick();setInterval(tick,1000);
   }
   function updSky(dt){
     skyClock+=dt;
-    dayK=clamp(dayK+(dayOn?1:-1)*dt/1.3,0,1);
+    dayK=clamp(dayK+(dayOn?1:-1)*dt/1.3,0,1);DAYST.on=dayOn;DAYST.k=dayK;
     const k=dayK;
     FOGC[0]=58+(150-58)*k;FOGC[1]=15+(180-15)*k;FOGC[2]=74+(215-74)*k;
     CAM.amb=[.16+.42*k,.16+.42*k,.2+.4*k];
@@ -784,7 +786,7 @@ tick();setInterval(tick,1000);
     setInterval(msync,250);msync()}
   const dbtn=document.getElementById('day');
   if(dbtn){const sync=()=>{dbtn.textContent=dayOn?'\u263E NIGHT':'\u2600 DAY';dbtn.setAttribute('aria-pressed',dayOn?'true':'false');document.documentElement.classList.toggle('day',dayOn)};
-    dbtn.addEventListener('click',()=>{dayOn=!dayOn;try{localStorage.setItem('jowo.day',dayOn?'1':'0')}catch(e){}sync();if(reduce){dayK=dayOn?1:0;updSky(0);frame(0)}});sync()}
+    dbtn.addEventListener('click',()=>{dayOn=!dayOn;try{localStorage.setItem('jowo.day',dayOn?'1':'0')}catch(e){}sync();if(reduce){dayK=dayOn?1:0;updSky(0);frame(0);if(DAYST.map)DAYST.map()}});sync()}
   if(/[?&]debug/.test(location.search))window.__alley={couple:spawnCouple,day:v=>{dayOn=v},monster:(k)=>{dayOn=true;dayK=1;startMonster(k)},logo:()=>LOGO,newLogo:newLogo,sky:()=>({dayK,mon:MON.on,t:MON.t,last:MON.last,next:MON.next,clock:skyClock}),bolt:()=>{flashT=0;nextBolt=99;boltPts=[[0,-.5],[.03,-.3],[-.02,-.15],[.01,-.03]]},spawn:spawn,chars:()=>chars,turn:()=>{nextTurn=0},J:()=>J,pan:()=>pan,alleyNo:()=>alleyNo};
   let last=0;
   function loop(t){
@@ -807,7 +809,7 @@ const apps={
   skills:{jp:'技',t:'SKILLS',t2:'навыки · 技能 · कौशल',w:420},
   map:{jp:'地',t:'DISTRICT MAP',t2:'خريطة · 지도 · Карта',w:null,init:initMap,x:.4,y:80,w:600},
   contact:{jp:'連',t:'CONTACT',t2:'связь · 連絡 · اتصال',w:380},
-  club:{jp:'踊',t:'CASA SOFIA',t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007o',cls:'app-win',ar:1.5}
+  club:{jp:'踊',t:'CASA SOFIA',t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007q',cls:'app-win',ar:1.5}
 };
 const open={};let zTop=100,n=0;
 function openApp(id){
@@ -859,7 +861,7 @@ function initMap(win){
   const cars=[{p:0,s:.5,c:'#ff2e88'},{p:.5,s:.35,c:'#19e3ff'}];
   let hover=null,t=0;
   const poly=(pts,fill,stroke)=>{c.beginPath();pts.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));c.closePath();if(fill){c.fillStyle=fill;c.fill()}if(stroke){c.strokeStyle=stroke;c.lineWidth=1;c.stroke()}};
-  const shade=(hex,k)=>{const v=parseInt(hex.slice(1),16);const r=clamp((v>>16)*k,0,255)|0,g=clamp(((v>>8)&255)*k,0,255)|0,b=clamp((v&255)*k,0,255)|0;return`rgb(${r},${g},${b})`};
+  const shade=(hex,k)=>{k*=1+DAYST.k*.8;const v=parseInt(hex.slice(1),16);const r=clamp((v>>16)*k,0,255)|0,g=clamp(((v>>8)&255)*k,0,255)|0,b=clamp((v&255)*k,0,255)|0;return`rgb(${r},${g},${b})`};
   function shapes(b){
     const x0=b.gx,y0=b.gy,x1=b.gx+b.w,y1=b.gy+b.dd,h=b.h;
     return{top:[iso(x0,y0,h),iso(x1,y0,h),iso(x1,y1,h),iso(x0,y1,h)],
@@ -906,13 +908,44 @@ function initMap(win){
     if(outT<=0){outT=8+Math.random()*9;if(outs.length<2)outs.push({kind:Math.random()<.5?'walk':'thrown',t:0,dir:Math.random()<.5?-1:1,fem:Math.random()<.4,col:PCOL[Math.floor(Math.random()*PCOL.length)]})}
     for(let i=outs.length-1;i>=0;i--){const a=outs[i];a.t+=.016;if(a.t>(a.kind==='walk'?12:11))outs.splice(i,1)}
   }
+  const hx=h=>{const v=parseInt(h.slice(1),16);return[v>>16,(v>>8)&255,v&255]},mx=(a,b,k)=>a.map((v,i)=>v+(b[i]-v)*k),rg=a=>`rgb(${a[0]|0},${a[1]|0},${a[2]|0})`;
+  /* daytime extras: drifting clouds (with soft ground shadows) and delivery drones crossing the district */
+  const clouds=[],drones=[];let cloudT=1,droneT=4;
+  function updFx(){
+    const k=DAYST.k;
+    if(k>.5){
+      cloudT-=.016;if(cloudT<=0){cloudT=5+Math.random()*7;if(clouds.length<4){const sc=.8+Math.random()*.9;clouds.push({x:-70*sc,y:10+Math.random()*210,s:7+Math.random()*9,sc:sc})}}
+      droneT-=.016;if(droneT<=0){droneT=7+Math.random()*9;if(drones.length<2){const g0=.3+Math.random()*5.4,fw=Math.random()<.5;drones.push({u:0,dur:9+Math.random()*5,fw:fw,g0:g0,g1:g0+(Math.random()*3-1.5),z:30+Math.random()*16,box:Math.random()<.5,ph:Math.random()*6})}}
+    }
+    for(let i=clouds.length-1;i>=0;i--){clouds[i].x+=clouds[i].s*.016;if(clouds[i].x>440)clouds.splice(i,1)}
+    for(let i=drones.length-1;i>=0;i--){drones[i].u+=.016/drones[i].dur;if(drones[i].u>1)drones.splice(i,1)}
+  }
+  const PUF=[[0,0,9],[11,-5,11],[23,0,9],[12,4,8],[-8,3,6],[32,3,6]];
+  function drawFx(){
+    const k=DAYST.k;if(k<.02)return;
+    /* cloud shadows on the ground, then the clouds */
+    c.save();
+    clouds.forEach(o=>{c.globalAlpha=k*.16;c.fillStyle='#000';PUF.forEach(q=>{c.beginPath();c.ellipse(o.x+(q[0]+8)*o.sc,o.y+(q[1]*.5+34)*o.sc,q[2]*o.sc,q[2]*.55*o.sc,0,0,7);c.fill()})});
+    drones.forEach(d=>{const gx=d.fw?-1+(N+2)*d.u:N+1-(N+2)*d.u,gy=d.g0+(d.g1-d.g0)*d.u,sp=iso(gx,gy,0);
+      c.globalAlpha=k*.22;c.fillStyle='#000';c.beginPath();c.ellipse(sp[0],sp[1],5,2,0,0,7);c.fill()});
+    drones.forEach(d=>{const gx=d.fw?-1+(N+2)*d.u:N+1-(N+2)*d.u,gy=d.g0+(d.g1-d.g0)*d.u,p=iso(gx,gy,d.z+Math.sin(t*3+d.ph)*1.5),x=p[0],y=p[1],spin=Math.floor(t*30+d.ph)%2;
+      c.save();c.translate(x,y);c.scale(1.7,1.7);c.translate(-x,-y);c.globalAlpha=k;
+      c.strokeStyle='#1c2030';c.lineWidth=1;c.beginPath();c.moveTo(x-5,y-1);c.lineTo(x+5,y-1);c.stroke();
+      c.fillStyle='#2a2f3d';c.fillRect(x-2,y-2,4,3);c.fillStyle='#19e3ff';c.fillRect(x-1,y,2,1);
+      c.fillStyle='#dfe6f5';[-5,5].forEach(o=>{c.globalAlpha=k*(spin?.85:.4);c.fillRect(x+o-2,y-3,4,1)});c.globalAlpha=k;
+      c.fillStyle=Math.floor(t*3+d.ph)%2?'#ff3a3a':'#3dff9a';c.fillRect(d.fw?x+2:x-3,y-2,1,1);
+      if(d.box){c.strokeStyle='#5a4a3a';c.beginPath();c.moveTo(x,y+1);c.lineTo(x,y+3);c.stroke();c.fillStyle='#c89a5a';c.fillRect(x-2,y+3,4,3);c.fillStyle='#8a6a3a';c.fillRect(x-2,y+4,4,1)}c.restore()});
+    clouds.forEach(o=>{c.globalAlpha=k*.93;c.fillStyle='#fff';PUF.forEach(q=>{c.beginPath();c.arc(o.x+q[0]*o.sc,o.y+q[1]*o.sc,q[2]*o.sc,0,7);c.fill()});
+      c.globalAlpha=k*.35;c.fillStyle='#b5c3dd';PUF.forEach(q=>{c.beginPath();c.ellipse(o.x+q[0]*o.sc,o.y+(q[1]+q[2]*.55)*o.sc,q[2]*.85*o.sc,q[2]*.35*o.sc,0,0,7);c.fill()})});
+    c.restore();c.globalAlpha=1;
+  }
   function draw(){
-    updOuts();
-    c.fillStyle='#0b0716';c.fillRect(0,0,360,260);
+    updOuts();updFx();const dk=DAYST.k;
+    c.fillStyle=rg(mx([11,7,22],[132,160,196],dk));c.fillRect(0,0,360,260);
     /* tiles */
     for(let y=0;y<N;y++)for(let x=0;x<N;x++){
       const road=(x===3||y===3);
-      poly([iso(x,y),iso(x+1,y),iso(x+1,y+1),iso(x,y+1)],road?'#1b1530':((x+y)&1?'#171027':'#1d1530'),null);
+      poly([iso(x,y),iso(x+1,y),iso(x+1,y+1),iso(x,y+1)],rg(mx(road?[27,21,48]:((x+y)&1?[23,16,39]:[29,21,48]),road?[98,102,122]:((x+y)&1?[136,142,160]:[146,152,170]),dk)),null);
     }
     /* road dashes */
     c.fillStyle='#ffb347';for(let i=0;i<N;i++){const a=iso(3.5,i+.45),b=iso(i+.45,3.5);c.fillRect(a[0]-1,a[1]-1,2,1);c.fillRect(b[0]-1,b[1]-1,2,1)}
@@ -930,11 +963,11 @@ function initMap(win){
       if(!b.lot){
         for(let r=0;r<Math.floor(b.h/13)-0;r++)for(let k=0;k<b.dd*2;k++){
           const on=((r*7+k*3+Math.floor(t*.4+r))%5)>1;const gx=b.gx+b.w,gy=b.gy+(k+.3)/2,z=7+r*13;
-          const p=iso(gx,gy,z);c.fillStyle=on?b.glow:'#140c22';c.fillRect(p[0]-1,p[1]+lift,2,3);
+          const p=iso(gx,gy,z);c.fillStyle=on?rg(mx(hx(b.glow),[255,240,200],dk*.7)):rg(mx([20,12,34],[70,88,124],dk));c.fillRect(p[0]-1,p[1]+lift,2,3);
         }
         const tp=iso(b.gx+b.w/2,b.gy+b.dd/2,b.h+13);
         const blink=(Math.floor(t*1.5)%7)!==0;
-        c.fillStyle=blink?b.glow:'#333';c.font='bold 10px "Zen Kaku Gothic New",sans-serif';c.textAlign='center';c.fillText(b.sign,tp[0],tp[1]+lift);
+        c.globalAlpha=1-dk*.55;c.fillStyle=blink?b.glow:'#333';c.font='bold 10px "Zen Kaku Gothic New",sans-serif';c.textAlign='center';c.fillText(b.sign,tp[0],tp[1]+lift);
         c.fillStyle=b.glow;c.globalAlpha=.25;c.fillRect(tp[0]-5,tp[1]+3+lift,10,1);c.globalAlpha=1;
       }else{
         c.strokeStyle='#ffb347';c.setLineDash([2,2]);poly(mv(s.top),null,'#ffb347');c.setLineDash([]);
@@ -958,7 +991,7 @@ function initMap(win){
       const pool=[iso(3,1.7,0),iso(3,2.3,0),iso(4.4,3.2,0),iso(4.4,.8,0)];
       c.save();c.globalCompositeOperation='lighter';
       const g=c.createLinearGradient(iso(3,2,0)[0],iso(3,2,0)[1],iso(4.3,2.8,0)[0],iso(4.3,2.8,0)[1]);
-      g.addColorStop(0,`rgba(${cs},${.5*fl})`);g.addColorStop(1,`rgba(${cs},0)`);
+      g.addColorStop(0,`rgba(${cs},${.5*fl*(1-dk*.8)})`);g.addColorStop(1,`rgba(${cs},0)`);
       poly(pool,null,null);c.fillStyle=g;c.fill();c.restore();
       c.fillStyle=col;poly([iso(3,1.78,0),iso(3,2.22,0),iso(3,2.22,10),iso(3,1.78,10)],col,'#000');
       /* velvet rope posts */
@@ -991,6 +1024,7 @@ function initMap(win){
       const bp=iso(3.12,2.4,0);c.fillStyle='#0c0c12';c.fillRect(bp[0]-1,bp[1]-6,3,6);c.fillStyle=col;c.fillRect(bp[0],bp[1]-5,1,3);
       c.font='5px "Share Tech Mono",monospace';c.fillStyle='#ffb347';c.textAlign='left';const lp=iso(3.5,.15,0);c.fillText('QUEUE',lp[0]+4,lp[1]);
     }
+    drawFx();
     if(hover&&hover._s){
       const all=[].concat(hover._s.top,hover._s.left,hover._s.right);
       const xs=all.map(p=>p[0]),ys=all.map(p=>p[1]-4);
@@ -1013,6 +1047,7 @@ function initMap(win){
   cv.addEventListener('pointerleave',()=>{hover=null});
   cv.addEventListener('click',e=>{const b=pick(e);if(b&&b.app)openApp(b.app)});
   let raf;function loop(){t+=.016;draw();if(!document.body.contains(win)){cancelAnimationFrame(raf);return}if(!reduce)raf=requestAnimationFrame(loop)}
+  DAYST.map=()=>{if(document.body.contains(win))draw()};
   draw();if(!reduce)loop();
 }
 
