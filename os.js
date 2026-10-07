@@ -327,35 +327,12 @@ tick();setInterval(tick,1000);
       for(const ch of mev.ms){
         if(!chars.includes(ch)){continue}
         const e=ch.ent;ch.dropT-=dt;ch.talkT-=dt;
-        if(ch.dropT<=0){ch.dropT=.7+Math.random()*.5;BG.push({x:clamp(e.x+(Math.random()-.5)*.8,-WALL+.4,WALL-.4),z:e.z-ch.dir*.3,y:FLOOR-1.1,vy:-1.5,t:0,taken:false,landed:false})}
-        if(ch.talkT<=0){ch.talkT=2.4+Math.random()*1.5;say(ch,rndp(ch.def.bub),'say',1.7)}
+                if(ch.talkT<=0){ch.talkT=2.4+Math.random()*1.5;say(ch,rndp(ch.def.bub),'say',1.7)}
       }
       if(mev.t>=mev.dur)endMascots();
     }
     for(const b of BG){b.t+=dt;b.z-=SCR*dt;if(!b.landed){b.vy+=11*dt;b.y+=b.vy*dt;if(b.y>=FLOOR-.07){b.y=FLOOR-.07;b.landed=true}}}
     for(let i=BG.length-1;i>=0;i--){const b=BG[i];if(b.taken||b.t>9||b.z<1.6||b.z>34)BG.splice(i,1)}
-    /* hungry inhabitants notice free burgers and run for them */
-    rushT-=dt;
-    if(BG.length&&rushT<=0){rushT=.35;
-      const free=BG.filter(b=>!b.taken);
-      let n=chars.filter(q=>q.rush).length;
-      for(const q of chars){if(n>=7)break;if(!rusher(q))continue;
-        if(free.some(b=>Math.abs(b.z-q.ent.z)<10)){q.rush=true;q.rsp=q.sp;q.rs=q.name==='oldlady'?2.6:3.6+Math.random()*1.4;q.sp=q.rs;n++;if(Math.random()<.5)say(q,rndp(BGSAY),'say',1.4)}}
-    }
-  }
-  function rushMove(ch,dt){
-    const e=ch.ent;e.z+=-SCR*dt;
-    let best=null,bd=1e9;
-    for(const b of BG){if(b.taken)continue;const d=Math.hypot(b.x-e.x,b.z-e.z);if(d<bd){bd=d;best=b}}
-    if(!best){stopRush(ch,true);return}
-    if(bd<.5){best.taken=true;stopRush(ch,false);
-      ch.eat=1.8;ch.wait=1.8;const k=gk(ch),ax=k==='L'?-.3:.3;
-      e.parts=e.parts.concat(LP.compile([{p:[ax,1.26,.46],s:[.22,.07,.22],c:'#d89a3a'},{p:[ax,1.32,.46],s:[.2,.05,.2],c:'#6a3a22'},{p:[ax,1.37,.46],s:[.2,.04,.2],c:'#4cc54a'},{p:[ax,1.43,.46],s:[.22,.08,.22],c:'#e8a23a'}]).map(p=>Object.assign(p,{snack:1})));
-      say(ch,rndp(['Mmm!','うまい!','Вкусно!','맛있다!','¡Rico!','Miam !','Oma!']),'say',1.8);return}
-    const dx=(best.x-e.x)/bd,dz=(best.z-e.z)/bd;
-    e.x+=dx*ch.rs*dt*.9;e.z+=dz*ch.rs*dt;
-    e.yaw+=((Math.atan2(dx,dz))-e.yaw)*Math.min(1,dt*10);
-    e.arms[gk(ch)]=-1.3+Math.sin(clock*14)*.5;
   }
   function mascotMove(ch,dt){
     const e=ch.ent,lo=5.5,hi=18;
@@ -364,24 +341,6 @@ tick();setInterval(tick,1000);
     e.yaw+=((ch.dir<0?Math.PI:0)-e.yaw)*Math.min(1,dt*9);
     ch.tx=Math.sin(clock*.8+ch.seed)*1.3;e.x+=(ch.tx-e.x)*Math.min(1,dt*2);
     e.arms[gk(ch)]=-2.4+Math.sin(clock*9)*.35;
-  }
-  function drawBurgers(){
-    for(const b of BG){
-      if(b.z<1.5)continue;
-      const fogk=CAM.fogK(b.z),a=clamp(1-fogk,.15,1)*clamp((b.z-1.5)/1.2,0,1)*(b.t>8?(9-b.t):1);
-      const p=P(b.x,b.y,b.z),r=f/b.z*.2;
-      c.globalAlpha=a;
-      const sp=P(b.x,FLOOR,b.z);c.fillStyle='rgba(0,0,0,.45)';c.beginPath();c.ellipse(sp[0],sp[1],r*1.1,r*.28,0,0,7);c.fill();
-      const pulse=.5+.5*Math.sin(clock*7+b.x*4);
-      const g=c.createRadialGradient(p[0],p[1]-r*.4,0,p[0],p[1]-r*.4,r*2.4);g.addColorStop(0,'rgba(255,212,42,'+(.35+.25*pulse)+')');g.addColorStop(1,'rgba(255,212,42,0)');
-      c.fillStyle=g;c.fillRect(p[0]-r*2.4,p[1]-r*2.8,r*4.8,r*4.8);
-      c.fillStyle='#d89a3a';c.beginPath();c.ellipse(p[0],p[1],r,r*.3,0,0,7);c.fill();
-      c.fillStyle='#6a3a22';c.fillRect(p[0]-r*.95,p[1]-r*.5,r*1.9,r*.3);
-      c.fillStyle='#4cc54a';c.fillRect(p[0]-r,p[1]-r*.68,r*2,r*.2);
-      c.fillStyle='#e8a23a';c.beginPath();c.ellipse(p[0],p[1]-r*.7,r,r*.62,0,Math.PI,Math.PI*2);c.fill();
-      c.fillStyle='#fff3c8';[-.4,0,.4].forEach(k=>c.fillRect(p[0]+k*r-r*.04,p[1]-r*(1.0-Math.abs(k)*.4),r*.1,r*.06));
-      c.globalAlpha=1;
-    }
   }
   function makeIrate(ch,txt,force){
     if(!force&&ch.cool>0)return;
@@ -470,7 +429,6 @@ tick();setInterval(tick,1000);
       ch.life-=dt;
       const drift=-SCR;
       if(ch.ev)mascotMove(ch,dt);
-      else if(ch.rush&&ch.wait<=0)rushMove(ch,dt);
       else if(ch.wait>0){ch.wait-=dt;e.z+=drift*dt}
       else if(ch.stat){e.z+=drift*dt}
       else e.z+=(ch.toward?-(ch.sp*.7+SCR):Math.max(.12,ch.sp*.7-SCR))*dt;
@@ -571,7 +529,6 @@ tick();setInterval(tick,1000);
     chars=chars.filter(ch=>!ch.dead&&ch.ent.z>1.3&&ch.ent.z<36);
   }
   function drawChars(){
-    drawBurgers();
     const list=chars.slice().sort((a,b)=>b.ent.z-a.ent.z);
     CAM.f=f;
     list.forEach(ch=>{const e=ch.ent;ch.vis=false;if(e.z<1.4)return;
@@ -946,7 +903,7 @@ const apps={
   skills:{jp:'技',t:'SKILLS',t2:'навыки · 技能 · कौशल',w:420},
   map:{jp:'地',t:'DISTRICT MAP',t2:'خريطة · 지도 · Карта',w:null,init:initMap,x:.4,y:80,w:600},
   contact:{jp:'連',t:'CONTACT',t2:'связь · 連絡 · اتصال',w:380},
-  club:{jp:'踊',get t(){return BEACH.on?'PLAYA SOFIA':'CASA SOFIA'},t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007zn',cls:'app-win',ar:1.5}
+  club:{jp:'踊',get t(){return BEACH.on?'PLAYA SOFIA':'CASA SOFIA'},t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007zo',cls:'app-win',ar:1.5}
 };
 const open={};let zTop=100,n=0;
 function openApp(id){
