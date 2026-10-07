@@ -151,3 +151,15 @@ a{color:var(--cyan)}
 .hud .snd[disabled]{opacity:.45;cursor:not-allowed}
 .hud .snd[disabled]:hover{background:none;color:var(--cyan)}
 .hud a.snd{display:inline-block;text-decoration:none}
+
+/* half-width / narrow windows: the alley, HUD and dock stay pinned while the hero and any open windows stack down a scrollable page */
+@media (max-width:980px){
+  html,body{height:auto;min-height:100%;overflow-x:hidden;overflow-y:auto}
+  body{padding:50px 0 96px}
+  .hero{position:relative;left:auto;bottom:auto;max-width:none;margin:30vh 16px 24px}
+  .hero .v{display:none}
+  .win{position:relative!important;left:auto!important;top:auto!important;width:auto!important;max-width:none;max-height:none;margin:14px 10px 22px}
+  .hud .tick,.hud .hide{display:none}
+  .hud{overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+  .hud::-webkit-scrollbar{display:none}
+}
