@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ejovwo Obahor | Computer Science Student</title>
+<meta name="description" content="Ejovwo Obahor: computer science student in Toronto. Web, canvas graphics and audio programming.">
+<style>
+:root{--bg:#f7f6f2;--fg:#17171c;--mut:#5b5b66;--line:#dcdad2;--acc:#1b4fd8;--card:#fff}
+@media (prefers-color-scheme:dark){:root{--bg:#121216;--fg:#ececf1;--mut:#a0a0ad;--line:#2a2a33;--acc:#8fb0ff;--card:#1a1a20}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--acc)}
+.wrap{max-width:760px;margin:0 auto;padding:0 20px}
+header{border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:14px;padding-bottom:14px;flex-wrap:wrap}
+nav a{margin-right:18px;text-decoration:none;color:var(--mut);font-size:15px}
+nav a:hover{color:var(--fg)}
+.fun{font:600 14px system-ui,sans-serif;letter-spacing:.06em;text-decoration:none;color:#fff;background:linear-gradient(90deg,#ff2e88,#7c5cff);padding:8px 16px;border-radius:999px}
+.fun:hover,.fun:focus-visible{filter:brightness(1.12);outline:2px solid var(--fg);outline-offset:2px}
+h1{font-size:2.2rem;line-height:1.15;margin:44px 0 6px}
+.lead{color:var(--mut);margin:0 0 8px;font-size:1.1rem}
+h2{font-size:1.15rem;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin:44px 0 12px;border-top:1px solid var(--line);padding-top:24px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding:0;margin:0;list-style:none}
+.chips li{border:1px solid var(--line);background:var(--card);padding:4px 12px;border-radius:999px;font-size:15px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin:14px 0}
+.card h3{margin:0 0 4px;font-size:1.1rem}
+.card .meta{color:var(--mut);font-size:14px;margin:0 0 8px}
+.card ul{margin:8px 0 0;padding-left:20px}
+.todo{border:1px dashed var(--line);color:var(--mut);padding:10px 14px;border-radius:8px;font-size:15px;margin-top:12px}
+footer{margin:60px 0 40px;color:var(--mut);font-size:14px}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <nav aria-label="Sections"><a href="#about">About</a><a href="#education">Education</a><a href="#skills">Skills</a><a href="#projects">Projects</a><a href="#contact">Contact</a></nav>
+    <a class="fun" id="fun" href="index.html" title="Back to the cyberpunk city">FUN</a>
+  </div>
+</header>
+<main class="wrap">
+  <h1>Ejovwo Obahor</h1>
+  <p class="lead">Computer science student in Toronto, Canada.</p>
+
+  <h2 id="about">About</h2>
+  <p>I build interactive software for the browser: graphics, audio and small simulations. I like writing things from first principles, and I would rather understand the rendering loop than import a library to hide it. I am looking to apply that approach to larger, collaborative projects.</p>
+
+  <h2 id="education">Education</h2>
+  <div class="card">
+    <h3>Computer Science</h3>
+    <p class="meta">Toronto, Ontario</p>
+    <div class="todo">School, program and expected graduation year to be added.</div>
+  </div>
+
+  <h2 id="skills">Skills</h2>
+  <ul class="chips">
+    <li>JavaScript</li><li>HTML</li><li>CSS</li><li>Canvas 2D graphics</li><li>Web Audio API</li><li>Git and GitHub</li><li>Python</li><li>Linux</li>
+  </ul>
+  <p style="color:var(--mut);font-size:15px;margin-top:10px">JavaScript, HTML, CSS, Canvas and Web Audio are demonstrated in the project below. Python, Linux and course work to be confirmed.</p>
+
+  <h2 id="projects">Projects</h2>
+  <article class="card">
+    <h3>Neo-Jowo OS (this portfolio, in its playful form)</h3>
+    <p class="meta">JavaScript, Canvas 2D, Web Audio API. No frameworks, no build step, no external assets. Hosted on GitHub Pages.</p>
+    <ul>
+      <li>A custom flat-shaded low-poly 3D renderer on a 2D canvas: boxes with taper, jointed limbs, painter's-algorithm sorting, fog and lighting.</li>
+      <li>A generative house-music synthesiser using the Web Audio API: seeded tracks across four styles (club, soul, latin and afro house), with drums, bass and chord voices built from oscillators and filtered noise.</li>
+      <li>Agent simulations: alley inhabitants with small state machines (walking, arguing, shopping, fleeing), a nightclub crowd with a moshpit and a dance-battle mode, and an isometric district map.</li>
+      <li>A window manager, a persistent playlist stored locally, and a day and night mode.</li>
+    </ul>
+    <p style="margin:10px 0 0"><a href="https://github.com/Jowo66/jowo66.github.io">Source on GitHub</a> &middot; <a href="index.html">Open the live version</a></p>
+  </article>
+  <div class="todo">More projects, with repository links, to be added.</div>
+
+  <h2 id="contact">Contact</h2>
+  <p><a href="https://github.com/Jowo66">github.com/Jowo66</a></p>
+  <div class="todo">Email and LinkedIn to be added.</div>
+</main>
+<footer class="wrap">&copy; Ejovwo Obahor &middot; <a href="classic.html">Classic site</a></footer>
+</body>
+</html>
