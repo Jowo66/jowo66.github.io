@@ -256,7 +256,7 @@ tick();setInterval(tick,1000);
     return rndp(COMMON);
   }
   const SHOUTS=['おい!!','HEY!','¡OYE!','ЭЙ!','야!!','ÇEK!','Hé!','你干嘛!','यार!','أنت!','Oi!','Ντε!','Biko!','Ewo!'];
-  let chars=[],spawnT=0,clock=0,coupleT=14,buyT=7;const gk=ch=>ch.def.gk||'R';
+  let chars=[],spawnT=0,clock=0,coupleT=14,buyT=7,sheltered=[],emergeQ=[],emT=0,wasMon=false;const gk=ch=>ch.def.gk||'R';
   const rndp=a=>a[Math.floor(Math.random()*a.length)];
   function spawn(initial,force,ov){
     const name=force||pickType(),fem=ov&&ov.fem!=null?ov.fem:(FEMOK.has(name)&&Math.random()<.5),cy=CYOK.has(name)&&Math.random()<.24,def=LP.make(name==='sage'&&fem?'sageF':name,fem,cy);
@@ -289,7 +289,7 @@ tick();setInterval(tick,1000);
     return out;
   }
   function shopTraffic(dt){
-    shopT-=dt;if(shopT>0||pan)return;shopT=2.2+Math.random()*2.5;
+    shopT-=dt;if(shopT>0||pan||MON.on)return;shopT=2.2+Math.random()*2.5;
     const vs=visibleShops();if(!vs.length)return;
     const cafeV=vs.find(v=>v.sh.cafe),cp=chars.find(q=>q.mate&&!q.follower&&!q.shop&&!q.mate.shop&&q.irate<=0&&q.wait<=0&&q.ent.z>6&&q.ent.z<22);
     if(cafeV&&cp&&Math.random()<.7){cp.shop={id:cafeV.id,side:cafeV.side};cp.mate.shop=cp.shop;say(cp,rndp(['Coffee?','カフェ行こ♥','Кофе?','카페 가요','Our table ♥']),'say',2.4);return}
@@ -307,6 +307,29 @@ tick();setInterval(tick,1000);
   /* two unique characters who meet point, argue for three exchanges, hop with rage and storm off */
   const ARGUE=['No, YOU move!','Мой тротуар!','俺の道だ!','내 길이야!','Excuse me?!','Ewo! Biko!','¡Yo llegué primero!','Je ne bouge pas.','Tsk, rookie.','Pas moi!','まさか!','Нет, ты!','I was here first!','Unbelievable.','お前こそ!','Gị onwe gị!'];
   let pairs=[];
+  /* a monster attack: everyone runs for the nearest shop and hides until it is over */
+  const SCREAM=['AAAH!','怪獣!','Монстр!','괴물이다!','Ewo!','KAIJU!','¡Corre!','Sauve qui peut!'];
+  function nearestShop(ez){
+    let best=null,bd=1e9;const b0=Math.floor(scroll/SEG);
+    for(let id=b0;id<=b0+NSEG;id++)for(const side of [-1,1]){if(!shopAt(id,side))continue;const d=Math.abs(doorZ(id)-ez);if(d<bd){bd=d;best={id:id,side:side}}}
+    return best;
+  }
+  function panicCheck(dt){
+    if(MON.on&&!wasMon){wasMon=true;pairs=[];
+      for(const ch of chars){
+        ch.fled=true;ch.irate=0;ch.wait=0;ch.buy=null;ch.chase=null;ch.met=false;ch.emerge=0;ch.tint=null;ch.ent.tint=null;ch.hopT=0;ch.ent.elev=ch.def.fly?ch.ent.elev:0;
+        delete ch.ent.arms[gk(ch)];ch.ent.parts=ch.ent.parts.filter(p=>!p.snack);ch.snack=false;
+        ch.stat=false;ch.life=999;ch.hurry=true;
+        const s=(NOSHOP(ch.name)||ch.def.fly)?null:nearestShop(ch.ent.z);
+        if(s){ch.shop=s;ch.fleeShop=true;ch.vanish=0}
+        else{ch.shop=null;ch.toward=Math.random()<.5;ch.sp=Math.max(ch.sp,4.5)}
+        say(ch,rndp(SCREAM),'irate',2.2);
+      }}
+    if(!MON.on&&wasMon){wasMon=false;emergeQ=sheltered.splice(0);emT=1.5;chars.forEach(ch=>{ch.fled=false;ch.fleeShop=false;ch.hurry=false})}
+    if(!MON.on&&emergeQ.length){emT-=dt;if(emT<=0){emT=.45;const q=emergeQ.shift(),vs=visibleShops();
+      spawn(false,q.name,{fem:q.fem});const ch=chars[chars.length-1],e=ch.ent;
+      if(vs.length&&!ch.def.fly){const s=rndp(vs);ch.stat=false;ch.toward=Math.random()<.5;e.z=s.z;e.x=s.side*(WALL-SHOP_D+.3);e.yaw=s.side>0?-Math.PI/2:Math.PI/2;ch.emerge=2.0;ch.ex=s.side*(.4+Math.random()*.9);ch.age=0}}}
+  }
   function updPairs(dt){
     pairs=pairs.filter(p=>{
       const A=p.A,B=p.B;
@@ -323,7 +346,8 @@ tick();setInterval(tick,1000);
   function updChars(dt){
     updPairs(dt);
     clock+=dt;spawnT-=dt;shopTraffic(dt);
-    if(spawnT<=0&&chars.length<9){spawn(false);spawnT=1+Math.random()*2}
+    if(spawnT<=0&&chars.length<9&&!MON.on&&!emergeQ.length){spawn(false);spawnT=1+Math.random()*2}
+    panicCheck(dt);
     for(const ch of chars){
       const e=ch.ent;ch.age+=dt;e.clock=clock;ch.cool=Math.max(0,ch.cool-dt);
       ch.life-=dt;
@@ -342,7 +366,7 @@ tick();setInterval(tick,1000);
       if(ch.shop){const zd=doorZ(ch.shop.id),sd=ch.shop.side,tx=sd*(WALL-SHOP_D+.35);
         e.z+=(zd-e.z)*Math.min(1,dt*2.2);e.x+=(tx-e.x)*Math.min(1,dt*1.2);
         if(Math.abs(e.z-zd)<1.4)e.yaw+=((sd>0?Math.PI/2:-Math.PI/2)-e.yaw)*Math.min(1,dt*4);
-        if(Math.abs(e.x)>WALL-SHOP_D-.1){ch.vanish=(ch.vanish||0)+dt/.5;if(ch.vanish>=1)ch.dead=true}}
+        if(Math.abs(e.x)>WALL-SHOP_D-.1){ch.vanish=(ch.vanish||0)+dt/.5;if(ch.vanish>=1){ch.dead=true;if(ch.fleeShop)sheltered.push({name:ch.name,fem:ch.fem})}}}
       /* preacher gesticulates, samurai stays calm */
       if(ch.stat&&ch.wait<=0&&ch.irate<=0){
         if(ch.name==='preacher')e.arms.R=-2.5+Math.sin(clock*3)*.35;
@@ -381,7 +405,7 @@ tick();setInterval(tick,1000);
       if(!A||A.dead||!chars.includes(A)){ch.follower=false;ch.mate=null;continue}
       if(A.shop){if(!ch.shop){ch.shop=A.shop}}
       else{ch.shop=null;ch.vanish=0;e.z=A.ent.z;e.x=A.ent.x+.58;e.yaw=A.ent.yaw;e.ph=A.ent.ph+.35;ch.wait=A.wait;ch.toward=A.toward;ch.sp=A.sp;ch.age=Math.max(ch.age,A.age)}}
-    coupleT-=dt;if(coupleT<=0){coupleT=26+Math.random()*30;if(!chars.some(q=>q.mate)&&chars.length<9)spawnCouple()}
+    coupleT-=dt;if(coupleT<=0&&!MON.on){coupleT=26+Math.random()*30;if(!chars.some(q=>q.mate)&&chars.length<9)spawnCouple()}
     /* robocop chases the running kid but never catches it */
     {const rc=chars.find(q=>q.name==='robocop');
      if(rc&&rc.chase){const k=rc.chase;
@@ -395,7 +419,7 @@ tick();setInterval(tick,1000);
            say(rc,rndp(['STOP!!','止まれ!','СТОЙ!','멈춰!']),'irate',1.8);say(k,rndp(['Zoom!','捕まらない!','Не поймаешь!','못 잡아!']),'say',2)}}}}
     /* snack time: customers buy a hotdog or a bowl from a vendor */
     buyT-=dt;
-    if(buyT<=0){buyT=5+Math.random()*6;
+    if(buyT<=0&&!MON.on){buyT=5+Math.random()*6;
       const vs=chars.filter(v=>(v.name==='ramen'||v.name==='hotdog')&&v.ent.z>6&&v.ent.z<21&&v.irate<=0&&v.wait<=0&&!v.met);
       if(vs.length){const v=rndp(vs);
         const cu=chars.find(q=>q!==v&&!q.stat&&!q.def.fly&&!q.mate&&!q.met&&!q.shop&&!q.chase&&!q.chased&&!q.emerge&&q.irate<=0&&q.wait<=0&&q.buy==null&&!['ramen','hotdog','kidball','oldlady','dog','monk','robocop'].includes(q.name)&&Math.abs(q.ent.z-v.ent.z)<2&&Math.abs(q.ent.x-v.ent.x)<2.6);
@@ -705,7 +729,7 @@ const apps={
   skills:{jp:'技',t:'SKILLS',t2:'навыки · 技能 · कौशल',w:420},
   map:{jp:'地',t:'DISTRICT MAP',t2:'خريطة · 지도 · Карта',w:null,init:initMap,x:.4,y:80,w:600},
   contact:{jp:'連',t:'CONTACT',t2:'связь · 連絡 · اتصال',w:380},
-  club:{jp:'踊',t:'THE RUSTY KOI NIGHTCLUB',t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007d',cls:'app-win',ar:1.5}
+  club:{jp:'踊',t:'THE RUSTY KOI NIGHTCLUB',t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007e',cls:'app-win',ar:1.5}
 };
 const open={};let zTop=100,n=0;
 function openApp(id){
