@@ -807,7 +807,7 @@ const apps={
   skills:{jp:'技',t:'SKILLS',t2:'навыки · 技能 · कौशल',w:420},
   map:{jp:'地',t:'DISTRICT MAP',t2:'خريطة · 지도 · Карта',w:null,init:initMap,x:.4,y:80,w:600},
   contact:{jp:'連',t:'CONTACT',t2:'связь · 連絡 · اتصال',w:380},
-  club:{jp:'踊',t:'THE RUSTY KOI NIGHTCLUB',t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007g',cls:'app-win',ar:1.5}
+  club:{jp:'踊',t:'CASA SOFIA',t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007h',cls:'app-win',ar:1.5}
 };
 const open={};let zTop=100,n=0;
 function openApp(id){
@@ -850,7 +850,7 @@ function initMap(win){
   const TW=46,TH=23,OX=180,OY=50,N=7;
   const iso=(gx,gy,z=0)=>[OX+(gx-gy)*TW/2,OY+(gx+gy)*TH/2-z];
   const B=[
-    {n:'The Rusty Koi Nightclub',d:'OPEN: a hologram DJ, a pulsing floor and a very friendly moshpit.',gx:1,gy:1,w:2,dd:2,h:49,col:'#7a1f4d',app:'club',glow:'#ff2e88',sign:'踊'},
+    {n:'Casa Sofia',d:'OPEN: a hologram DJ, a pulsing floor and a very friendly moshpit.',gx:1,gy:1,w:2,dd:2,h:49,col:'#7a1f4d',app:'club',glow:'#ff2e88',sign:'踊'},
     {n:'About Tower',d:'OPEN: who I am.',gx:1,gy:4,w:1,dd:2,h:67,col:'#243a6a',app:'about',glow:'#19e3ff',sign:'我'},
     {n:'Lot 01',d:'UNDER CONSTRUCTION: a future project will go here.',gx:3,gy:4,w:1,dd:1,h:17,col:'#2c2440',lot:1},
     {n:'Lot 02',d:'UNDER CONSTRUCTION: a future project will go here.',gx:5,gy:4,w:1,dd:2,h:23,col:'#2c2440',lot:1},

@@ -30,6 +30,14 @@ const STABP=[
 const KICKP=[[1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],[1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,1],[1,0,0,0,1,0,0,0,1,0,0,1,1,0,0,0],[1,0,0,0,1,0,0,0,1,0,0,0,1,0,1,0]];
 const HATP=[[0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0],[0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,1],[1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],[0,1,1,0,0,1,1,0,0,1,1,0,0,1,1,0]];
 const PERCP=[null,[0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1],[0,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0],[0,0,1,0,0,0,1,0,0,1,0,0,0,1,0,0]];
+const LADJ=['Casa','Fuego','Noche','Caliente','Dulce','Bogotá','Havana','Luna','Sol','Mambo','Sabor','Candela'],LNOUN=['Sofia','Terraza','Rumba','Calle','Fiesta','Medianoche','Montuno','Tumbao','Azotea','Cumbia','Balcón','Corazón'];
+const AADJ=['Savannah','Baobab','Kalahari','Lagos','Harmattan','Sahara','Orisha','Accra','Kilimanjaro','Palm Wine','Jollof','Zulu'],ANOUN=['Sunrise','Drum Circle','Ritual','Dust','Night Market','Rain','Dancefloor','Talking Drum','Ancestors','Horizon','Gathering','Ember'];
+const LMONT=[[1,0,0,1,0,0,1,0,1,0,0,1,0,0,1,0],[1,0,1,0,0,1,0,1,0,0,1,0,1,0,0,1],[0,0,1,0,1,0,0,1,0,0,1,0,1,0,0,0]];
+const LTUMB=[[0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,1],[1,0,0,0,0,0,1,0,0,0,0,0,1,0,1,0],[0,0,0,1,0,0,1,0,0,0,0,1,0,0,1,0]];
+const LCONG=[[0,0,1,1,2,0,1,0,0,0,1,1,2,0,1,1],[0,0,0,1,2,0,1,0,0,0,0,1,2,0,1,0]];
+const ABASS=[[1,0,0,1,0,1,0,0,1,0,0,1,0,0,1,0],[1,0,1,0,0,1,0,0,1,0,0,0,1,0,1,0]];
+const AKAL=[[1,0,0,1,0,0,1,0,0,1,0,0,1,0,1,0],[0,1,0,0,1,0,1,0,0,0,1,0,0,1,0,0]];
+const ATOM=[[0,0,1,0,0,1,0,1,0,0,1,0,0,1,0,1],[0,1,0,0,1,0,0,1,0,1,0,0,1,0,0,1]];
 const ADJ=['Rain','Neon','Midnight','Velvet','Chrome','Lantern','Static','Electric','Basement','Glass','Wet','Slow','Jowo','Koi','Paper'];
 const NOUN=['Groove','Circuit','Alley','Pulse','Echo','Shrine','Noodle','Elevator','Skyline','Signal','Disco','Ritual','Drift','Hologram','Taxi'];
 let ac=null,master,duck,send,noise,timer=0,step=0,nextT=0,t0=0,on=false;
@@ -54,6 +62,13 @@ function makeTrack(seed){
     open:first?true:R()<.8,swing:first?0:R()*.012,
     sbass:pick(SBASS),skeys:pick(SKEYS),pad:R()<.8,mel:Array.from({length:8},()=>Math.floor(R()*5)),melOn:R()<.7};
   if(soul){t.swing=.022+R()*.014;t.wet=.3+R()*.2}
+  if(!first&&!soul){
+    /* a separate roll so earlier seeds keep their sound; some club seeds become latin or afro house */
+    const kr=mulberry((seed*2654435761)>>>0)();
+    if(kr<.5){R=mulberry((seed^0x5bd1e995)>>>0);
+      if(kr<.27){t.kind='latin';t.name=pick(LADJ)+' '+pick(LNOUN);t.bpm=120+Math.floor(R()*8);t.swing=.004+R()*.008;t.mont=pick(LMONT);t.tumb=pick(LTUMB);t.cong=pick(LCONG);t.brass=R()<.65;t.cow=R()<.6;t.wet=.22+R()*.12}
+      else{t.kind='afro';t.name=pick(AADJ)+' '+pick(ANOUN);t.bpm=116+Math.floor(R()*8);t.swing=.018+R()*.012;t.abass=pick(ABASS);t.akal=pick(AKAL);t.tom=pick(ATOM);t.wet=.3+R()*.15;t.voice=R()<.75}
+    }}
   R=Math.random;return t;
 }
 function newSeed(){return 1+Math.floor(Math.random()*999999999)}
@@ -132,6 +147,50 @@ function lead(t,m,len){
   gn.gain.setValueAtTime(.0001,t);gn.gain.linearRampToValueAtTime(.06,t+.03);gn.gain.exponentialRampToValueAtTime(.0001,t+len);
   o.connect(gn);gn.connect(duck);gn.connect(send);o.start(t);lfo.start(t);o.stop(t+len+.05);lfo.stop(t+len+.05);
 }
+function conga(t,type){const o=ac.createOscillator(),gn=ac.createGain();o.type='sine';const f0=type===2?420:300,f1=type===2?300:215;
+  o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+.07);gn.gain.setValueAtTime(type===2?.5:.6,t);gn.gain.exponentialRampToValueAtTime(.001,t+(type===2?.09:.18));
+  o.connect(gn);gn.connect(master);o.start(t);o.stop(t+.22);if(type===2)nz(t,'bandpass',2600,2,.2,.04,master)}
+function clave(t){const o=ac.createOscillator(),gn=ac.createGain();o.type='sine';o.frequency.value=2450;env(gn,t,.001,.26,.07);o.connect(gn);gn.connect(master);o.start(t);o.stop(t+.1)}
+function cowbell(t,acc){[562,845].forEach(fq=>{const o=ac.createOscillator(),f=ac.createBiquadFilter(),gn=ac.createGain();o.type='square';o.frequency.value=fq;f.type='bandpass';f.frequency.value=fq*1.2;f.Q.value=1.2;env(gn,t,.002,acc?.13:.08,.11);o.connect(f);f.connect(gn);gn.connect(master);o.start(t);o.stop(t+.15)})}
+function timbale(t,hi){nz(t,'bandpass',hi?3600:2400,1.5,.25,.07,master);const o=ac.createOscillator(),gn=ac.createGain();o.type='triangle';o.frequency.setValueAtTime(hi?900:520,t);o.frequency.exponentialRampToValueAtTime(hi?600:340,t+.06);env(gn,t,.001,.2,.1);o.connect(gn);gn.connect(master);o.start(t);o.stop(t+.14)}
+function piano(t,m,vel){const gn=ac.createGain(),f=ac.createBiquadFilter();f.type='lowpass';f.frequency.setValueAtTime(3800,t);f.frequency.exponentialRampToValueAtTime(900,t+.4);
+  gn.gain.setValueAtTime(.0001,t);gn.gain.linearRampToValueAtTime(.2*vel,t+.004);gn.gain.exponentialRampToValueAtTime(.0001,t+.5);
+  [['triangle',1],['sine',2.001],['sine',3.003]].forEach(([ty,k],i)=>{const o=ac.createOscillator(),g2=ac.createGain();o.type=ty;o.frequency.value=mtof(m)*k;g2.gain.value=i?.28/i:1;o.connect(g2);g2.connect(f);o.start(t);o.stop(t+.55)});
+  f.connect(gn);gn.connect(master);if(send)gn.connect(send)}
+function tom(t,fq){const o=ac.createOscillator(),gn=ac.createGain();o.type='sine';o.frequency.setValueAtTime(fq*1.6,t);o.frequency.exponentialRampToValueAtTime(fq,t+.08);gn.gain.setValueAtTime(.5,t);gn.gain.exponentialRampToValueAtTime(.001,t+.24);o.connect(gn);gn.connect(master);o.start(t);o.stop(t+.28)}
+function kalimba(t,m){[[1,.22,.5],[5.4,.05,.12]].forEach(([k,pk,dc])=>{const o=ac.createOscillator(),gn=ac.createGain();o.type='sine';o.frequency.value=mtof(m)*k;env(gn,t,.002,pk,dc);o.connect(gn);gn.connect(master);if(send)gn.connect(send);o.start(t);o.stop(t+dc+.1)})}
+function voice(t,m,len){const o=ac.createOscillator(),lfo=ac.createOscillator(),lg=ac.createGain(),gn=ac.createGain(),sum=ac.createGain();o.type='sawtooth';o.frequency.value=mtof(m-12);lfo.frequency.value=5.2;lg.gain.value=9;lfo.connect(lg);lg.connect(o.detune);
+  [[720,5],[1180,6]].forEach(([fq,q])=>{const f=ac.createBiquadFilter();f.type='bandpass';f.frequency.value=fq;f.Q.value=q;o.connect(f);f.connect(sum)});
+  gn.gain.setValueAtTime(.0001,t);gn.gain.linearRampToValueAtTime(.2,t+.18);gn.gain.exponentialRampToValueAtTime(.0001,t+len);sum.connect(gn);gn.connect(master);if(send)gn.connect(send);o.start(t);lfo.start(t);o.stop(t+len+.05);lfo.stop(t+len+.05)}
+function schedLatin(n,t){
+  const s=n%16,bar=Math.floor(n/16),ch=T.chords[bar%4],phrase=Math.floor(bar/4)%4;
+  t+=(s%2?T.swing:0);
+  if(s%4===0)kick(t);
+  if(s===4||s===12)nz(t,'bandpass',1900,3,.2,.05,master);
+  nz(t,'highpass',8500,.5,s%2?.085:.05,.03,duck);
+  if(s===14&&bar%2)hat(t,true);
+  if(s===0||s===3||s===6||s===10||s===12)clave(t);
+  if(T.cong[s])conga(t,T.cong[s]);
+  if(T.cow&&phrase>=1&&(s===0||s===6||s===8||s===14))cowbell(t,s===0);
+  if(phrase===3&&bar%4===3&&s>=12)timbale(t,s%2===0);
+  if(T.tumb[s])sbass(t,s===14?ch.b+7:ch.b,S16*(s===6?3.4:2.6));
+  if(T.mont[s]){let k=0;for(let i=0;i<s;i++)if(T.mont[i])k++;piano(t,ch.ch[(k+bar)%4],.8+(s%3)*.1)}
+  if(T.brass&&phrase>=2&&(s===3||s===10))stab(t,ch.ch.slice(0,3),2400,'sawtooth');
+  if(s===0&&T.pad)padv(t,ch.ch,S16*16);
+}
+function schedAfro(n,t){
+  const s=n%16,bar=Math.floor(n/16),ch=T.chords[bar%4],phrase=Math.floor(bar/4)%4;
+  t+=(s%2?T.swing:0);
+  if(s%4===0)soft(t,1);
+  if(s===4||s===12)nz(t,'bandpass',1700,2.5,.22,.06,master);
+  nz(t,'highpass',s%2?8000:9000,.5,s%2?.09:.04,.035,duck);
+  if(s===6||s===14)hat(t,true);
+  if(T.tom[s])tom(t,[150,115,88][(s+bar)%3]);
+  if(T.abass[s])sbass(t,s%8===5?ch.b+7:ch.b,S16*2.2);
+  if(phrase>=1&&T.akal[s])kalimba(t,ch.ch[0]+[0,2,4,7,9][T.mel[(s+bar)%8]]);
+  if(T.voice&&phrase>=2&&(s===0||s===8)&&bar%2===0)voice(t,ch.ch[((s/8)+bar)%4|0],S16*7);
+  if(s===0&&T.pad)padv(t,ch.ch,S16*16);
+}
 function schedSoul(n,t){
   const s=n%16,bar=Math.floor(n/16),ch=T.chords[bar%4],phrase=Math.floor(bar/4)%4;
   t+=(s%2?T.swing:0);
@@ -148,6 +207,8 @@ function schedSoul(n,t){
 }
 function sched(n,t){
   if(T.kind==='soul')return schedSoul(n,t);
+  if(T.kind==='latin')return schedLatin(n,t);
+  if(T.kind==='afro')return schedAfro(n,t);
   const s=n%16,bar=Math.floor(n/16),ch=T.chords[bar%4],phrase=Math.floor(bar/4)%4;
   t+=(s%2?T.swing:0);
   if(T.kickp[s])kick(t);
