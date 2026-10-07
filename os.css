@@ -138,3 +138,9 @@ a{color:var(--cyan)}
 .toast{position:fixed;left:50%;top:70px;transform:translateX(-50%) translateY(-8px);z-index:9100;padding:6px 18px;font-family:var(--disp);font-size:30px;letter-spacing:.1em;
   color:var(--paper);background:rgba(10,6,18,.8);border:2px solid var(--pink);box-shadow:4px 4px 0 #000;opacity:0;transition:.4s;pointer-events:none}
 .toast.show{opacity:1;transform:translateX(-50%)}
+
+.hud .snd{all:unset;cursor:pointer;font-family:var(--disp);font-size:18px;letter-spacing:.08em;color:var(--cyan);border:1px solid rgba(25,227,255,.6);padding:0 10px;line-height:24px;white-space:nowrap}
+.hud .snd:hover,.hud .snd:focus-visible{background:var(--cyan);color:#05161c;outline:none}
+.hud .snd.on{color:#05161c;background:var(--pink);border-color:var(--pink);box-shadow:0 0 14px var(--pink);animation:sndp .484s infinite}
+@keyframes sndp{50%{box-shadow:0 0 4px var(--pink)}}
+@media (max-width:760px){.hud .snd{font-size:15px;padding:0 6px}}

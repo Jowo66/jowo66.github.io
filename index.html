@@ -17,7 +17,7 @@
 <div class="hud" role="banner">
   <b>NEO-EDO OS</b>
   <div class="tick hide" aria-hidden="true"><span>ようこそ · WELCOME · Добро пожаловать · 환영합니다 · مرحبا · स्वागत है · ยินดีต้อนรับ · Bienvenue · Bienvenido · 欢迎光临 · Καλώς ήρθατε · ברוכים הבאים · Hoş geldiniz · Karibu · Witamy · Nnọọ · Ndewo · Bem-vindo · E kaabo &nbsp;&nbsp;&nbsp; ようこそ · WELCOME · Добро пожаловать · 환영합니다 · مرحبا · स्वागत है · ยินดีต้อนรับ · Bienvenue · Bienvenido · 欢迎光临 · Καλώς ήρθατε · ברוכים הבאים · Hoş geldiniz · Karibu · Witamy · Nnọọ · Ndewo · Bem-vindo · E kaabo</span></div>
-  <div class="r"><span class="hide"><span class="dot"></span>ONLINE</span><span class="hide" id="date"></span><span id="clock">--:--:--</span><span class="hide">TORONTO / 東京-2099</span></div>
+  <div class="r"><button id="snd" class="snd" type="button" aria-pressed="false" title="Toggle house music">&#9834; SOUND OFF</button><span class="hide"><span class="dot"></span>ONLINE</span><span class="hide" id="date"></span><span id="clock">--:--:--</span><span class="hide">TORONTO / 東京-2099</span></div>
 </div>
 
 <section class="hero">
@@ -32,8 +32,7 @@
   <button class="app" data-app="about"><span class="g">我</span>About</button>
   <button class="app cy" data-app="skills"><span class="g">技</span>Skills</button>
   <button class="app am" data-app="map"><span class="g">地</span>Map</button>
-  <button class="app vm" data-app="cabaret"><span class="g">酒</span>Cabaret</button>
-  <button class="app" data-app="dojo"><span class="g">相</span>Dojo</button>
+  <button class="app vm" data-app="club"><span class="g">踊</span>Nightclub</button>
   <button class="app cy" data-app="contact"><span class="g">連</span>Contact</button>
 </nav>
 
@@ -61,7 +60,7 @@
   <p class="cmd">cat profile.txt</p>
   <p>I'm Ejovwo, a computer science student in Toronto. I build things for the web and for the canvas, and this whole city is hand-coded: no frameworks, no assets, just JavaScript.</p>
   <p class="cmd">ls apps/</p>
-  <p>The <b style="color:var(--pink)">Cabaret</b> and the <b style="color:var(--pink)">Dojo</b> are small simulations I wrote from scratch. Open the Map to wander the district.</p>
+  <p>The <b style="color:var(--pink)">Nightclub</b> is a small 3D simulation I wrote from scratch: a hologram DJ, a moshpit and a sound button that plays house music, all synthesised in the browser. Open the Map to wander the district.</p>
   <div class="todo">TODO: add school, program and year here.</div>
 </template>
 <template id="t-skills">
@@ -86,6 +85,7 @@
 </template>
 
 <script src="lp3d.js"></script>
+<script src="house.js"></script>
 <script src="alley-lore.js"></script>
 <script src="os.js"></script>
 </body>

@@ -14,7 +14,7 @@ tick();setInterval(tick,1000);
 
 /* ---------- boot ---------- */
 (function(){
-  const lines=['<b>NEO-EDO OS</b>','mounting /district ........ ok','loading neon ............. ok','tuning rain .............. ok','waking the cabaret ....... ok','waking the dojo .......... ok','ようこそ · welcome · добро пожаловать · 환영합니다 · مرحبا'];
+  const lines=['<b>NEO-EDO OS</b>','mounting /district ........ ok','loading neon ............. ok','tuning rain .............. ok','warming up the club ...... ok','calibrating the bass ..... ok','ようこそ · welcome · добро пожаловать · 환영합니다 · مرحبا'];
   const pre=$('#bootText');let i=0;
   const hide=()=>{$('#boot').classList.add('gone');openApp('about');if(innerWidth>760)openApp('map')};
   let done=false;const fin=()=>{if(done)return;done=true;hide()};
@@ -466,8 +466,7 @@ const apps={
   skills:{jp:'技',t:'SKILLS',t2:'навыки · 技能 · कौशल',w:420},
   map:{jp:'地',t:'DISTRICT MAP',t2:'خريطة · 지도 · Карта',w:null,init:initMap,x:.4,y:80,w:600},
   contact:{jp:'連',t:'CONTACT',t2:'связь · 連絡 · اتصال',w:380},
-  cabaret:{jp:'酒',t:'THE RUSTY KOI CABARET',t2:'كاباريه · 카바레',frame:'future.html?embed',cls:'app-win',ar:1.6},
-  dojo:{jp:'相',t:'THE DOJO',t2:'道場 · Додзё',frame:'sumo.html?embed',cls:'app-win',ar:1.3}
+  club:{jp:'踊',t:'THE RUSTY KOI NIGHTCLUB',t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed',cls:'app-win',ar:1.6}
 };
 const open={};let zTop=100,n=0;
 function openApp(id){
@@ -510,8 +509,7 @@ function initMap(win){
   const TW=46,TH=23,OX=180,OY=50,N=7;
   const iso=(gx,gy,z=0)=>[OX+(gx-gy)*TW/2,OY+(gx+gy)*TH/2-z];
   const B=[
-    {n:'The Rusty Koi Cabaret',d:'OPEN: a chrome singer, five tables, and something behind the curtains.',gx:1,gy:1,w:2,dd:2,h:49,col:'#7a1f4d',app:'cabaret',glow:'#ff2e88',sign:'酒'},
-    {n:'The Dojo',d:'OPEN: endless sumo bouts. Win streaks tilt the odds, but never lock them.',gx:4,gy:1,w:2,dd:2,h:38,col:'#8a3a22',app:'dojo',glow:'#ffb347',sign:'相'},
+    {n:'The Rusty Koi Nightclub',d:'OPEN: a hologram DJ, a pulsing floor and a very friendly moshpit.',gx:1,gy:1,w:2,dd:2,h:49,col:'#7a1f4d',app:'club',glow:'#ff2e88',sign:'踊'},
     {n:'About Tower',d:'OPEN: who I am.',gx:1,gy:4,w:1,dd:2,h:67,col:'#243a6a',app:'about',glow:'#19e3ff',sign:'我'},
     {n:'Lot 01',d:'Reserved for a future project.',gx:3,gy:4,w:1,dd:1,h:17,col:'#2c2440',lot:1},
     {n:'Lot 02',d:'Reserved for a future project.',gx:5,gy:4,w:1,dd:2,h:23,col:'#2c2440',lot:1},
@@ -603,4 +601,11 @@ function initMap(win){
   },600);
 })();
 window.openApp=openApp;
+})();
+
+/* ---------- sound toggle: synthesised house music (house.js) ---------- */
+(function(){
+  const b=document.getElementById('snd');if(!b||!window.House)return;
+  const lab=on=>{b.textContent=on?'\u266A SOUND ON':'\u266A SOUND OFF';b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false')};
+  b.addEventListener('click',()=>House.toggle());House.onchange(lab);lab(false);
 })();
