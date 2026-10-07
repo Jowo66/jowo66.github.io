@@ -117,10 +117,10 @@ html.embed #spbar{flex-wrap:wrap}
 #np b{color:#ffb347;font-weight:700}#np i{font-style:normal;color:#27e8ff}#np[hidden]{display:none}
 html.embed #np{display:none}
 </style>
-<script src="lp3d.js?v=20261007zk"></script>
-<script src="house.js?v=20261007zk"></script>
-<script src="spotify-config.js?v=20261007zk"></script>
-<script src="spotify.js?v=20261007zk"></script>
+<script src="lp3d.js?v=20261007zl"></script>
+<script src="house.js?v=20261007zl"></script>
+<script src="spotify-config.js?v=20261007zl"></script>
+<script src="spotify.js?v=20261007zl"></script>
 <script>(function(){if(/[?&]embed/.test(location.search)){document.documentElement.className="embed";var e=document.createElement("style");e.textContent="header,header.bar,main>:not(.stage),footer,.rules,.districts{display:none!important}html,body{background:#05020a!important}body{padding:6px!important;margin:0!important;min-height:0!important}main{padding:0!important;margin:0 auto!important;max-width:none!important}";document.head.appendChild(e)}})()</script>
 </head>
 
@@ -633,38 +633,54 @@ function updBouncer(dt){
 /* ---------- hologram DJ ---------- */
 const DJ_PARTS=LP.compile(LP.human({coat:'#fff',pant:'#fff',skin:'#fff',hair:'#fff'}).concat([
   box(0,1.74,0,.34,.05,.3,'#fff'),box(-.15,1.52,0,.06,.18,.2,'#fff'),box(.15,1.52,0,.06,.18,.2,'#fff')]));
-const HP={col:HCOLS[0].slice(),to:HCOLS[0].slice(),ci:0,g:0,slices:[]};
+/* three holograms: the DJ and two dancers either side of the stage. They never share a colour, including when one of them glitches into a new one. */
+const mkHF=(x,sc,ci,o)=>Object.assign({x,sc,col:HCOLS[ci].slice(),to:HCOLS[ci],ci,g:0,slices:[],ng:rnd(2,5)},o||{});
+const HP=mkHF(0,1.5,0,{dj:true,seed:0});
+const HL=mkHF(-2.55,1.45,1,{seed:1}),HR=mkHF(2.55,1.45,4,{seed:2});
+const HFS=[HP,HL,HR];
 const LH=document.createElement('canvas');LH.width=W;LH.height=H;const lh=LH.getContext('2d');
 const SCAN=document.createElement('canvas');SCAN.width=4;SCAN.height=4;{const s=SCAN.getContext('2d');s.fillStyle='rgba(0,0,0,.5)';s.fillRect(0,0,4,2)}
 const RAIN='アイウ01234567абвгدزحتกขคअआ한글あ';
 const rainDrops=Array.from({length:24},()=>({x:rnd(-1.8,1.8),y:rnd(0,3),z:rnd(10.1,11),v:rnd(.4,1),ch:RAIN[ri(0,RAIN.length-1)]}));
 let lastBar=-1,djMode='up';
-function glitch(){
-  let n;do{n=ri(0,HCOLS.length-1)}while(n===HP.ci);HP.ci=n;HP.to=HCOLS[n];HP.g=.3;
-  HP.slices=Array.from({length:ri(5,9)},()=>({y:rnd(90,330),h:rnd(6,30),dx:rnd(-40,40)}));
+const newSlices=()=>Array.from({length:ri(5,9)},()=>({y:rnd(90,330),h:rnd(6,30),dx:rnd(-40,40)}));
+function glitchF(f){                                    /* a new colour that none of the three is wearing or heading for */
+  const taken=HFS.map(o=>o.ci),opts=HCOLS.map((_,i)=>i).filter(i=>!taken.includes(i));
+  const n=pick(opts);f.ci=n;f.to=HCOLS[n];f.g=.3;f.slices=newSlices();
+}
+function glitch(){glitchF(HP)}
+function glitchAll(){                                   /* the drop: all three change, to three different colours */
+  const idx=HCOLS.map((_,i)=>i).sort(()=>Math.random()-.5);
+  HFS.forEach((f,k)=>{f.ci=idx[k];f.to=HCOLS[idx[k]];f.g=.3;f.slices=newSlices()});
 }
 let SCANPAT=null;
-function drawHolo(){
-  const arms=djMode==='up'?{L:-2.5+Math.sin(beat*Math.PI*2)*.45,R:-2.5-Math.sin(beat*Math.PI*2)*.45}:{L:-1.15+Math.sin(beat*Math.PI*4)*.2,R:-1.15+Math.cos(beat*Math.PI*3)*.25};
-  const e=ent(DJ_PARTS,0,DJZ,{y:BOOTH_Y,yaw:Math.PI,sc:1.5,clock:time,elev:.03+kick*.04,bob:Math.sin(beat*Math.PI*2)*.03,
-    holo:[HP.col[0],HP.col[1],HP.col[2],.26],arms});
-  const bp=P(0,BOOTH_Y,DJZ),top=P(0,BOOTH_Y-3.4,DJZ);
-  const RX=Math.max(0,Math.floor(bp[0]-260)),RY=Math.max(0,Math.floor(top[1]-40)),RW=Math.min(W-RX,520),RH=Math.min(H-RY,Math.ceil(bp[1]-top[1]+90));
+function drawHolo(){HFS.forEach(drawHoloFig)}
+function drawHoloFig(f){
+  let arms,yaw=Math.PI,ph=0,el=.03+kick*.04;
+  if(f.dj)arms=djMode==='up'?{L:-2.5+Math.sin(beat*Math.PI*2)*.45,R:-2.5-Math.sin(beat*Math.PI*2)*.45}:{L:-1.15+Math.sin(beat*Math.PI*4)*.2,R:-1.15+Math.cos(beat*Math.PI*3)*.25};
+  else if(f.seed===1){arms={L:-2.6+Math.sin(beat*Math.PI*2)*.5,R:-2.6+Math.cos(beat*Math.PI*2)*.5};yaw=Math.PI+Math.sin(beat*Math.PI)*.5;ph=beat*Math.PI*4;el=Math.abs(Math.sin(beat*Math.PI))*.18}
+  else{arms={L:-1.2+Math.sin(beat*Math.PI*2)*1.2,R:-1.2+Math.sin(beat*Math.PI*2+Math.PI)*1.2};yaw=Math.PI-Math.sin(beat*Math.PI)*.5;ph=beat*Math.PI*3;el=Math.abs(Math.cos(beat*Math.PI))*.18}
+  const k=f.sc/1.5,e=ent(DJ_PARTS,f.x,DJZ,{y:BOOTH_Y,yaw,sc:f.sc,clock:time,ph,elev:el,bob:f.dj?Math.sin(beat*Math.PI*2)*.03:0,
+    holo:[f.col[0],f.col[1],f.col[2],f.dj?.26:.36],arms});
+  const bp=P(f.x,BOOTH_Y,DJZ),top=P(f.x,BOOTH_Y-3.4*k,DJZ),col=f.col;
+  const RWm=f.dj?520:300,RX=Math.max(0,Math.floor(bp[0]-RWm/2)),RY=Math.max(0,Math.floor(top[1]-40)),RW=Math.min(W-RX,RWm),RH=Math.min(H-RY,Math.ceil(bp[1]-top[1]+90));
   lh.clearRect(RX,RY,RW,RH);
   const rg=lh.createLinearGradient(0,bp[1],0,top[1]);
-  rg.addColorStop(0,`rgba(${HP.col},.35)`);rg.addColorStop(1,`rgba(${HP.col},0)`);
-  lh.fillStyle=rg;lh.beginPath();lh.moveTo(bp[0]-24,bp[1]);lh.lineTo(bp[0]+24,bp[1]);lh.lineTo(top[0]+80,top[1]);lh.lineTo(top[0]-80,top[1]);lh.closePath();lh.fill();
-  lh.strokeStyle=`rgba(${HP.col},.9)`;lh.lineWidth=2;lh.beginPath();lh.ellipse(bp[0],bp[1],34+kick*6,8+kick*1.5,0,0,TAU);lh.stroke();
-  lh.beginPath();lh.ellipse(bp[0],bp[1],20,5,0,0,TAU);lh.stroke();
+  rg.addColorStop(0,`rgba(${col},.35)`);rg.addColorStop(1,`rgba(${col},0)`);
+  lh.fillStyle=rg;lh.beginPath();lh.moveTo(bp[0]-24*k,bp[1]);lh.lineTo(bp[0]+24*k,bp[1]);lh.lineTo(top[0]+80*k,top[1]);lh.lineTo(top[0]-80*k,top[1]);lh.closePath();lh.fill();
+  lh.strokeStyle=`rgba(${col},.9)`;lh.lineWidth=2;lh.beginPath();lh.ellipse(bp[0],bp[1],(34+kick*6)*k,(8+kick*1.5)*k,0,0,TAU);lh.stroke();
+  lh.beginPath();lh.ellipse(bp[0],bp[1],20*k,5*k,0,0,TAU);lh.stroke();
   LP.drawEnt(lh,e,CAM,1);
-  lh.font='700 13px '+SERIF;lh.textAlign='center';
-  rainDrops.forEach(r=>{r.y+=r.v*.032;if(r.y>3){r.y=0;r.ch=RAIN[ri(0,RAIN.length-1)]}const q=P(r.x,BOOTH_Y-r.y,r.z);lh.fillStyle=`rgba(${HP.col},${.65-r.y*.18})`;lh.fillText(r.ch,q[0],q[1])});
+  if(f.dj){
+    lh.font='700 13px '+SERIF;lh.textAlign='center';
+    rainDrops.forEach(r=>{r.y+=r.v*.032;if(r.y>3){r.y=0;r.ch=RAIN[ri(0,RAIN.length-1)]}const q=P(r.x,BOOTH_Y-r.y,r.z);lh.fillStyle=`rgba(${col},${.65-r.y*.18})`;lh.fillText(r.ch,q[0],q[1])});
+  }
   lh.globalCompositeOperation='destination-out';lh.fillStyle=SCANPAT||(SCANPAT=lh.createPattern(SCAN,'repeat'));lh.fillRect(RX,RY,RW,RH);lh.globalCompositeOperation='source-over';
-  const sy=((time*90)%420)+40;lh.fillStyle=`rgba(${HP.col},.1)`;lh.globalCompositeOperation='source-atop';lh.fillRect(RX,sy,RW,10);lh.globalCompositeOperation='source-over';
+  const sy=((time*90+f.seed*140)%420)+40;lh.fillStyle=`rgba(${col},.1)`;lh.globalCompositeOperation='source-atop';lh.fillRect(RX,sy,RW,10);lh.globalCompositeOperation='source-over';
   ctx.save();ctx.globalCompositeOperation='lighter';
-  const fl=.85+.15*Math.sin(time*40)+(HP.g>0?(Math.random()-.5)*.5:0);ctx.globalAlpha=clamp(fl,.3,1);
+  const fl=.85+.15*Math.sin(time*40+f.seed)+(f.g>0?(Math.random()-.5)*.5:0);ctx.globalAlpha=clamp(fl,.3,1);
   const dh=(dx)=>ctx.drawImage(LH,RX,RY,RW,RH,RX+dx,RY,RW,RH);
-  if(HP.g>0){dh(0);HP.slices.forEach(s=>{if(s.y>=RY&&s.y<RY+RH){const hh=Math.min(s.h,RY+RH-s.y);ctx.drawImage(LH,RX,s.y,RW,hh,RX+s.dx,s.y,RW,hh)}});ctx.globalAlpha=.35;dh(-6);dh(6)}
+  if(f.g>0){dh(0);f.slices.forEach(s=>{if(s.y>=RY&&s.y<RY+RH){const hh=Math.min(s.h,RY+RH-s.y);ctx.drawImage(LH,RX,s.y,RW,hh,RX+s.dx,s.y,RW,hh)}});ctx.globalAlpha=.35;dh(-6);dh(6)}
   else{dh(0);ctx.globalAlpha=.25;dh(0)}
   ctx.restore();
 }
@@ -785,11 +801,11 @@ function update(dt){
   time+=dt;updBeat(dt);
   beachK=clamp(beachK+(beach?1:-1)*dt/1.1,0,1);applyBeachLight(beachK);
   // every four bars: a drop (flash + glitch + new DJ move)
-  const b4=Math.floor(beat/16);if(b4!==lastBar){if(lastBar>=0){drops++;flash=1;glitch();djMode=Math.random()<.45?'scratch':'up'}lastBar=b4}
+  const b4=Math.floor(beat/16);if(b4!==lastBar){if(lastBar>=0){drops++;flash=1;glitchAll();djMode=Math.random()<.45?'scratch':'up'}lastBar=b4}
   flash=Math.max(0,flash-dt*2.2);
   nextG-=dt;if(nextG<=0){glitch();nextG=rnd(2.5,5)}
-  HP.g=Math.max(0,HP.g-dt);
-  for(let i=0;i<3;i++)HP.col[i]=lerp(HP.col[i],HP.to[i],Math.min(1,dt*10));
+  [HL,HR].forEach(f=>{f.ng-=dt;if(f.ng<=0){glitchF(f);f.ng=rnd(2.5,6)}});
+  HFS.forEach(f=>{f.g=Math.max(0,f.g-dt);for(let i=0;i<3;i++)f.col[i]=lerp(f.col[i],f.to[i],Math.min(1,dt*10))});
   CAM.lights[3].c=HP.col.map(Math.round);
   updCrowd(dt);
   hazes.forEach(h=>{h.x+=h.vx*dt;if(h.x>W+h.rx)h.x=-h.rx;if(h.x<-h.rx)h.x=W+h.rx});
