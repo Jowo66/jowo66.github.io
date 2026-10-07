@@ -103,9 +103,10 @@ section{max-width:1180px;margin:0 auto;padding:80px 6% 70px}
 
 footer{text-align:center;padding:50px 20px;border-top:1px solid rgba(255,46,136,.3);color:var(--muted)}
 footer a{color:var(--cyan)}
+html.beach:not(.embed) body{background:radial-gradient(ellipse at 80% 10%,rgba(255,214,120,.35),transparent 55%),radial-gradient(ellipse at 10% 90%,rgba(80,200,255,.22),transparent 50%),#15324f}
 </style>
 <script src="lp3d.js?v=20261007c"></script>
-<script src="house.js?v=20261007q"></script>
+<script src="house.js?v=20261007u"></script>
 <script>(function(){if(/[?&]embed/.test(location.search)){document.documentElement.className="embed";var e=document.createElement("style");e.textContent="header,header.bar,main>:not(.stage),footer,.rules,.districts{display:none!important}html,body{background:#05020a!important}body{padding:6px!important;margin:0!important;min-height:0!important}main{padding:0!important;margin:0 auto!important;max-width:none!important}";document.head.appendChild(e)}})()</script>
 </head>
 
@@ -134,7 +135,7 @@ footer a{color:var(--cyan)}
     </div>
     <div class="status" role="status" aria-live="off">
       <span>In the club: <b id="who">0</b>/28 &nbsp;&middot;&nbsp; Mode: <b id="mode">pogo</b> &nbsp;&middot;&nbsp; BPM: <b id="bpm">124</b> &nbsp;&middot;&nbsp; Track: <b id="trk">Rain Groove</b> &nbsp;&middot;&nbsp; Plays: <b id="plays">0</b> &nbsp;&middot;&nbsp; Drops: <b id="drops">0</b></span>
-      <span class="btns"><button id="battle" type="button" aria-pressed="false" title="Two dancers battle in the middle while everyone cheers">🥊 Battle: off</button> <button id="dance" type="button" title="Change the dancing style">💃 Style: Mosh</button> <button id="hype" type="button" title="Bring one more person into the club">&#128293; Hype</button> <button id="shf" type="button" title="Generate a new house track">&#10551; Shuffle</button> <button id="fav" type="button" aria-pressed="false" title="Save this track to your playlist">&#9825; Save</button> <select id="pl" aria-label="Your playlist"><option value="">Playlist (0)</option></select> <button id="snd" type="button" aria-pressed="false">&#9834; Sound: off</button> <button id="pause" type="button">Pause</button></span>
+      <span class="btns"><button id="battle" type="button" aria-pressed="false" title="Two dancers battle in the middle while everyone cheers">🥊 Battle: off</button> <button id="dance" type="button" title="Change the dancing style">💃 Style: Mosh</button> <button id="hype" type="button" title="Bring one more person into the club">&#128293; Hype</button> <button id="shf" type="button" title="Generate a new house track">&#10551; Shuffle</button> <button id="fav" type="button" aria-pressed="false" title="Save this track to your playlist">&#9825; Save</button> <select id="pl" aria-label="Your playlist"><option value="">Playlist (0)</option></select> <button id="beachbtn" type="button" aria-pressed="false" title="Switch between Casa Sofia and the beach version, Playa Sofia">&#127958; Beach</button> <button id="snd" type="button" aria-pressed="false">&#9834; Sound: off</button> <button id="pause" type="button">Pause</button></span>
     </div>
   </div>
 
@@ -604,7 +605,7 @@ function drawGrain(){
   const ox=-Math.floor(Math.random()*200),oy=-Math.floor(Math.random()*200);
   for(let x=ox;x<W;x+=200)for(let y=oy;y<H;y+=200)ctx.drawImage(GR,x,y);
   ctx.restore();
-  const v=ctx.createRadialGradient(W/2,H*.5,H*.35,W/2,H*.5,H*.95);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(3,1,8,.72)');ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
+  const v=ctx.createRadialGradient(W/2,H*.5,H*.35,W/2,H*.5,H*.95);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(3,1,8,'+(.72-.56*beachK)+')');ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
 }
 
 function drawBattleFloor(){
@@ -631,6 +632,7 @@ function drawBattleBanner(){
 let nextG=2;
 function update(dt){
   time+=dt;updBeat(dt);
+  beachK=clamp(beachK+(beach?1:-1)*dt/1.1,0,1);applyBeachLight(beachK);
   // every four bars: a drop (flash + glitch + new DJ move)
   const b4=Math.floor(beat/16);if(b4!==lastBar){if(lastBar>=0){drops++;flash=1;glitch();djMode=Math.random()<.45?'scratch':'up'}lastBar=b4}
   flash=Math.max(0,flash-dt*2.2);
@@ -642,8 +644,10 @@ function update(dt){
   hazes.forEach(h=>{h.x+=h.vx*dt;if(h.x>W+h.rx)h.x=-h.rx;if(h.x<-h.rx)h.x=W+h.rx});
 }
 function render(){
-  ctx.clearRect(0,0,W,H);ctx.drawImage(bg,0,0);
-  drawWall();drawTiles();drawBattleFloor();
+  const bm=beachK>=.5;
+  ctx.clearRect(0,0,W,H);ctx.drawImage(bm?bgB:bg,0,0);
+  if(bm){drawBeachBack();drawBeachFloor()}else{drawWall();drawTiles()}
+  drawBattleFloor();
   drawHolo();
   const items=[];
   items.push({z:DJZ-.05,f:()=>{LP.drawEnt(ctx,ent(BOOTH_PARTS,0,DJZ+.1,{y:FLOOR}),CAM,1)}});
@@ -652,7 +656,7 @@ function render(){
   dancers.concat(edge).forEach(d=>items.push({z:d.e.z,f:()=>LP.drawEnt(ctx,d.e,CAM,d.alpha)}));
   bns.forEach(bn=>items.push({z:bn.e.z,f:()=>LP.drawEnt(ctx,bn.e,CAM,bn.alpha)}));
   items.sort((x,y)=>y.z-x.z).forEach(i=>i.f());
-  drawLasers();
+  if(bm)drawSunRays();else drawLasers();
   bursts.forEach(b=>{const q=P(b.x,FLOOR-1.9-b.t*.5,b.z);ctx.save();ctx.translate(q[0],q[1]);ctx.rotate(b.r);ctx.globalAlpha=Math.max(0,1-b.t/.9);
     ctx.font='800 '+Math.round(F/b.z*.38)+'px '+SERIF;ctx.textAlign='center';ctx.lineWidth=4;ctx.strokeStyle='#000';ctx.strokeText(b.txt,0,0);ctx.fillStyle='#ffe14a';ctx.fillText(b.txt,0,0);ctx.restore()});
   if(sweeping&&bns.length){ctx.save();ctx.textAlign='center';ctx.font='800 22px '+SERIF;ctx.fillStyle='#ffe14a';ctx.shadowColor='#ff2e88';ctx.shadowBlur=14;ctx.globalAlpha=.65+.35*Math.sin(time*8);ctx.fillText('CAPACITY \u00b7 \u6e80\u54e1 \u00b7 \u0430\u0448\u0430\u043b\u0442\u0430 \u00b7 SECURITY ESCORTING GUESTS OUT \u00b7 '+toGo()+' TO GO',W/2,H-20);ctx.restore()}
@@ -660,14 +664,132 @@ function render(){
   drawHaze();
   if(flash>0){ctx.fillStyle=`rgba(255,255,255,${flash*.45})`;ctx.fillRect(0,0,W,H)}
   drawGrain();
+  if(beachK>0&&beachK<1){ctx.fillStyle=`rgba(255,246,220,${(1-Math.abs(beachK-.5)*2)*.9})`;ctx.fillRect(0,0,W,H)}
+}
+
+/* ---------- PLAYA SOFIA: the same club, but on a beach in the daytime ---------- */
+let beach=false,beachK=0;
+const bgB=document.createElement('canvas');bgB.width=W;bgB.height=H;
+const HZ=236,SEA_END=339;
+function palmBake(c,x0,y0,x1,y1,sc,flip){
+  c.save();c.strokeStyle='#6b4a2a';c.lineCap='round';c.lineWidth=14*sc;c.beginPath();c.moveTo(x0,y0);c.quadraticCurveTo((x0+x1)/2+flip*50*sc,(y0+y1)/2,x1,y1);c.stroke();
+  c.strokeStyle='rgba(0,0,0,.18)';c.lineWidth=3*sc;for(let k=0;k<7;k++){const u=k/7,qx=x0+(x1-x0)*u+flip*30*sc*Math.sin(u*3.14),qy=y0+(y1-y0)*u;c.beginPath();c.moveTo(qx-6*sc,qy);c.lineTo(qx+6*sc,qy+3)}c.stroke();
+  for(let i=0;i<9;i++){const a=-Math.PI*1.05+i*Math.PI*1.1/8,l=(100+(i%3)*24)*sc,dx=Math.cos(a)*l,dy=Math.sin(a)*l*.5+Math.abs(Math.cos(a))*38*sc;
+    c.strokeStyle=i%2?'#1f7a3a':'#2e9c4c';c.lineWidth=7*sc;c.beginPath();c.moveTo(x1,y1);c.quadraticCurveTo(x1+dx*.5,y1+dy*.1-26*sc,x1+dx,y1+dy);c.stroke();
+    c.strokeStyle='#58c06e';c.lineWidth=2*sc;c.beginPath();c.moveTo(x1,y1);c.quadraticCurveTo(x1+dx*.5,y1+dy*.1-26*sc,x1+dx,y1+dy);c.stroke()}
+  c.fillStyle='#4b2f18';[[-8,6],[6,8],[0,12]].forEach(o=>{c.beginPath();c.arc(x1+o[0]*sc,y1+o[1]*sc,6*sc,0,TAU);c.fill()});c.restore();
+}
+function umbBake(c,x,y,c1,c2,sc){
+  c.save();c.fillStyle='rgba(0,0,0,.18)';c.beginPath();c.ellipse(x+10*sc,y+2,60*sc,10*sc,0,0,TAU);c.fill();
+  c.strokeStyle='#d8d0c0';c.lineWidth=4*sc;c.beginPath();c.moveTo(x,y);c.lineTo(x-4*sc,y-120*sc);c.stroke();
+  for(let i=0;i<8;i++){const a0=Math.PI+i*Math.PI/8,a1=Math.PI+(i+1)*Math.PI/8;c.fillStyle=i%2?c1:c2;c.beginPath();c.moveTo(x-4*sc,y-136*sc);c.ellipse(x-4*sc,y-112*sc,74*sc,26*sc,0,a0,a1);c.closePath();c.fill()}
+  c.fillStyle=c1;c.fillRect(x-70*sc,y-112*sc,0,0);c.restore();
+}
+function bakeBeach(){
+  const c=bgB.getContext('2d');
+  let g=c.createLinearGradient(0,0,0,HZ);g.addColorStop(0,'#2f9de6');g.addColorStop(.6,'#8fd5f6');g.addColorStop(1,'#dff4ff');c.fillStyle=g;c.fillRect(0,0,W,HZ);
+  g=c.createRadialGradient(735,96,6,735,96,170);g.addColorStop(0,'rgba(255,252,220,.95)');g.addColorStop(.25,'rgba(255,240,170,.45)');g.addColorStop(1,'rgba(255,240,170,0)');c.fillStyle=g;c.fillRect(480,0,480,260);
+  c.fillStyle='#fffbe0';c.beginPath();c.arc(735,96,30,0,TAU);c.fill();
+  [[160,64,1],[420,40,.8],[600,120,.7],[880,50,.9],[300,140,.6]].forEach(([x,y,s])=>{c.fillStyle='rgba(255,255,255,.92)';[[0,0,40],[34,-8,34],[68,0,38],[30,10,34]].forEach(q=>{c.beginPath();c.ellipse(x+q[0]*s,y+q[1]*s,q[2]*s,q[2]*.5*s,0,0,TAU);c.fill()});c.fillStyle='rgba(180,205,235,.35)';c.beginPath();c.ellipse(x+30*s,y+16*s,70*s,9*s,0,0,TAU);c.fill()});
+  /* far island */
+  c.fillStyle='#2f7d86';c.beginPath();c.moveTo(70,HZ);c.quadraticCurveTo(150,HZ-34,260,HZ-6);c.lineTo(300,HZ);c.closePath();c.fill();
+  c.strokeStyle='#245e66';c.lineWidth=2;[[150,HZ-22],[190,HZ-18]].forEach(([x,y])=>{c.beginPath();c.moveTo(x,y+12);c.lineTo(x+2,y-4);c.stroke();[-8,8,0].forEach(d=>{c.beginPath();c.moveTo(x+2,y-4);c.lineTo(x+2+d,y+2);c.stroke()})});
+  /* sea */
+  g=c.createLinearGradient(0,HZ,0,SEA_END);g.addColorStop(0,'#1b66aa');g.addColorStop(.55,'#2aa0d0');g.addColorStop(1,'#46d0dc');c.fillStyle=g;c.fillRect(0,HZ,W,SEA_END-HZ);
+  c.fillStyle='rgba(255,255,255,.35)';c.fillRect(0,HZ,W,2);
+  /* sand with a wet edge and foam */
+  g=c.createLinearGradient(0,SEA_END,0,H);g.addColorStop(0,'#f1dca4');g.addColorStop(1,'#dcb878');c.fillStyle=g;c.fillRect(0,SEA_END,W,H-SEA_END);
+  c.fillStyle='rgba(170,140,90,.35)';c.fillRect(0,SEA_END,W,16);
+  c.fillStyle='rgba(255,255,255,.75)';for(let x=0;x<W;x+=22){c.beginPath();c.ellipse(x+((x*7)%9),SEA_END-1,14,3,0,0,TAU);c.fill()}
+  c.fillStyle='rgba(150,120,70,.18)';for(let i=0;i<70;i++){c.fillRect((i*137)%W,SEA_END+22+((i*61)%170),3+(i%4),1.5)}
+  /* rocks for the waterfall (back left) and the pool under them */
+  c.fillStyle='#c9b27a';c.beginPath();c.ellipse(232,SEA_END+3,80,12,0,0,TAU);c.fill();
+  c.fillStyle='#55c9e6';c.beginPath();c.ellipse(232,SEA_END+2,64,9,0,0,TAU);c.fill();
+  [['#6f6a72',150,336,70,92],['#85808a',200,336,62,120],['#7a7580',262,336,64,100],['#615c66',300,338,50,66]].forEach(([col,x,y,w,h])=>{c.fillStyle=col;c.beginPath();c.moveTo(x-w/2,y);c.lineTo(x-w*.32,y-h*.7);c.lineTo(x-w*.05,y-h);c.lineTo(x+w*.3,y-h*.8);c.lineTo(x+w/2,y);c.closePath();c.fill();c.fillStyle='rgba(255,255,255,.14)';c.beginPath();c.moveTo(x-w*.32,y-h*.7);c.lineTo(x-w*.05,y-h);c.lineTo(x,y-h*.7);c.closePath();c.fill()});
+  /* round fountain basin (back right) */
+  c.fillStyle='#d4c7b0';c.beginPath();c.ellipse(764,SEA_END+4,92,16,0,0,TAU);c.fill();c.fillStyle='#9a8e78';c.beginPath();c.ellipse(764,SEA_END+8,92,16,0,0,Math.PI);c.fill();
+  c.fillStyle='#4fd0ee';c.beginPath();c.ellipse(764,SEA_END+3,80,12,0,0,TAU);c.fill();
+  /* big palms at both edges */
+  palmBake(c,40,H+10,92,170,1.15,-1);palmBake(c,925,H+10,868,190,1.05,1);
+  palmBake(c,372,SEA_END+4,356,262,.45,-1);palmBake(c,605,SEA_END+4,622,268,.4,1);
+  umbBake(c,112,462,'#ff4d94','#ffffff',1.1);umbBake(c,862,478,'#27c6ff','#ffffff',1.05);
+  /* tiki torches and a sign */
+  [[196,388],[740,392]].forEach(([x,y])=>{c.strokeStyle='#6b4a2a';c.lineWidth=4;c.beginPath();c.moveTo(x,y);c.lineTo(x,y-52);c.stroke();c.fillStyle='#3c2812';c.fillRect(x-4,y-60,8,10)});
+}
+function drawBeachBack(){
+  const T=time;
+  /* gulls */
+  ctx.strokeStyle='#fff';ctx.lineWidth=2;for(let i=0;i<3;i++){const x=((T*18+i*340)%1100)-70,y=70+i*34+Math.sin(T*1.4+i*2)*6,fl=Math.sin(T*6+i)*5;ctx.beginPath();ctx.moveTo(x-9,y+fl);ctx.quadraticCurveTo(x-4,y-5,x,y);ctx.quadraticCurveTo(x+4,y-5,x+9,y+fl);ctx.stroke()}
+  /* waves on the sea */
+  for(let r=0;r<8;r++){const u=r/7,y=HZ+8+Math.pow(u,1.5)*(SEA_END-HZ-14),n=7+r,len=18+r*6,sp=6+r*3;ctx.strokeStyle=`rgba(255,255,255,${.22+u*.3})`;ctx.lineWidth=1+u*1.4;ctx.beginPath();
+    for(let i=0;i<n;i++){const x=((i*(W+80)/n+T*sp*(r%2?-1:1)+r*53)%(W+80)+(W+80))%(W+80)-40;ctx.moveTo(x,y);ctx.quadraticCurveTo(x+len/2,y-3-u*3,x+len,y)}ctx.stroke()}
+  /* sun glitter */
+  ctx.fillStyle='#fff';for(let i=0;i<26;i++){const k=Math.floor(T*5+i*7)%5;if(k)continue;const u=(i*37%26)/26,y=HZ+6+u*(SEA_END-HZ-10),x=735+Math.sin(i*5.1)*(24+u*70);ctx.fillRect(x,y,3+u*4,1.5)}
+  /* waterfall */
+  ctx.save();ctx.beginPath();ctx.rect(206,240,52,SEA_END-238);ctx.clip();
+  for(let i=0;i<9;i++){const x=208+i*5.6,off=(T*140+i*41)%62;ctx.fillStyle=`rgba(${215+i*3},245,255,${.55+(i%3)*.12})`;for(let y=-62+off;y<SEA_END;y+=62)ctx.fillRect(x,Math.max(246,y+240),3.5,30)}
+  ctx.restore();
+  ctx.fillStyle='rgba(255,255,255,.7)';for(let i=0;i<9;i++){const a=T*3+i*1.3;ctx.beginPath();ctx.arc(232+Math.cos(a)*34,SEA_END-1+Math.sin(a*1.7)*3,2+(i%3),0,TAU);ctx.fill()}
+  /* fountain jets that jump on the kick */
+  ctx.save();ctx.lineCap='round';const fx=764,fy=SEA_END+2,kh=kick*34;
+  ctx.strokeStyle='rgba(225,248,255,.92)';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(fx,fy);ctx.lineTo(fx,fy-92-kh);ctx.stroke();
+  ctx.lineWidth=3;[-1,1].forEach(sd=>[34,60].forEach((dx,i)=>{ctx.beginPath();ctx.moveTo(fx,fy-2);ctx.quadraticCurveTo(fx+sd*dx*.6,fy-70-kh*.6-i*10,fx+sd*dx*1.2,fy+2);ctx.stroke()}));
+  ctx.fillStyle='rgba(235,250,255,.9)';for(let i=0;i<14;i++){const u=((T*1.3+i*.07)%1),a=i%2?1:-1,x=fx+a*(10+u*58)*(.5+(i%4)*.3),y=fy-(1-Math.pow(1-u*2,2))*(90+kh)*.6*(u<.5?1:1-(u-.5)*1.4)+u*u*40;ctx.beginPath();ctx.arc(x,y,2+(i%3)*.6,0,TAU);ctx.fill()}
+  ctx.restore();
+  /* string lights between the palms, pulsing on the beat */
+  ctx.strokeStyle='rgba(40,30,20,.6)';ctx.lineWidth=1.5;ctx.beginPath();for(let i=0;i<=40;i++){const u=i/40,x=96+u*(868-96),y=150+Math.sin(u*Math.PI)*38+Math.sin(u*Math.PI*6)*4;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.stroke();
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  for(let i=0;i<=22;i++){const u=i/22,x=96+u*(868-96),y=150+Math.sin(u*Math.PI)*38+Math.sin(u*Math.PI*6)*4+6,col=HCOLS[(((i+Math.floor(beat))%HCOLS.length)+HCOLS.length)%HCOLS.length],r=5+kick*4+(i%2)*1.5;
+    const g=ctx.createRadialGradient(x,y,0,x,y,r*2.4);g.addColorStop(0,`rgba(${col},.95)`);g.addColorStop(1,`rgba(${col},0)`);ctx.fillStyle=g;ctx.fillRect(x-r*2.4,y-r*2.4,r*4.8,r*4.8)}
+  ctx.restore();
+}
+function drawBeachFloor(){
+  const cols=8,rows=6,x0=-3.2,z0=4.6,s=.8;
+  for(let r=0;r<rows;r++)for(let k=0;k<cols;k++){
+    const on=(k+r)%2===0,L=on?52+kick*7:47+kick*5;
+    ctx.fillStyle=`hsl(${28+((k*3+r*5)%8)},${48+kick*10}%,${L}%)`;
+    quad(ctx,P(x0+k*s,FLOOR,z0+r*s),P(x0+(k+1)*s-.03,FLOOR,z0+r*s),P(x0+(k+1)*s-.03,FLOOR,z0+(r+1)*s-.03),P(x0+k*s,FLOOR,z0+(r+1)*s-.03));ctx.fill();
+  }
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  const c=P(0,FLOOR,7.2),gl=ctx.createRadialGradient(c[0],c[1],10,c[0],c[1],300);gl.addColorStop(0,`rgba(255,230,160,${.1+kick*.1})`);gl.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.scale(1,.28);ctx.translate(0,c[1]/.28-c[1]);ctx.fillStyle=gl;ctx.fillRect(c[0]-320,c[1]-320,640,640);ctx.restore();
+}
+function drawSunRays(){
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  [[-30,.05],[20,.04],[70,.05]].forEach(([dx,a],i)=>{const sw=Math.sin(time*.4+i*2)*14,g=ctx.createLinearGradient(735,100,735-120+dx*3,520);g.addColorStop(0,`rgba(255,244,190,${a+.03})`);g.addColorStop(1,'rgba(255,244,190,0)');ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(735+dx*.3,100);ctx.lineTo(735+dx*.3+24,100);ctx.lineTo(300+dx*4+sw+120,540);ctx.lineTo(300+dx*4+sw-60,540);ctx.closePath();ctx.fill()});
+  ctx.restore();
+}
+const LB=CAM.lights.map(l=>({c:l.c.slice(),k:l.k})),AB=CAM.amb.slice(),FB=CAM.fogC.slice();
+function mix3(a,b,k){return a.map((v,i)=>v+(b[i]-v)*k)}
+function applyBeachLight(bk){
+  CAM.amb=mix3(AB,[.66,.62,.56],bk);CAM.fogC=mix3(FB,[176,222,246],bk);
+  const T2=[{c:[255,244,214],k:1.05},{c:[255,226,190],k:.5},{c:[190,226,255],k:.5},null,{c:[255,250,235],k:.7}];
+  [0,1,2,4].forEach(i=>{CAM.lights[i].c=mix3(LB[i].c,T2[i].c,bk).map(Math.round);CAM.lights[i].k=LB[i].k+(T2[i].k-LB[i].k)*bk});
+  CAM.lights[3].k=LB[3].k+(.25-LB[3].k)*bk;
+}
+function applyBeachUI(){
+  const h=document.querySelector('.intro h1');if(h)h.textContent=beach?'Playa Sofia':'Casa Sofia';
+  const sb=document.querySelector('.intro .sub');if(sb)sb.innerHTML=beach?'浜 &middot; Beach club &middot; Neo-Jowo 2087':'踊 &middot; Nightclub &middot; Neo-Jowo 2087';
+  document.title=beach?'浜 | Playa Sofia Beach Club, Neo-Jowo 2087':'夜 | Casa Sofia Nightclub, Neo-Jowo 2087';
+  cv.setAttribute('aria-label',beach?'Animated low-poly 3D beach club in the sunshine. A hologram DJ plays between two speaker stacks on a wooden deck while a crowd dances, with palm trees, a waterfall, a fountain and the sea behind.':'Animated low-poly 3D cyberpunk nightclub. A hologram DJ in headphones plays behind a booth between two speaker stacks while a crowd moshes and circles on a pulsing tiled dance floor under lasers.');
+  document.documentElement.classList.toggle('beach',beach);
+  const b=el('beachbtn');if(b){b.setAttribute('aria-pressed',beach?'true':'false');b.innerHTML=beach?'\u{1F319} Club':'\u{1F3D6} Beach'}
+}
+function setBeach(on,fromStorage){
+  beach=on;if(!fromStorage){try{localStorage.setItem('jowo.beach',on?'1':'0')}catch(e){}}
+  if(paused||reduce)beachK=on?1:0;applyBeachUI();
 }
 
 /* ---------- boot ---------- */
-bake();initCrowd();
+bake();bakeBeach();initCrowd();
 const reduce=typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 let paused=reduce;
 const btn=el('pause'),label=()=>{btn.textContent=paused?'Play':'Pause'};
 btn.onclick=()=>{paused=!paused;label()};label();
+try{beach=localStorage.getItem('jowo.beach')==='1'}catch(e){}
+beachK=beach?1:0;applyBeachLight(beachK);applyBeachUI();
+const bbn=el('beachbtn');if(bbn)bbn.onclick=()=>setBeach(!beach);
+addEventListener('storage',e=>{if(e.key==='jowo.beach'){setBeach(e.newValue==='1',true)}});
 const snd=el('snd');
 const hb=el('hype');
 if(hb)hb.onclick=()=>{const r=hype();hb.textContent=r==='full'?'\u{1F6AB} Full! Security\u2026':'\u{1F525} Hype';if(r==='full')setTimeout(()=>{hb.textContent='\u{1F525} Hype'},1600)};
@@ -717,7 +839,7 @@ if(snd){
   const lab=on=>{snd.textContent=on?'♪ Sound: on':'♪ Sound: off';snd.setAttribute('aria-pressed',on?'true':'false')};
   lab(false);snd.onclick=()=>{if(AUDIO)AUDIO.toggle()};if(AUDIO){AUDIO.onchange(lab);lab(AUDIO.on)}
 }
-if(document.fonts&&document.fonts.load){document.fonts.load('800 40px "Shippori Mincho B1"','夜踊れクラブ出口');document.fonts.load('800 40px Rajdhani','NEO-JOWO').then(()=>bake())}
+if(document.fonts&&document.fonts.load){document.fonts.load('800 40px "Shippori Mincho B1"','夜踊れクラブ出口');document.fonts.load('800 40px Rajdhani','NEO-JOWO').then(()=>{bake();bakeBeach()})}
 let last=performance.now(),stat=0;
 function loop(t){
   const dt=Math.min(.05,(t-last)/1000);last=t;
