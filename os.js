@@ -345,7 +345,7 @@ tick();setInterval(tick,1000);
     if(!MON.on&&wasMon){wasMon=false;emergeQ=sheltered.splice(0);emT=1.5;chars.forEach(ch=>{ch.fled=false;ch.fleeShop=false;ch.hurry=false})}
     if(!MON.on&&emergeQ.length){emT-=dt;if(emT<=0){emT=.45;const q=emergeQ.shift(),vs=visibleShops();
       spawn(false,q.name,{fem:q.fem});const ch=chars[chars.length-1],e=ch.ent;
-      ch.myth=q.myth;ch.agev=q.agev;ch.body=q.body;ch.prof=q.prof;e.sh=q.ent.sh;e.sw=q.ent.sw;
+      ch.myth=q.myth;ch.agev=q.agev;ch.body=q.body;ch.prof=q.prof;if(q.sh){e.sh=q.sh;e.sw=q.sw}
       if(vs.length&&!ch.def.fly){const s=rndp(vs);ch.stat=false;ch.toward=Math.random()<.5;e.z=s.z;e.x=s.side*(WALL-SHOP_D+.3);e.yaw=s.side>0?-Math.PI/2:Math.PI/2;ch.emerge=2.0;ch.ex=s.side*(.4+Math.random()*.9);ch.age=0}}}
   }
   function updPairs(dt){
@@ -384,7 +384,7 @@ tick();setInterval(tick,1000);
       if(ch.shop){const zd=doorZ(ch.shop.id),sd=ch.shop.side,tx=sd*(WALL-SHOP_D+.35);
         e.z+=(zd-e.z)*Math.min(1,dt*2.2);e.x+=(tx-e.x)*Math.min(1,dt*1.2);
         if(Math.abs(e.z-zd)<1.4)e.yaw+=((sd>0?Math.PI/2:-Math.PI/2)-e.yaw)*Math.min(1,dt*4);
-        if(Math.abs(e.x)>WALL-SHOP_D-.1){ch.vanish=(ch.vanish||0)+dt/.5;if(ch.vanish>=1){ch.dead=true;if(ch.fleeShop)sheltered.push({name:ch.name,fem:ch.fem})}}}
+        if(Math.abs(e.x)>WALL-SHOP_D-.1){ch.vanish=(ch.vanish||0)+dt/.5;if(ch.vanish>=1){ch.dead=true;if(ch.fleeShop)sheltered.push({name:ch.name,fem:ch.fem,myth:ch.myth,agev:ch.agev,body:ch.body,prof:ch.prof,sh:ch.ent.sh,sw:ch.ent.sw})}}}
       /* preacher gesticulates, samurai stays calm */
       if(ch.stat&&ch.wait<=0&&ch.irate<=0){
         if(ch.name==='preacher')e.arms.R=-2.5+Math.sin(clock*3)*.35;
@@ -824,7 +824,7 @@ tick();setInterval(tick,1000);
       if(!J&&nextTurn<=0)J={id:Math.floor(scroll/SEG)+4,side:Math.random()<.5?-1:1};
       if(J){const b0=Math.floor(scroll/SEG),z=(J.id-b0)*SEG-(scroll-b0*SEG);if(z<=1.7)pan={t:0,dir:J.side,swapped:false}}}
     if(BEACH.on!==dayOn&&typeof setBeach==='function')setBeach(dayOn);
-    scroll+=dt*SCR;updChars(dt);updSky(dt);if(dayK<.5)updRain(dt);frame(t);updTerm(dt);
+    try{scroll+=dt*SCR;updChars(dt);updSky(dt);if(dayK<.5)updRain(dt);frame(t);updTerm(dt)}catch(err){console.error('alley frame error',err)}
     if(!reduce)requestAnimationFrame(loop);
   }
   if(reduce){scroll=2;for(let i=0;i<5;i++)spawn(true);frame(0)}else requestAnimationFrame(loop);
