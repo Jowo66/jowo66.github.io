@@ -242,15 +242,23 @@ const FIGF={Achilles:'GR',Odysseus:'GR',Icarus:'GR',Sisyphus:'GR',Hercules:'GR',
  Quetzalcoatl:'MX',Huitzilopochtli:'MX',Tlaloc:'MX',Coatlicue:'MX',Xolotl:'MX',Tezcatlipoca:'MX',Mictlantecuhtli:'MX',Bolivar:'VE'};
 const SURNF={Okonkwo:'NG',Nwosu:'NG',Eze:'NG',Adeyemi:'NG',Balogun:'NG',Okeke:'NG',Obi:'NG',Nnamdi:'NG',Eriksen:'NO',Hernandez:'ES',Xochitl:'MX',Ramirez:'ES',Okafor:'NG',Tanaka:'JP',Petrov:'RU',Haddad:'LB',Kim:'KR',Singh:'IN',Rossi:'IT',Nguyen:'VN',Silva:'PT',Cohen:'US',Jovanovic:'RS',Mensah:'GH',Larsson:'SE',Reyes:'ES',Abdi:'SO',Ivanova:'RU',Chen:'CN',Dlamini:'ZA',Costa:'PT',Yilmaz:'TR',Park:'KR',Moreau:'FR'};
 if(g.XC){Object.keys(g.XC).forEach(k=>{CULT[k]=g.XC[k];CULTF[k]=g.XC[k].cc});}
+if(g.XE){Object.keys(g.XE).forEach(k=>{const C=CULT[k],E=g.XE[k];if(!C)return;['first','last'].forEach(w=>{const have=new Set(C[w].map(x=>x.toLowerCase()));(E[w]||[]).forEach(x=>{if(!have.has(x.toLowerCase())){have.add(x.toLowerCase());C[w].push(x)}})})})}
+const ALLKEYS=Object.keys(CULT);
 const NEWKEYS=Object.keys(CULT).filter(k=>OLDKEYS.indexOf(k)<0);
 const flag=c=>c?String.fromCodePoint(...[...c].map(ch=>127397+ch.charCodeAt(0))):'';
 const MYTHKEYS=Object.keys(MYTH);
 function mythName(){
   const r=Math.random();
-  if(r<.42){const k=pick(MYTHKEYS),l=pick(SURN);return{key:k,first:k,last:l,f1:flag(FIGF[k]),f2:flag(SURNF[l]),c1:FIGF[k],c2:SURNF[l]}}
-  const cu=pick(NEWKEYS.length&&Math.random()>.35?NEWKEYS:OLDKEYS),C=CULT[cu],cf=flag(CULTF[cu]);
-  if(r<.74){const k=pick(Object.keys(C.fig));return{key:k,first:k,last:pick(C.last),cult:cu,f1:flag(FIGF[k]||CULTF[cu]),f2:cf,c1:FIGF[k]||CULTF[cu],c2:CULTF[cu]}}
-  return{key:null,first:pick(C.first),last:pick(C.last),cult:cu,f1:cf,f2:cf,c1:CULTF[cu],c2:CULTF[cu]}
+  const lastFrom=(skip,p)=>{ // surname: same culture, or mixed in from any other
+    if(Math.random()<p){let b=pick(ALLKEYS),n=0;while(b===skip&&n++<5)b=pick(ALLKEYS);return{l:pick(CULT[b].last),c:CULTF[b],mix:b}}
+    return null};
+  if(r<.3){const k=pick(MYTHKEYS);let l=pick(SURN),c2=SURNF[l];const m=lastFrom(null,.5);if(m){l=m.l;c2=m.c}
+    return{key:k,first:k,last:l,f1:flag(FIGF[k]),f2:flag(c2),c1:FIGF[k],c2}}
+  const cu=pick(NEWKEYS.length&&Math.random()>.35?NEWKEYS:OLDKEYS),C=CULT[cu],cc=CULTF[cu];
+  if(r<.6){const k=pick(Object.keys(C.fig));const m=lastFrom(cu,.4);const l=m?m.l:pick(C.last),c2=m?m.c:cc;
+    return{key:k,first:k,last:l,cult:cu,f1:flag(cc),f2:flag(c2),c1:cc,c2}}
+  const m=lastFrom(cu,.5);const l=m?m.l:pick(C.last),c2=m?m.c:cc;
+  return{key:null,first:pick(C.first),last:l,cult:cu,f1:flag(cc),f2:flag(c2),c1:cc,c2}
 }
 
 /* ---------- made-up details ---------- */
