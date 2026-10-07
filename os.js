@@ -500,7 +500,7 @@ const apps={
   skills:{jp:'技',t:'SKILLS',t2:'навыки · 技能 · कौशल',w:420},
   map:{jp:'地',t:'DISTRICT MAP',t2:'خريطة · 지도 · Карта',w:null,init:initMap,x:.4,y:80,w:600},
   contact:{jp:'連',t:'CONTACT',t2:'связь · 連絡 · اتصال',w:380},
-  club:{jp:'踊',t:'THE RUSTY KOI NIGHTCLUB',t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007c',cls:'app-win',ar:1.6}
+  club:{jp:'踊',t:'THE RUSTY KOI NIGHTCLUB',t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007c',cls:'app-win',ar:1.5}
 };
 const open={};let zTop=100,n=0;
 function openApp(id){
@@ -545,9 +545,9 @@ function initMap(win){
   const B=[
     {n:'The Rusty Koi Nightclub',d:'OPEN: a hologram DJ, a pulsing floor and a very friendly moshpit.',gx:1,gy:1,w:2,dd:2,h:49,col:'#7a1f4d',app:'club',glow:'#ff2e88',sign:'踊'},
     {n:'About Tower',d:'OPEN: who I am.',gx:1,gy:4,w:1,dd:2,h:67,col:'#243a6a',app:'about',glow:'#19e3ff',sign:'我'},
-    {n:'Lot 01',d:'Reserved for a future project.',gx:3,gy:4,w:1,dd:1,h:17,col:'#2c2440',lot:1},
-    {n:'Lot 02',d:'Reserved for a future project.',gx:5,gy:4,w:1,dd:2,h:23,col:'#2c2440',lot:1},
-    {n:'Lot 03',d:'Reserved for a future project.',gx:3,gy:5,w:1,dd:1,h:14,col:'#2c2440',lot:1}
+    {n:'Lot 01',d:'UNDER CONSTRUCTION: a future project will go here.',gx:3,gy:4,w:1,dd:1,h:17,col:'#2c2440',lot:1},
+    {n:'Lot 02',d:'UNDER CONSTRUCTION: a future project will go here.',gx:5,gy:4,w:1,dd:2,h:23,col:'#2c2440',lot:1},
+    {n:'Lot 03',d:'UNDER CONSTRUCTION: a future project will go here.',gx:3,gy:5,w:1,dd:1,h:14,col:'#2c2440',lot:1}
   ];
   const cars=[{p:0,s:.5,c:'#ff2e88'},{p:.5,s:.35,c:'#19e3ff'}];
   let hover=null,t=0;
@@ -591,12 +591,31 @@ function initMap(win){
         c.fillStyle=b.glow;c.globalAlpha=.25;c.fillRect(tp[0]-5,tp[1]+3+lift,10,1);c.globalAlpha=1;
       }else{
         c.strokeStyle='#ffb347';c.setLineDash([2,2]);poly(mv(s.top),null,'#ffb347');c.setLineDash([]);
+        /* hazard tape round the base, scaffolding poles, a crane and a blinking work light */
+        [[b.gx,b.gy+b.dd,b.gx+b.w,b.gy+b.dd,1],[b.gx+b.w,b.gy,b.gx+b.w,b.gy+b.dd,0]].forEach(([ax,ay,bx,by,hor])=>{
+          const n=Math.round(Math.hypot(bx-ax,by-ay)*9);
+          for(let i=0;i<n;i++){const u0=i/n,u1=(i+1)/n,x0=ax+(bx-ax)*u0,y0=ay+(by-ay)*u0,x1=ax+(bx-ax)*u1,y1=ay+(by-ay)*u1;
+            poly([iso(x0,y0,0+lift*-1*0),iso(x1,y1,0),iso(x1,y1,5),iso(x0,y0,5)].map(p=>[p[0],p[1]+lift]),i%2?'#ffcf2a':'#15101a',null)}});
+        const cb=iso(b.gx+b.w*.35,b.gy+b.dd*.4,b.h);
+        c.strokeStyle='#ffb347';c.lineWidth=1;c.beginPath();c.moveTo(cb[0],cb[1]+lift);c.lineTo(cb[0],cb[1]-16+lift);c.lineTo(cb[0]+10,cb[1]-16+lift);c.moveTo(cb[0]-5,cb[1]-16+lift);c.lineTo(cb[0],cb[1]-16+lift);c.moveTo(cb[0]+8,cb[1]-16+lift);c.lineTo(cb[0]+8,cb[1]-9+Math.sin(t*2+b.gx)*2+lift);c.stroke();
+        c.fillStyle='#ffb347';c.fillRect(cb[0]+7,cb[1]-9+Math.sin(t*2+b.gx)*2+lift,3,2);
+        const lp2=iso(b.gx+b.w*.8,b.gy+b.dd*.8,b.h);if(Math.floor(t*2)%2){c.fillStyle='#ffcf2a';c.fillRect(lp2[0]-1,lp2[1]-2+lift,2,2);c.globalAlpha=.25;c.beginPath();c.arc(lp2[0],lp2[1]-1+lift,5,0,7);c.fill();c.globalAlpha=1}
+        c.fillStyle='#ffcf2a';c.font='4px "Share Tech Mono",monospace';c.textAlign='center';const tp2=iso(b.gx+b.w/2,b.gy+b.dd/2,b.h+7);c.fillText('UNDER CONSTRUCTION',tp2[0],tp2[1]+lift);
       }
       b._s=s;
     });
     /* the queue out of the nightclub door, shuffling forward */
     {
       const cl=B[0],dp=iso(3,1.78,0),dq=iso(3,2.22,0);
+      /* the door throws a pool of coloured light across the road, and the queue casts long coloured shadows away from it */
+      {const fl=.85+.15*Math.sin(t*9)+(Math.floor(t*3)%9?0:.2);
+       c.save();c.globalCompositeOperation='lighter';
+       const g=c.createLinearGradient(iso(3,2,0)[0],iso(3,2,0)[1],iso(4.3,2.8,0)[0],iso(4.3,2.8,0)[1]);
+       g.addColorStop(0,`rgba(255,46,136,${.5*fl})`);g.addColorStop(1,'rgba(255,46,136,0)');
+       poly([iso(3,1.7,0),iso(3,2.3,0),iso(4.4,3.2,0),iso(4.4,.8,0)],null,null);c.fillStyle=g;c.fill();
+       c.restore();
+       for(let i=7;i>=0;i--){const gy=1.62-(i-((t*.35)%1))*.2;if(gy<.1)continue;const p=iso(3.32,gy,0),q=iso(3.32+.55,gy+(2-gy)*.12,0);
+         c.fillStyle='rgba(255,46,136,.32)';c.beginPath();c.moveTo(p[0]-1,p[1]);c.lineTo(q[0],q[1]-1);c.lineTo(q[0],q[1]+1);c.lineTo(p[0]+1,p[1]);c.closePath();c.fill()}}
       c.fillStyle=Math.floor(t*3)%9?'#ff2e88':'#ffe14a';
       poly([iso(3,1.78,0),iso(3,2.22,0),iso(3,2.22,10),iso(3,1.78,10)],c.fillStyle,'#000');
       const n=7+Math.floor(1.5+1.5*Math.sin(t*.15)),sh=(t*.35)%1;
@@ -623,7 +642,7 @@ function initMap(win){
       [[x0,y0,1,1],[x1,y0,-1,1],[x0,y1,1,-1],[x1,y1,-1,-1]].forEach(q=>{c.moveTo(q[0]+q[2]*L,q[1]);c.lineTo(q[0],q[1]);c.lineTo(q[0],q[1]+q[3]*L)});c.stroke();
       c.globalAlpha=.25;c.fillStyle='#19e3ff';const sy=y0+((t*40)%(y1-y0));c.fillRect(x0,sy,x1-x0,1);c.globalAlpha=1;
       c.fillStyle='#19e3ff';c.font='6px "Share Tech Mono",monospace';c.textAlign='left';
-      c.fillText('LOCK '+(hover.app?'// OPEN':'// VACANT'),x0,y0-3);
+      c.fillText('LOCK '+(hover.app?'// OPEN':'// UNDER CONSTRUCTION'),x0,y0-3);
     }
     if(hover){c.fillStyle='rgba(255,255,255,.9)';c.font='8px "Share Tech Mono",monospace';c.textAlign='center';const p=iso(hover.gx+hover.w/2,hover.gy+hover.dd/2,hover.h+30);
       c.fillStyle='#000';c.fillRect(p[0]-hover.n.length*2.4-3,p[1]-7,hover.n.length*4.8+6,10);c.fillStyle='#ffb347';c.fillText(hover.n,p[0],p[1])}
@@ -633,7 +652,7 @@ function initMap(win){
     const order=B.slice().sort((a,b)=>(b.gx+b.gy+b.w+b.dd)-(a.gx+a.gy+a.w+a.dd));
     return order.find(b=>b._s&&(inPoly(p,b._s.top)||inPoly(p,b._s.left)||inPoly(p,b._s.right)))||null;
   }
-  cv.addEventListener('pointermove',e=>{const b=pick(e);if(b!==hover){hover=b;cap.textContent=b?b.n+': '+b.d:'Hover a building. The lit ones are open; empty lots are reserved for future projects.';cv.style.cursor=b&&b.app?'pointer':'crosshair'}});
+  cv.addEventListener('pointermove',e=>{const b=pick(e);if(b!==hover){hover=b;cap.textContent=b?b.n+': '+b.d:'Hover a building. The lit ones are open; the rest are under construction.';cv.style.cursor=b&&b.app?'pointer':'crosshair'}});
   cv.addEventListener('pointerleave',()=>{hover=null});
   cv.addEventListener('click',e=>{const b=pick(e);if(b&&b.app)openApp(b.app)});
   let raf;function loop(){t+=.016;draw();if(!document.body.contains(win)){cancelAnimationFrame(raf);return}if(!reduce)raf=requestAnimationFrame(loop)}
@@ -660,9 +679,11 @@ function initMap(win){
     up.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
     wn.textContent=Object.keys(open).length;
     tg.textContent=(Object.keys(open).pop()||'none').toUpperCase();const pc=$('#pace');if(pc)pc.textContent=((window.__pace||1)).toFixed(1)+'x';
-    if(!reduce){rows.shift();rows.push(line())}
+    hexT++;if(!reduce&&hexT%3===0){rows.shift();rows.push(line())}
     hex.textContent=rows.join('\n');
   },600);
+  /* the data stream scrolls slowly: one new line every 1.8s */
+  let hexT=0;
 })();
 window.openApp=openApp;
 })();

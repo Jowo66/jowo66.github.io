@@ -60,7 +60,7 @@ a{color:var(--cyan)}
 .win.front{box-shadow:10px 10px 0 #000,10px 10px 0 2px var(--cyan)}
 .win h3{font-family:var(--disp);font-weight:400;font-size:32px;margin:0 0 8px;letter-spacing:.05em;color:var(--amber)}
 .win p{margin:0 0 10px;line-height:1.5}
-.win .frame{width:min(900px,92vw,calc((100vh - 170px)*var(--ar,1.6)));border:0;display:block;background:#000}
+.win .frame{width:min(1180px,96vw,calc((100vh - 170px)*var(--ar,1.6)));border:0;display:block;background:#000}
 .win.app-win .body{padding:0}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{padding:5px 11px;border:2px solid var(--cyan);color:var(--cyan);background:rgba(25,227,255,.07);box-shadow:3px 3px 0 #000;font-size:14px}

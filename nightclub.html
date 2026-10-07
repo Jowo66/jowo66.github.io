@@ -71,6 +71,11 @@ select{font:inherit;font-weight:700;padding:9px 12px;background:#0b0716;color:va
 select:focus-visible{outline:2px solid var(--amber)}
 #fav.on{background:var(--magenta);border-color:var(--magenta);color:#fff}
 .btns{display:flex;gap:10px;flex-wrap:wrap}
+html.embed .status{display:block}html.embed .status>span:first-child{display:block;margin-bottom:8px;font-size:1rem}
+html.embed .btns{flex-wrap:nowrap;gap:6px;width:100%}
+html.embed .btns button,html.embed .btns select{padding:7px 8px;font-size:clamp(11px,1.45vw,15px);white-space:nowrap;flex:0 1 auto}
+html.embed .btns select{min-width:0;flex:1 1 120px;max-width:none}
+html.embed #pause{margin-left:auto}
 button:hover{background:var(--cyan);color:var(--ink);box-shadow:0 0 22px var(--cyan)}
 
 section{max-width:1180px;margin:0 auto;padding:80px 6% 70px}
@@ -101,7 +106,7 @@ footer a{color:var(--cyan)}
 </style>
 <script src="lp3d.js?v=20261007c"></script>
 <script src="house.js?v=20261007c"></script>
-<script>(function(){if(/[?&]embed/.test(location.search)){var e=document.createElement("style");e.textContent="header,header.bar,main>:not(.stage),footer,.rules,.districts{display:none!important}html,body{background:#05020a!important}body{padding:6px!important;margin:0!important;min-height:0!important}main{padding:0!important;margin:0 auto!important;max-width:none!important}";document.head.appendChild(e)}})()</script>
+<script>(function(){if(/[?&]embed/.test(location.search)){document.documentElement.className="embed";var e=document.createElement("style");e.textContent="header,header.bar,main>:not(.stage),footer,.rules,.districts{display:none!important}html,body{background:#05020a!important}body{padding:6px!important;margin:0!important;min-height:0!important}main{padding:0!important;margin:0 auto!important;max-width:none!important}";document.head.appendChild(e)}})()</script>
 </head>
 
 <body>
@@ -129,7 +134,7 @@ footer a{color:var(--cyan)}
     </div>
     <div class="status" role="status" aria-live="off">
       <span>In the club: <b id="who">0</b>/28 &nbsp;&middot;&nbsp; Mode: <b id="mode">pogo</b> &nbsp;&middot;&nbsp; BPM: <b id="bpm">124</b> &nbsp;&middot;&nbsp; Track: <b id="trk">Rain Groove</b> &nbsp;&middot;&nbsp; Plays: <b id="plays">0</b> &nbsp;&middot;&nbsp; Drops: <b id="drops">0</b></span>
-      <span class="btns"><button id="battle" type="button" aria-pressed="false" title="Two dancers battle in the middle while everyone cheers">\u{1F94A} Battle: off</button> <button id="dance" type="button" title="Change the dancing style">\u{1F483} Style: Mosh</button> <button id="hype" type="button" title="Bring one more person into the club">&#128293; Hype</button> <button id="shf" type="button" title="Generate a new house track">&#10551; Shuffle</button> <button id="fav" type="button" aria-pressed="false" title="Save this track to your playlist">&#9825; Save</button> <select id="pl" aria-label="Your playlist"><option value="">Playlist (0)</option></select> <button id="snd" type="button" aria-pressed="false">&#9834; Sound: off</button> <button id="pause" type="button">Pause</button></span>
+      <span class="btns"><button id="battle" type="button" aria-pressed="false" title="Two dancers battle in the middle while everyone cheers">🥊 Battle: off</button> <button id="dance" type="button" title="Change the dancing style">💃 Style: Mosh</button> <button id="hype" type="button" title="Bring one more person into the club">&#128293; Hype</button> <button id="shf" type="button" title="Generate a new house track">&#10551; Shuffle</button> <button id="fav" type="button" aria-pressed="false" title="Save this track to your playlist">&#9825; Save</button> <select id="pl" aria-label="Your playlist"><option value="">Playlist (0)</option></select> <button id="snd" type="button" aria-pressed="false">&#9834; Sound: off</button> <button id="pause" type="button">Pause</button></span>
     </div>
   </div>
 
@@ -697,7 +702,7 @@ function drawPL(){
   plSel.innerHTML='';const o0=document.createElement('option');o0.value='';o0.textContent='Playlist ('+PL.length+')';plSel.appendChild(o0);
   PL.forEach(e=>{const t=AUDIO.make(e),o=document.createElement('option');o.value=entryId(e);o.textContent=t.name+' \u00b7 '+t.key+' \u00b7 '+t.bpm+' \u00b7 \u25B6'+AUDIO.plays(t.id);plSel.appendChild(o)});
   const saved=PL.some(e=>entryId(e)===cur);
-  if(fav){fav.classList.toggle('on',saved);fav.setAttribute('aria-pressed',saved?'true':'false');fav.textContent=saved?'\u2665 Saved (click to remove)':'\u2661 Save'}
+  if(fav){fav.classList.toggle('on',saved);fav.setAttribute('aria-pressed',saved?'true':'false');fav.textContent=saved?'\u2665 Saved':'\u2661 Save'}
 }
 if(fav)fav.onclick=()=>{if(!AUDIO||!AUDIO.track)return;const t=AUDIO.track,i=PL.findIndex(e=>entryId(e)===trackId(t));if(i>=0)PL.splice(i,1);else PL.push(t.seed!=null?t.seed:JSON.parse(JSON.stringify(t)));savePL(PL);favSig='';drawPL()};
 if(plSel)plSel.onchange=()=>{const e=PL.find(x=>entryId(x)===plSel.value);plSel.value='';if(!e&&e!==0||!AUDIO)return;AUDIO.load(e);if(!AUDIO.on)AUDIO.toggle();favSig='';drawPL()};
