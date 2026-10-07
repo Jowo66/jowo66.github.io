@@ -324,8 +324,6 @@ tick();setInterval(tick,1000);
         if(ch.irate<=0){e.tint=null;if(ch.name!=='preacher'&&ch.name!=='samurai')delete e.arms.R;if(ch.name==='samurai')e.arms.R=-.9;e.yaw=ch.toward?Math.PI:(ch.stat?e.yaw:0)}
         ch.wait=Math.max(ch.wait,0);
       }
-      /* collide with the viewer */
-      if(ch.toward&&!ch.bump&&e.z<3.3){ch.bump=true;if(Math.random()<.3)makeIrate(ch,rndp(['Watch it!','邪魔だ!','Смотри!','조심해!','انتبه!']))}
       /* random chatter */
       ch.bubT-=dt;if(ch.bubT<=0){
         if(ch.name==='sage'&&ch.stat){ch.bubT=8+Math.random()*3;if(ch.irate<=0&&ch.wait<=0&&e.z<24)say(ch,Lore.parable(),'wisdom',6.5)}
