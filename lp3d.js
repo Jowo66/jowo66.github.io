@@ -12,7 +12,27 @@ const FACES=[[0,1,2,3],[4,5,6,7],[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7]];
 
 /* ---------- model builders ---------- */
 /* part: p=[x,y,z] bottom-centre, s=[w,h,d], c colour, tp top taper, e emissive, sw swing amp, ph phase,
-   ak 'L'|'R' arm key (poseable; any key name works), pk+pv parent joint (child limb: elbow/knee), sp spin, bn bounce amplitude, ya yaw offset */
+   ak 'L'|'R' arm key (poseable; any key name works), pk+pv parent joint (child limb: elbow/knee; psw/pph = parent swing when the key is unset), po own pivot override, sp spin, bn bounce amplitude, ya yaw offset */
+/* jointed arm: upper arm (key side) + forearm and hand (key 'e'+side, hinged at the elbow) */
+const UA=.34,FA=.3,HA=.08;
+function arm(side,x,shY,col,o){
+  o=o||{};const dz=o.dz||0,ey=shY-UA,k='e'+side,w=o.w||.12,sk=o.skin||'#c98f6b';
+  const j={pk:side,pv:[shY,dz]};if(o.psw){j.psw=o.psw;j.pph=o.ph||0}
+  const up={p:[x,ey,dz],s:[w,UA,w+.02],c:col,ak:side,e:!!o.e};if(o.sw){up.sw=o.sw;up.ph=o.ph||0}
+  return[up,Object.assign({p:[x,ey-FA,dz],s:[w-.01,FA,w+.01],c:col,ak:k,po:[ey,dz],e:!!o.e},j),Object.assign({p:[x,ey-FA-HA,dz],s:[w-.03,HA,w-.02],c:sk,ak:k,po:[ey,dz]},j)];
+}
+/* items glued to a hand. f: forearm held horizontal (key e+side = -PI/2) so world offsets are used (dy up, dz forward of the hand);
+   h: arm hanging, offsets from the hand. item {x,dy,dz,w,h,d,c,e} gives the box centre and WORLD size */
+function hold(side,x,shY,items,mode,o){
+  o=o||{};const dz0=o.dz||0,ey=shY-UA,k='e'+side,hc=FA+HA/2;
+  return items.map(i=>{
+    let fy,fz,fh,fd;
+    if(mode==='h'){fy=-hc+(i.dy||0);fz=i.dz||0;fh=i.h;fd=i.d}
+    else{fy=-(hc+(i.dz||0));fz=i.dy||0;fh=i.d;fd=i.h}
+    const q={p:[x+(i.x||0),ey+fy-fh/2,dz0+fz],s:[i.w,fh,fd],c:i.c,ak:k,pk:side,pv:[shY,dz0],po:[ey,dz0]};
+    if(i.e)q.e=true;if(o.psw){q.psw=o.psw;q.pph=o.ph||0}return q;
+  });
+}
 function human(o,dz){
   dz=dz||0;const L=[];
   const pant=o.pant||'#15101f',coat=o.coat||'#1a1f3a',skin=o.skin||'#c98f6b',hair=o.hair||'#0d0a14',lg=o.legW||.16;
@@ -20,9 +40,12 @@ function human(o,dz){
   L.push({p:[.11,0,dz],s:[lg,.82,.18],c:pant,sw:o.legSw||.55,ph:Math.PI,tp:o.legTp});
   L.push({p:[0,.78,dz],s:[.46,.72,.26],c:coat,tp:.88});
   if(o.long)L.push({p:[0,.3,dz],s:[.5,.62,.3],c:coat,tp:.82});
-  const as=o.armSw||.5;
-  L.push({p:[-.3,.76,dz],s:[.12,.72,.14],c:o.armL||coat,sw:as,ph:Math.PI,ak:'L',e:!!o.armLe});
-  L.push({p:[.3,.76,dz],s:[.12,.72,.14],c:o.armR||coat,sw:as,ph:0,ak:'R',e:!!o.armRe});
+  const as=o.armSw||.5,j=o.j||'';
+  [['L',-.3,o.armL,o.armLe,Math.PI],['R',.3,o.armR,o.armRe,0]].forEach(a=>{
+    const col=a[2]||coat;
+    if(j==='both'||j===a[0])arm(a[0],a[1],1.48,col,{dz:dz,skin:skin,sw:as,psw:as,ph:a[4],e:!!a[3]}).forEach(q=>L.push(q));
+    else L.push({p:[a[1],.76,dz],s:[.12,.72,.14],c:col,sw:as,ph:a[4],ak:a[0],e:!!a[3]});
+  });
   L.push({p:[0,1.5,dz],s:[.22,.26,.22],c:skin,tp:.82});
   if(o.hat==='fedora'){L.push({p:[0,1.72,dz],s:[.44,.04,.44],c:o.hatC||'#3a3028'});L.push({p:[0,1.74,dz],s:[.26,.15,.26],c:o.hatC||'#3a3028',tp:.85})}
   else if(o.hat==='cap'){L.push({p:[0,1.72,dz],s:[.25,.1,.25],c:o.hatC||'#d6246e'});L.push({p:[0,1.72,dz+.16],s:[.22,.03,.14],c:o.hatC||'#d6246e'})}
@@ -48,9 +71,12 @@ function seated(o){
   return L;
 }
 const M={};
-M.umbrella=()=>{const L=human({coat:'#202a52',long:true,hair:'#15101f'});
-  L.push({p:[.3,.8,0],s:[.03,.95,.03],c:'#8a8a99'});L.push({p:[.3,1.75,0],s:[1.2,.26,1.2],c:'#d6246e',tp:.1});
-  L.push({p:[.3,1.74,0],s:[1.24,.03,1.24],c:'#ff7ab6',e:true});return{parts:L,sp:[1.1,1.9],h:2.1,bub:['…','雨','Rain.','Дождь','비']}};
+M.umbrella=()=>{const L=human({coat:'#202a52',long:true,hair:'#15101f',j:'R'});
+  /* umbrella held in the right fist, pole vertical through it */
+  hold('R',.3,1.48,[{dy:.25,w:.03,h:1.3,d:.03,c:'#8a8a99'},{dy:-.12,w:.05,h:.12,d:.05,c:'#4a4a58'},
+    {dy:.76,w:1.2,h:.05,d:1.2,c:'#ff7ab6',e:true},{dy:.8,w:1.12,h:.07,d:1.12,c:'#d6246e'},{dy:.87,w:.84,h:.07,d:.84,c:'#d6246e'},
+    {dy:.94,w:.5,h:.07,d:.5,c:'#d6246e'},{dy:1.02,w:.1,h:.1,d:.1,c:'#8a8a99'}],'f').forEach(q=>L.push(q));
+  return{parts:L,sp:[1.1,1.9],h:2.1,arms:{R:0,eR:-1.57},bub:['…','雨','Rain.','Дождь','비'],gk:'L'}};
 M.courier=()=>{const L=human({coat:'#0e1d2a',armRe:true,armR:'#19e3ff',pant:'#0a0a12',hair:'#ff2e88'});
   L.push({p:[0,1.55,.11],s:[.2,.07,.05],c:'#19e3ff',e:true});L.push({p:[0,.9,-.19],s:[.36,.5,.16],c:'#222338'});
   L.push({p:[0,1.2,-.28],s:[.3,.05,.02],c:'#ffb347',e:true});return{parts:L,sp:[1.6,2.4],h:1.9,bub:['配達!','Move!','Быстро!','빨리!']}};
@@ -59,8 +85,14 @@ M.kimono=()=>{const L=[];
   L.push({p:[0,1.3,0],s:[.38,.18,.28],c:'#7d1330',tp:.7});
   L.push({p:[0,1.42,0],s:[.2,.25,.2],c:'#ece8f4',tp:.85});L.push({p:[0,1.65,0],s:[.26,.16,.26],c:'#0d0a14',tp:.7});
   L.push({p:[0,1.5,.1],s:[.1,.03,.02],c:'#19e3ff',e:true});
-  L.push({p:[.34,.75,0],s:[.025,.9,.025],c:'#6a5a4a'});L.push({p:[.34,1.6,0],s:[1.0,.22,1.0],c:'#e0352b',tp:.08});
-  return{parts:L,sp:[.5,.9],h:2.0,bub:['あら','Ara?','Oh…']}};
+  const sk={skin:'#ece8f4',w:.13};
+  arm('L',-.27,1.4,'#7d1330',Object.assign({sw:.06,psw:.06,ph:Math.PI},sk)).forEach(q=>L.push(q));
+  arm('R',.27,1.4,'#7d1330',sk).forEach(q=>L.push(q));
+  /* parasol in the right hand */
+  hold('R',.27,1.4,[{dy:.25,w:.025,h:1.2,d:.025,c:'#6a5a4a'},
+    {dy:.62,w:1.0,h:.05,d:1.0,c:'#ff6a5a',e:true},{dy:.67,w:.9,h:.06,d:.9,c:'#e0352b'},{dy:.73,w:.62,h:.06,d:.62,c:'#e0352b'},
+    {dy:.79,w:.32,h:.06,d:.32,c:'#e0352b'},{dy:.85,w:.07,h:.1,d:.07,c:'#ffb347'}],'f').forEach(q=>L.push(q));
+  return{parts:L,sp:[.5,.9],h:2.0,arms:{R:0,eR:-1.57,eL:-.2},bub:['あら','Ara?','Oh…'],gk:'L'}};
 M.dog=()=>{const L=[];
   L.push({p:[0,.36,0],s:[.3,.26,.74],c:'#6b7390',tp:.9});L.push({p:[0,.46,.45],s:[.2,.2,.26],c:'#4b516a',tp:.8});
   L.push({p:[0,.55,.58],s:[.12,.05,.03],c:'#ff2a2a',e:true});
@@ -75,30 +107,37 @@ M.ramen=()=>{const L=[];
   L.push({p:[.58,.85,0],s:[.2,.3,.2],c:'#ff3a2a',e:true});L.push({p:[-.58,.85,0],s:[.2,.3,.2],c:'#ffb347',e:true});
   L.push({p:[-.5,0,0],s:[.06,.38,.38],c:'#15101a'});L.push({p:[.5,0,0],s:[.06,.38,.38],c:'#15101a'});
   L.push({p:[0,.7,.31],s:[.7,.1,.02],c:'#19e3ff',e:true});
-  return{parts:L.concat(human({coat:'#e8e4ee',pant:'#222',hair:'#e8e4ee'},-.75)),sp:[.3,.5],h:2.0,bub:['ラーメン!','Ramen!','Рамен!','라멘!','ราเมน!','Nri ọhụrụ!']}};
+  return{parts:L.concat(human({coat:'#e8e4ee',pant:'#222',hair:'#e8e4ee',j:'both',armSw:.15},-.75)),sp:[.3,.5],h:2.0,arms:{L:-1.0,R:-1.15,eL:-.5,eR:-.4},bub:['ラーメン!','Ramen!','Рамен!','라멘!','ราเมน!','Nri ọhụrụ!']}};
 M.dealer=()=>{const L=human({coat:'#2a2030',long:true,hat:'wide',hatC:'#17121d',armR:'#ff2a3a',armRe:true,hair:'#111'});
   L.push({p:[0,.95,.14],s:[.3,.4,.02],c:'#ff2e88',e:true});L.push({p:[0,1.52,.12],s:[.2,.05,.03],c:'#ff2a3a',e:true});
   L.push({p:[-.14,.55,.15],s:[.06,.06,.02],c:'#19e3ff',e:true});L.push({p:[.0,.55,.15],s:[.06,.06,.02],c:'#ffb347',e:true});
   return{parts:L,sp:[0,0],h:1.9,stat:true,bub:['Psst…','チップ?','Чипы?','칩 팔아요','شريحة؟','Chips?']}};
 M.preacher=()=>{const L=[];
   L.push({p:[0,.05,0],s:[.6,1.3,.4],c:'#d8d0c0',tp:.6});L.push({p:[0,1.3,0],s:[.46,.2,.3],c:'#d8d0c0',tp:.8});
-  L.push({p:[-.34,.9,0],s:[.12,.55,.14],c:'#d8d0c0',ak:'L'});L.push({p:[.34,.9,0],s:[.12,.55,.14],c:'#d8d0c0',ak:'R'});
+  arm('R',.34,1.45,'#d8d0c0',{skin:'#b88a6a'}).forEach(q=>L.push(q));
+  arm('L',-.34,1.45,'#d8d0c0',{skin:'#b88a6a'}).forEach(q=>L.push(q));
   L.push({p:[0,1.45,0],s:[.22,.26,.22],c:'#b88a6a',tp:.82});L.push({p:[0,1.62,0],s:[.28,.1,.28],c:'#d8d0c0',tp:.8});
-  L.push({p:[.4,.2,.2],s:[.04,1.7,.04],c:'#6a5a4a'});L.push({p:[.4,1.5,.2],s:[.7,.5,.04],c:'#e8e4ee'});
-  L.push({p:[.4,1.62,.23],s:[.55,.07,.02],c:'#ff2a2a',e:true});L.push({p:[.4,1.5,.23],s:[.4,.05,.02],c:'#ff2a2a',e:true});
-  return{parts:L,sp:[0,0],h:2.1,stat:true,bub:['機械を信じるな','NO MACHINES','Никаких машин','기계는 거짓','لا للآلات','मशीनें झूठ']}};
+  /* placard held up in the left hand */
+  hold('L',-.34,1.45,[{dy:-.05,w:.04,h:1.7,d:.04,c:'#6a5a4a'},{dy:.6,x:-.2,w:.8,h:.52,d:.04,c:'#e8e4ee'},
+    {dy:.72,x:-.2,dz:.03,w:.62,h:.07,d:.02,c:'#ff2a2a',e:true},{dy:.6,x:-.2,dz:.03,w:.44,h:.05,d:.02,c:'#ff2a2a',e:true}],'f').forEach(q=>L.push(q));
+  return{parts:L,sp:[0,0],h:2.1,stat:true,arms:{L:0,eL:-1.57},gk:'R',bub:['機械を信じるな','NO MACHINES','Никаких машин','기계는 거짓','لا للآلات','मशीनें झूठ']}};
 M.robocop=()=>{const L=[];
   L.push({p:[-.14,0,0],s:[.22,.85,.24],c:'#3a4560',sw:.45,ph:0});L.push({p:[.14,0,0],s:[.22,.85,.24],c:'#3a4560',sw:.45,ph:Math.PI});
   L.push({p:[0,.8,0],s:[.7,.8,.38],c:'#46567a',tp:.82});L.push({p:[0,1.38,0],s:[.9,.12,.4],c:'#2e3852'});
-  L.push({p:[-.46,.72,0],s:[.16,.7,.18],c:'#3a4560',ak:'L',sw:.35,ph:Math.PI});L.push({p:[.46,.72,0],s:[.16,.7,.18],c:'#3a4560',ak:'R',sw:.35,ph:0});
+  arm('L',-.46,1.42,'#3a4560',{w:.16,skin:'#2a3348',sw:.35,psw:.35,ph:Math.PI}).forEach(q=>L.push(q));
+  arm('R',.46,1.42,'#3a4560',{w:.16,skin:'#2a3348',sw:.35,psw:.35,ph:0}).forEach(q=>L.push(q));
+  /* baton gripped in the left hand */
+  hold('L',-.46,1.42,[{dy:-.05,dz:.06,w:.05,h:.5,d:.05,c:'#222'},{dy:.22,dz:.06,w:.07,h:.08,d:.07,c:'#46567a'}],'h',{psw:.35,ph:Math.PI}).forEach(q=>L.push(q));
   L.push({p:[0,1.48,0],s:[.32,.32,.32],c:'#56688e',tp:.9});L.push({p:[0,1.58,.17],s:[.26,.08,.02],c:'#ffb347',e:true});
-  L.push({p:[.18,1.1,.2],s:[.1,.08,.02],c:'#19e3ff',e:true});L.push({p:[-.3,.62,.1],s:[.05,.5,.05],c:'#222'});
-  return{parts:L,sp:[.5,.9],h:2.0,age:[2,9],ageUnit:' (serial yrs)',bub:['STOP!','止まれ','СТОЙ!','멈춰!','قف!','Halt.']}};
-M.oldlady=()=>{const L=human({coat:'#5b7a52',pant:'#3a3030',skin:'#d8b090',hair:'#e8e4ee',long:true,legSw:.3,armSw:.2});
+  L.push({p:[.18,1.1,.2],s:[.1,.08,.02],c:'#19e3ff',e:true});
+  return{parts:L,sp:[.5,.9],h:2.0,age:[2,9],ageUnit:' (serial yrs)',arms:{eL:-.35,eR:-.25},bub:['STOP!','止まれ','СТОЙ!','멈춰!','قف!','Halt.']}};
+M.oldlady=()=>{const L=human({coat:'#5b7a52',pant:'#3a3030',skin:'#d8b090',hair:'#e8e4ee',long:true,legSw:.3,armSw:.2,j:'both'});
   L.push({p:[0,1.74,0],s:[.28,.1,.28],c:'#7d3a6a',tp:.9});
-  L.push({p:[.36,.3,.05],s:[.24,.34,.18],c:'#c8a46a'});L.push({p:[.36,.62,.05],s:[.04,.2,.04],c:'#4cc54a'});L.push({p:[.4,.62,.05],s:[.05,.14,.04],c:'#e8a23a'});
-  L.push({p:[-.36,.35,.05],s:[.2,.3,.18],c:'#c8a46a'});
-  return{parts:L,sp:[.4,.7],h:1.8,sc:.88,age:[68,93],bub:['あらまぁ','My knees…','Ох уж…','아이고','يا ساتر','उफ़']}};
+  /* a grocery bag in each hand, carried with the arms */
+  const o1={psw:.2,ph:0},o2={psw:.2,ph:Math.PI};
+  hold('R',.3,1.48,[{dy:-.21,w:.24,h:.34,d:.18,c:'#c8a46a'},{dy:.04,w:.04,h:.2,d:.04,c:'#4cc54a'},{dy:.0,x:.04,w:.05,h:.14,d:.04,c:'#e8a23a'}],'h',o1).forEach(q=>L.push(q));
+  hold('L',-.3,1.48,[{dy:-.2,w:.22,h:.3,d:.18,c:'#c8a46a'}],'h',o2).forEach(q=>L.push(q));
+  return{parts:L,sp:[.4,.7],h:1.8,sc:.88,age:[68,93],arms:{eL:-.25,eR:-.25},bub:['あらまぁ','My knees…','Ох уж…','아이고','يا ساتر','उफ़']}};
 M.mascot=()=>{const L=[];
   L.push({p:[-.13,0,0],s:[.18,.55,.2],c:'#c8283c',sw:.5,ph:0});L.push({p:[.13,0,0],s:[.18,.55,.2],c:'#c8283c',sw:.5,ph:Math.PI});
   L.push({p:[0,.5,0],s:[.5,.55,.3],c:'#ffd42a',tp:.9});
@@ -109,30 +148,41 @@ M.mascot=()=>{const L=[];
   L.push({p:[-.2,1.18,.54],s:[.14,.14,.02],c:'#fff',e:true});L.push({p:[.2,1.18,.54],s:[.14,.14,.02],c:'#fff',e:true});
   L.push({p:[0,1.0,.55],s:[.4,.05,.02],c:'#c8283c',e:true});
   return{parts:L,sp:[.5,.8],h:1.8,bub:['I\'m lovin\' it…','バーガー…','Бургер…','버거…','برغر…']}};
-M.kidball=()=>{const L=human({coat:'#2b6fd6',pant:'#222',hair:'#111',hat:'cap',hatC:'#e0352b',legSw:.7,armSw:.6});
-  L.push({p:[.34,.0,.38],s:[.2,.2,.2],c:'#ff8a2a',bn:.55,tp:.85});
-  return{parts:L,sp:[.6,1.0],h:1.1,sc:.62,age:[8,12],bub:['バスケ!','Swish!','Мяч!','농구!']}};
-M.detective=()=>{const L=human({coat:'#8a7a5a',pant:'#2a2620',long:true,hat:'fedora',hatC:'#4a3a2a',armR:'#8a7a5a'});
-  L.push({p:[.36,.52,.2],s:[.14,.2,.03],c:'#e8e4d0'});L.push({p:[0,1.44,.12],s:[.2,.04,.02],c:'#19e3ff',e:true});
-  return{parts:L,sp:[.6,1.0],h:1.9,det:true,bub:['Seen this face?','この顔を?','Вы видели?','본 적 있나요?','هل رأيته؟','¿La viste?']}};
-M.samurai=()=>{const L=human({coat:'#eae6f0',pant:'#eae6f0',legW:.26,legTp:.9,hair:'#0d0a14',skin:'#d0a07a'});
+M.kidball=()=>{const L=human({coat:'#2b6fd6',pant:'#222',hair:'#111',hat:'cap',hatC:'#e0352b',legSw:.7,armSw:.6,j:'R'});
+  /* basketball: orange body with black seams (all parts bounce together) */
+  const bx=.32,by=.5,bz=.42,B=.2,K='#241208';
+  L.push({p:[bx,by,bz],s:[B,B,B],c:'#ff8a2a',bn:.2,tp:.88});
+  L.push({p:[bx,by+B*.46,bz],s:[B+.012,.026,B+.012],c:K,bn:.2});
+  L.push({p:[bx,by,bz],s:[.026,B,B+.012],c:K,bn:.2});
+  L.push({p:[bx,by,bz],s:[B+.012,B,.026],c:K,bn:.2});
+  return{parts:L,sp:[.6,1.0],h:1.1,sc:.62,age:[8,12],arms:{R:-.3,eR:-.5},drib:true,bub:['バスケ!','Swish!','Мяч!','농구!']}};
+M.detective=()=>{const L=human({coat:'#8a7a5a',pant:'#2a2620',long:true,hat:'fedora',hatC:'#4a3a2a',armR:'#8a7a5a',j:'R'});
+  hold('R',.3,1.48,[{dy:.1,dz:.02,w:.16,h:.22,d:.03,c:'#e8e4d0'},{dy:.2,dz:.03,w:.12,h:.02,d:.01,c:'#19e3ff',e:true}],'f').forEach(q=>L.push(q));
+  L.push({p:[0,1.44,.12],s:[.2,.04,.02],c:'#19e3ff',e:true});
+  return{parts:L,sp:[.6,1.0],h:1.9,det:true,arms:{R:0,eR:-1.57},gk:'L',bub:['Seen this face?','この顔を?','Вы видели?','본 적 있나요?','هل رأيته؟','¿La viste?']}};
+M.samurai=()=>{const L=human({coat:'#eae6f0',pant:'#eae6f0',legW:.26,legTp:.9,hair:'#0d0a14',skin:'#d0a07a',j:'R'});
   L.push({p:[0,.74,0],s:[.5,.14,.3],c:'#15101a'});L.push({p:[0,1.74,-.04],s:[.1,.14,.1],c:'#0d0a14'});
-  L.push({p:[.36,.55,.28],s:[.05,1.05,.05],c:'#a9763c',ya:0});L.push({p:[.36,.62,.28],s:[.16,.04,.04],c:'#2a1a10'});
-  return{parts:L,sp:[.7,1.1],h:1.9,arms:{R:-.9},bub:['道','Honor.','Честь','도','شرف']}};
+  /* bokken gripped in the right fist, point resting down in front */
+  hold('R',.3,1.48,[{dy:-.52,w:.05,h:1.0,d:.05,c:'#a9763c'},{dy:.1,w:.055,h:.22,d:.055,c:'#2a1a10'},{dy:-.02,w:.17,h:.04,d:.07,c:'#2a1a10'}],'f').forEach(q=>L.push(q));
+  return{parts:L,sp:[.7,1.1],h:1.9,arms:{R:0,eR:-1.57},gk:'L',bub:['道','Honor.','Честь','도','شرف']}};
 M.sage=()=>{const L=[];
   L.push({p:[0,.05,0],s:[.66,1.3,.44],c:'#4f6a8c',tp:.62});L.push({p:[0,1.3,0],s:[.5,.2,.32],c:'#4f6a8c',tp:.8});
-  L.push({p:[-.36,.9,0],s:[.12,.55,.14],c:'#4f6a8c',ak:'L'});L.push({p:[.36,.9,0],s:[.12,.55,.14],c:'#4f6a8c',ak:'R'});
+  L.push({p:[-.36,.9,0],s:[.12,.55,.14],c:'#4f6a8c',ak:'L'});
+  arm('R',.36,1.45,'#4f6a8c',{skin:'#d8b090'}).forEach(q=>L.push(q));
   L.push({p:[0,1.45,0],s:[.22,.26,.22],c:'#d8b090',tp:.82});L.push({p:[0,1.62,0],s:[.32,.14,.32],c:'#4f6a8c',tp:.8});
   L.push({p:[0,1.12,.13],s:[.2,.42,.08],c:'#f2f2f6',tp:.4});L.push({p:[0,1.62,.12],s:[.22,.04,.04],c:'#f2f2f6'});
-  L.push({p:[.46,0,.12],s:[.04,1.95,.04],c:'#6a4a2a'});L.push({p:[.46,1.9,.12],s:[.15,.15,.15],c:'#19e3ff',e:true});
-  return{parts:L,sp:[0,0],h:2.1,stat:true,age:[84,420],bub:['Hmm…','ふむ','Хм…','음…']}};
+  /* staff planted on the ground, held in the right hand */
+  hold('R',.36,1.45,[{dy:-.13,w:.045,h:1.96,d:.045,c:'#6a4a2a'},{dy:.93,w:.15,h:.15,d:.15,c:'#19e3ff',e:true}],'f').forEach(q=>L.push(q));
+  return{parts:L,sp:[0,0],h:2.1,stat:true,age:[84,420],arms:{R:0,eR:-1.57},gk:'L',bub:['Hmm…','ふむ','Хм…','음…']}};
 M.sageF=()=>{const L=[];
   L.push({p:[0,.05,0],s:[.7,1.25,.46],c:'#7a4f8a',tp:.6});L.push({p:[0,1.25,0],s:[.56,.22,.34],c:'#a07ab0',tp:.8});
-  L.push({p:[-.36,.9,0],s:[.12,.55,.14],c:'#7a4f8a',ak:'L'});L.push({p:[.36,.9,0],s:[.12,.55,.14],c:'#7a4f8a',ak:'R'});
+  L.push({p:[-.36,.9,0],s:[.12,.55,.14],c:'#7a4f8a',ak:'L'});
+  arm('R',.36,1.45,'#7a4f8a',{skin:'#c89a78'}).forEach(q=>L.push(q));
   L.push({p:[0,1.42,0],s:[.22,.26,.22],c:'#c89a78',tp:.82});L.push({p:[0,1.62,0],s:[.26,.1,.26],c:'#f2f2f6',tp:.85});L.push({p:[0,1.72,-.03],s:[.14,.12,.14],c:'#f2f2f6'});
   L.push({p:[0,1.52,.12],s:[.2,.05,.03],c:'#ffb347',e:true});
-  L.push({p:[.44,0,.12],s:[.04,1.1,.04],c:'#6a4a2a'});L.push({p:[.44,1.05,.12],s:[.13,.18,.13],c:'#ffb347',e:true});
-  return{parts:L,sp:[0,0],h:2.0,stat:true,age:[84,420],bub:['Ah…','あらあら','Ох…','어이구']}};
+  /* lantern cane */
+  hold('R',.36,1.45,[{dy:-.5,w:.04,h:1.1,d:.04,c:'#6a4a2a'},{dy:.14,w:.13,h:.2,d:.13,c:'#ffb347',e:true}],'f').forEach(q=>L.push(q));
+  return{parts:L,sp:[0,0],h:2.0,stat:true,age:[84,420],arms:{R:0,eR:-1.57},gk:'L',bub:['Ah…','あらあら','Ох…','어이구']}};
 M.kidrun=()=>{const L=human({coat:'#ffd42a',pant:'#2a3a6a',hair:'#3a2418',legSw:1.1,armSw:1.0,legW:.18});
   L.push({p:[0,.9,-.17],s:[.26,.3,.1],c:'#ffd42a'});
   return{parts:L,sp:[5,6.5],h:1.1,sc:.62,age:[7,11],run:true,bub:['速っ!','Zoom!','Бегу!','달려!']}};
@@ -155,8 +205,8 @@ function build(ent,cam){
       x+=px;y+=py+by;z+=pz;
       let a=0;
       if(pt.ak&&arms[pt.ak]!=null)a=arms[pt.ak];else if(pt.sw)a=Math.sin((ent.ph||0)+pt.ph)*pt.sw;
-      if(a){const pv=py+h,yy=y-pv,zz=z-pz;y=pv+yy*Math.cos(a)-zz*Math.sin(a);z=pz+yy*Math.sin(a)+zz*Math.cos(a)}
-      if(pt.pk&&arms[pt.pk]!=null){const a1=arms[pt.pk],pv1=pt.pv[0],pz1=pt.pv[1],y1=y-pv1,z1=z-pz1;y=pv1+y1*Math.cos(a1)-z1*Math.sin(a1);z=pz1+y1*Math.sin(a1)+z1*Math.cos(a1)}
+      if(a){const pv=pt.po?pt.po[0]:py+h,pw=pt.po?pt.po[1]:pz,yy=y-pv,zz=z-pw;y=pv+yy*Math.cos(a)-zz*Math.sin(a);z=pw+yy*Math.sin(a)+zz*Math.cos(a)}
+      if(pt.pk){const a1=arms[pt.pk]!=null?arms[pt.pk]:(pt.psw?Math.sin((ent.ph||0)+(pt.pph||0))*pt.psw:0);if(a1){const pv1=pt.pv[0],pz1=pt.pv[1],y1=y-pv1,z1=z-pz1;y=pv1+y1*Math.cos(a1)-z1*Math.sin(a1);z=pz1+y1*Math.sin(a1)+z1*Math.cos(a1)}}
       if(pt.sp){const a2=clock*25,xx=x-px,zz=z-pz;x=px+xx*Math.cos(a2)-zz*Math.sin(a2);z=pz+xx*Math.sin(a2)+zz*Math.cos(a2)}
       const X=x*cos+z*sin,Z=-x*sin+z*cos;
       vs.push([ent.x+X*sc,mir?(baseY+(y+el)*sc):(baseY-(y+el)*sc),zc+Z*sc]);

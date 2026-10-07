@@ -228,7 +228,7 @@ tick();setInterval(tick,1000);
     return rndp(COMMON);
   }
   const SHOUTS=['おい!!','HEY!','¡OYE!','ЭЙ!','야!!','ÇEK!','Hé!','你干嘛!','यार!','أنت!','Oi!','Ντε!','Biko!','Ewo!'];
-  let chars=[],spawnT=0,clock=0;
+  let chars=[],spawnT=0,clock=0;const gk=ch=>ch.def.gk||'R';
   const rndp=a=>a[Math.floor(Math.random()*a.length)];
   function spawn(initial,force){
     const name=force||pickType(),def=LP.MODELS[name==='sage'&&Math.random()<.5?'sageF':name]();
@@ -275,7 +275,7 @@ tick();setInterval(tick,1000);
       const A=p.A,B=p.B;
       if(A.dead||B.dead||!chars.includes(A)||!chars.includes(B)){A.wait=Math.min(A.wait,0);B.wait=Math.min(B.wait,0);return false}
       p.t+=dt;
-      [[A,B],[B,A]].forEach(([a,b])=>{if(a.irate>0)return;a.ent.yaw=Math.atan2(b.ent.x-a.ent.x,b.ent.z-a.ent.z);if(!a.hopT)a.ent.arms.R=-1.5+Math.sin(p.t*8+(a===A?0:2))*.3});
+      [[A,B],[B,A]].forEach(([a,b])=>{if(a.irate>0)return;a.ent.yaw=Math.atan2(b.ent.x-a.ent.x,b.ent.z-a.ent.z);if(!a.hopT)a.ent.arms[a.def.gk||'R']=-1.5+Math.sin(p.t*8+(a===A?0:2))*.3});
       const st=Math.floor((p.t-.9)/1.25);
       if(p.t>=.9&&st>p.n-1&&p.n<6){p.n++;const sp=p.n%2?A:B;say(sp,rndp(ARGUE),'irate',1.5)}
       if(p.n>=6&&p.t>=.9+6*1.25+.4&&!p.hop){p.hop=true;[A,B].forEach(q=>{q.hopT=.55;say(q,rndp(FRUST),'irate',1.2)})}
@@ -296,6 +296,7 @@ tick();setInterval(tick,1000);
       else e.z+=(ch.toward?-(ch.sp*.7+SCR):Math.max(.12,ch.sp*.7-SCR))*dt;
       if(!ch.stat&&ch.wait<=0)e.ph+=dt*Math.min(ch.sp,6)*3.4*(ch.hurry?1.5:1);
       if(!ch.stat&&!ch.def.fly&&ch.wait<=0)e.x+=Math.sin(clock*.6+ch.seed)*.01*dt*10;
+      if(ch.def.drib&&ch.irate<=0&&ch.wait<=0){const sb=Math.abs(Math.sin(clock*7));e.arms.R=-.2-.25*sb;e.arms.eR=-.55+.1*sb}
       e.bob=ch.def.fly?Math.sin(clock*2+ch.seed)*.08:0;
       if(ch.hopT>0){ch.hopT-=dt;e.elev=Math.sin(Math.PI*clamp(1-ch.hopT/.55,0,1))*.7;if(ch.hopT<=0){e.elev=0;ch.hopT=0}}
       if(ch.emerge>0){ch.emerge-=dt;e.x+=(ch.ex-e.x)*Math.min(1,dt*1.6);
@@ -307,21 +308,21 @@ tick();setInterval(tick,1000);
         if(Math.abs(e.x)>WALL-SHOP_D-.1){ch.vanish=(ch.vanish||0)+dt/.5;if(ch.vanish>=1)ch.dead=true}}
       /* preacher gesticulates, samurai stays calm */
       if(ch.stat&&ch.wait<=0&&ch.irate<=0){
-        if(ch.name==='preacher'){e.arms.R=-2.5+Math.sin(clock*3)*.35;e.arms.L=-1.2+Math.sin(clock*2.4)*.5}
+        if(ch.name==='preacher')e.arms.R=-2.5+Math.sin(clock*3)*.35;
         if(ch.name==='dealer')e.yaw=Math.PI+Math.sin(clock*.5+ch.seed)*.5;
-        if(ch.name==='sage'){e.arms.R=-1.1+Math.sin(clock*1.6)*.25;e.arms.L=-.3+Math.sin(clock*1.1)*.2;e.yaw=Math.PI+Math.sin(clock*.4+ch.seed)*.25}
+        if(ch.name==='sage'){e.arms.L=-.3+Math.sin(clock*1.1)*.2;e.yaw=Math.PI+Math.sin(clock*.4+ch.seed)*.25}
       }
       if(ch.stat&&ch.life<=0&&ch.irate<=0)ch.dead=true;
       if(ch.meetT>0){ch.meetT-=dt;if(ch.meetT<=0){
         /* walk off in opposite directions, hurried and annoyed */
         ch.stat=false;ch.hurry=true;ch.toward=ch.leave==='toward';ch.sp=2+Math.random()*.9;ch.wait=0;
-        delete e.arms.R;if(ch.name==='samurai')e.arms.R=-.9;e.yaw=ch.toward?Math.PI:0;say(ch,rndp(FRUST),'irate',1.8);ch.cool=3}}
+        delete e.arms[gk(ch)];e.yaw=ch.toward?Math.PI:0;say(ch,rndp(FRUST),'irate',1.8);ch.cool=3}}
       /* anger: shake, turn to face the viewer, flash red */
       if(ch.irate>0){
         ch.irate-=dt;e.x+=Math.sin(clock*60)*.012;
         let dy=Math.PI-(e.yaw%(Math.PI*2));e.yaw+=dy*Math.min(1,dt*6);
-        e.tint=[255,30,30,.35+.25*Math.sin(clock*18)];e.arms.R=-2.6+Math.sin(clock*25)*.4;
-        if(ch.irate<=0){e.tint=null;if(ch.name!=='preacher'&&ch.name!=='samurai')delete e.arms.R;if(ch.name==='samurai')e.arms.R=-.9;e.yaw=ch.toward?Math.PI:(ch.stat?e.yaw:0)}
+        e.tint=[255,30,30,.35+.25*Math.sin(clock*18)];e.arms[gk(ch)]=-2.6+Math.sin(clock*25)*.4;
+        if(ch.irate<=0){e.tint=null;if(ch.name!=='preacher')delete e.arms[gk(ch)];e.yaw=ch.toward?Math.PI:(ch.stat?e.yaw:0)}
         ch.wait=Math.max(ch.wait,0);
       }
       /* random chatter */
@@ -334,16 +335,16 @@ tick();setInterval(tick,1000);
       if(ch.name==='detective'&&ch.wait<=0&&!ch.asked&&!ch.met){
         const t=chars.find(o=>o!==ch&&!o.met&&!o.def.fly&&o.name!=='detective'&&Math.abs(o.ent.z-e.z)<1.7&&Math.abs(o.ent.x-e.x)<1.4&&o.irate<=0&&o.wait<=0);
         if(t){ch.asked=true;ch.wait=3.2;t.wait=3.2;e.yaw=t.ent.x<e.x?-Math.PI/2:Math.PI/2;
-          say(ch,rndp(ch.def.bub),'say',2.8);say(t,rndp(['?','…','知らない','No.','Нет.','몰라요','لا.']),'say',2.4);e.arms.R=-1.5}
+          say(ch,rndp(ch.def.bub),'say',2.8);say(t,rndp(['?','…','知らない','No.','Нет.','몰라요','لا.']),'say',2.4);e.arms[gk(ch)]=-1.5}
       }
-      if(ch.name==='detective'&&ch.wait<=0&&ch.asked&&e.arms.R===-1.5){delete e.arms.R;e.yaw=ch.toward?Math.PI:0;ch.asked=false;ch.cool=Math.max(ch.cool,0)}
+      if(ch.name==='detective'&&ch.wait<=0&&ch.asked&&e.arms[gk(ch)]===-1.5){delete e.arms[gk(ch)];e.yaw=ch.toward?Math.PI:0;ch.asked=false;ch.cool=Math.max(ch.cool,0)}
     }
     /* two unique characters who meet stop, point at each other, then storm off */
     const us=chars.filter(q=>UNIQUE.has(q.name)&&!q.met&&q.irate<=0&&q.ent.z<22);
     if(us.length>=2){const A=us[0],B=us[1];
       if(Math.abs(A.ent.z-B.ent.z)<2.2&&Math.abs(A.ent.x-B.ent.x)<2.2){
         A.met=B.met=true;A.wait=B.wait=99;A.life=B.life=99;pairs.push({A,B,t:0,n:0});
-        [[A,B],[B,A]].forEach(([p,q])=>{p.ent.yaw=Math.atan2(q.ent.x-p.ent.x,q.ent.z-p.ent.z);p.ent.arms.R=-1.5;say(p,rndp(POINT),'irate',2.2)});
+        [[A,B],[B,A]].forEach(([p,q])=>{p.ent.yaw=Math.atan2(q.ent.x-p.ent.x,q.ent.z-p.ent.z);p.ent.arms[gk(p)]=-1.5;say(p,rndp(POINT),'irate',2.2)});
       }}
     /* walkers that cross paths bump into each other */
     for(let i=0;i<chars.length;i++)for(let j=i+1;j<chars.length;j++){
