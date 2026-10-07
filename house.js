@@ -117,7 +117,12 @@ function makeTrack(seed){
     }}
   R=Math.random;return t;
 }
-function newSeed(){return 1+Math.floor(Math.random()*999999999)}
+const GENRES=['House','Soul house','Latin house','Afro house','City pop','Grime','Amapiano','Gqom'];
+/* pick a genre first, then search for a seed that makes it, so every genre turns up equally often (old seeds keep their sound) */
+function newSeed(){
+  const want=GENRES[Math.floor(Math.random()*GENRES.length)];let sd=1+Math.floor(Math.random()*999999999);
+  for(let i=0;i<400;i++){if(makeTrack(sd).genre===want)return sd;sd=1+Math.floor(Math.random()*999999999)}
+  return sd}
 function setTempo(){SPB=60/T.bpm;S16=SPB/4}
 T=makeTrack(0);setTempo();
 function init(){
@@ -375,7 +380,8 @@ const House={
   shuffle(){return apply(makeTrack(newSeed()))},
   make(x){return(x&&typeof x==='object')?JSON.parse(JSON.stringify(x)):makeTrack(+x)},
   load(x){return apply(House.make(x))},
-  plays(id){return readPlays()[id]||0}
+  plays(id){return readPlays()[id]||0},
+  genres:GENRES
 };
 g.House=House;
 })(window);
