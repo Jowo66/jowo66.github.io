@@ -105,7 +105,7 @@ footer{text-align:center;padding:50px 20px;border-top:1px solid rgba(255,46,136,
 footer a{color:var(--cyan)}
 </style>
 <script src="lp3d.js?v=20261007c"></script>
-<script src="house.js?v=20261007c"></script>
+<script src="house.js?v=20261007m"></script>
 <script>(function(){if(/[?&]embed/.test(location.search)){document.documentElement.className="embed";var e=document.createElement("style");e.textContent="header,header.bar,main>:not(.stage),footer,.rules,.districts{display:none!important}html,body{background:#05020a!important}body{padding:6px!important;margin:0!important;min-height:0!important}main{padding:0!important;margin:0 auto!important;max-width:none!important}";document.head.appendChild(e)}})()</script>
 </head>
 
@@ -700,7 +700,7 @@ function syncFav(){
 function drawPL(){
   if(!plSel||!AUDIO)return;const cur=trackId(AUDIO.track);
   plSel.innerHTML='';const o0=document.createElement('option');o0.value='';o0.textContent='Playlist ('+PL.length+')';plSel.appendChild(o0);
-  PL.forEach(e=>{const t=AUDIO.make(e),o=document.createElement('option');o.value=entryId(e);o.textContent=t.name+' \u00b7 '+t.key+' \u00b7 '+t.bpm+' \u00b7 \u25B6'+AUDIO.plays(t.id);plSel.appendChild(o)});
+  PL.forEach(e=>{const t=AUDIO.make(e),o=document.createElement('option');o.value=entryId(e);o.textContent=t.name+(t.genre?' ('+t.genre+')':'')+' \u00b7 '+t.key+' \u00b7 '+t.bpm+' \u00b7 \u25B6'+AUDIO.plays(t.id);plSel.appendChild(o)});
   const saved=PL.some(e=>entryId(e)===cur);
   if(fav){fav.classList.toggle('on',saved);fav.setAttribute('aria-pressed',saved?'true':'false');fav.textContent=saved?'\u2665 Saved':'\u2661 Save'}
 }
