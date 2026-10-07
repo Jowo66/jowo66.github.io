@@ -75,7 +75,7 @@ async function artistGenres(id){
   try{const a=await api('/artists/'+encodeURIComponent(id));return genreCache[id]=(a&&a.genres)||[]}catch(e){return[]}
 }
 /* ---- shared session: lives with the player (in the main page), so closing the club window does not stop the music ---- */
-const session={playing:false,t:null,raw:null,genre:null,aid:null,bpm:+LS('jowo.spbpm')||122};
+const session={playing:false,shuffle:false,repeat:0,t:null,raw:null,genre:null,aid:null,bpm:+LS('jowo.spbpm')||122};
 const GMAP=[[/amapiano|kwaito|south african/,'Amapiano'],[/gqom|durban/,'Gqom'],[/afro ?house|afrobeat|afropop|afro-?tech|naija|nigerian|ghanaian|highlife|african/,'Afro house'],
  [/phonk|funk carioca|funk brasileiro|brazilian|baile|brasil|brazil|mpb|sertanejo|pagode|bossa/,'Brazilian phonk'],[/latin|salsa|reggaeton|cumbia|bachata|merengue|urbano|mambo|tango|mexican|colombian|dembow/,'Latin house'],
  [/city pop|j-pop|japanese|j-rock|shibuya|anime/,'City pop'],[/grime|uk hip hop|uk drill|drill|uk garage/,'Grime'],[/soul|r&b|funk|motown|disco|gospel/,'Soul house'],[/house|techno|edm|electro|dance|trance|club/,'House']];
@@ -83,7 +83,7 @@ const mapGenre=list=>{const s=(list||[]).join(' | ').toLowerCase();for(const p o
 on('state',async s=>{
   if(!s||!s.track_window||!s.track_window.current_track){session.playing=false;emit('session',session);return}
   const c=s.track_window.current_track,was=session.t&&session.t.uri;
-  session.playing=!s.paused;
+  session.playing=!s.paused;session.shuffle=!!s.shuffle;session.repeat=s.repeat_mode||0;      /* 0 off, 1 playlist, 2 song */
   const H=g.House;if(session.playing&&H&&H.on)H.toggle();            /* only one source at a time */
   session.t={uri:c.uri,name:c.name,artists:(c.artists||[]).map(a=>a.name).join(', ')};
   emit('session',session);
@@ -102,6 +102,7 @@ const Spot={session,off,mapGenre,
   toggle:guard(()=>player.togglePlay()),pause:guard(()=>player.pause()),resume:guard(()=>player.resume()),next:guard(()=>player.nextTrack()),prev:guard(()=>player.previousTrack()),
   activate:()=>{try{player&&player.activateElement&&player.activateElement()}catch(e){}},
   shuffle:b=>deviceId?api('/me/player/shuffle?state='+(b?'true':'false')+'&device_id='+encodeURIComponent(deviceId),{method:'PUT'}):Promise.resolve(),
+  repeat:m=>deviceId?api('/me/player/repeat?state='+(m==='track'?'track':m==='context'?'context':'off')+'&device_id='+encodeURIComponent(deviceId),{method:'PUT'}):Promise.resolve(),
   state:()=>state,
   /* PKCE helpers, exposed for the callback page and tests */
   _b64u:b64u,_challenge:challenge,_rnd:rnd

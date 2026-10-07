@@ -117,10 +117,10 @@ html.embed #spbar{flex-wrap:wrap}
 #np b{color:#ffb347;font-weight:700}#np i{font-style:normal;color:#27e8ff}#np[hidden]{display:none}
 html.embed #np{display:none}
 </style>
-<script src="lp3d.js?v=20261007zj"></script>
-<script src="house.js?v=20261007zj"></script>
-<script src="spotify-config.js?v=20261007zj"></script>
-<script src="spotify.js?v=20261007zj"></script>
+<script src="lp3d.js?v=20261007zk"></script>
+<script src="house.js?v=20261007zk"></script>
+<script src="spotify-config.js?v=20261007zk"></script>
+<script src="spotify.js?v=20261007zk"></script>
 <script>(function(){if(/[?&]embed/.test(location.search)){document.documentElement.className="embed";var e=document.createElement("style");e.textContent="header,header.bar,main>:not(.stage),footer,.rules,.districts{display:none!important}html,body{background:#05020a!important}body{padding:6px!important;margin:0!important;min-height:0!important}main{padding:0!important;margin:0 auto!important;max-width:none!important}";document.head.appendChild(e)}})()</script>
 </head>
 
@@ -158,6 +158,7 @@ html.embed #np{display:none}
       <button id="spt" type="button" title="Play / pause" aria-label="Play or pause" hidden>&#9199;</button>
       <button id="spn" type="button" title="Next track" aria-label="Next track" hidden>&#9197;</button>
       <button id="sps" type="button" aria-pressed="false" title="Shuffle your Spotify playlist" hidden>&#128256; Shuffle: off</button>
+      <button id="spr" type="button" aria-pressed="false" title="Repeat the current song" hidden>&#128258; Repeat song: off</button>
       <button id="spb" type="button" title="Tap along to the beat so the dancers keep time (Spotify no longer shares tempo data)" hidden>&#128065; Tap BPM: 122</button>
       <button id="spx" type="button" title="Disconnect Spotify" hidden>Disconnect</button>
       <span class="sps" id="spmsg" role="status"></span>
@@ -971,12 +972,12 @@ function syncNP(){
   n.hidden=false;n.innerHTML=x.html;n.querySelector('b').textContent=x.b;n.querySelector('i').textContent=x.i;n.querySelector('span').textContent=x.s}
 setInterval(syncNP,500);syncNP();
 /* ---------- Spotify (needs Premium): play your own playlists; the dancers follow your tapped tempo ---------- */
-const spb=el('spbar'),spc=el('spc'),spl=el('spl'),spt=el('spt'),spp=el('spp'),spn=el('spn'),sps=el('sps'),spbt=el('spb'),spx=el('spx'),spm=el('spmsg'),spsu=el('spsetup');
+const spr=el('spr'),spb=el('spbar'),spc=el('spc'),spl=el('spl'),spt=el('spt'),spp=el('spp'),spn=el('spn'),sps=el('sps'),spbt=el('spb'),spx=el('spx'),spm=el('spmsg'),spsu=el('spsetup');
 const spMsg=(t,warn)=>{if(spm){spm.textContent=t||'';spm.style.color=warn?'#ff7a9a':''}};
 function spShow(){
   const S=Spot;if(!spc||!S)return;
   const conn=S.connected(),conf=S.configured();
-  [spl,spp,spt,spn,sps,spbt,spx].forEach(e=>e&&(e.hidden=!conn));
+  [spl,spp,spt,spn,sps,spr,spbt,spx].forEach(e=>e&&(e.hidden=!conn));
   spc.hidden=conn;spc.textContent=conf?'\u{1F3A7} Connect Spotify':'\u{1F3A7} Spotify: set up';
 }
 function spSetup(){
@@ -1007,7 +1008,9 @@ if(Spot&&spc){
   const onReady=()=>{if(!SP.t)spMsg('Ready. Pick a playlist.')};S.on('ready',onReady);
   const onSess=()=>{
     if(SP.t)spMsg((SP.playing?'Playing: ':'Paused: ')+SP.t.name+' \u2014 '+SP.t.artists);
-    spt.innerHTML=SP.playing?'&#9208;':'&#9654;'};
+    spt.innerHTML=SP.playing?'&#9208;':'&#9654;';
+    sps.setAttribute('aria-pressed',SP.shuffle?'true':'false');sps.innerHTML='&#128256; Shuffle: '+(SP.shuffle?'on':'off');
+    spr.setAttribute('aria-pressed',SP.repeat===2?'true':'false');spr.innerHTML='&#128258; Repeat song: '+(SP.repeat===2?'on':'off')};
   const onTrack=()=>burst(PIT.x,PIT.z-.6,pick(['NEXT TRACK!','\u6b21\u306e\u66f2!','NEXT!']));
   S.on('session',onSess);S.on('track',onTrack);onSess();
   /* detach from the shared player when this window is closed or reloaded */
@@ -1019,10 +1022,11 @@ if(Spot&&spc){
   };
   spl.onchange=async()=>{
     const v=spl.value;if(!v)return;spMsg('Loading\u2026');S.activate();
-    try{if(AUDIO&&AUDIO.on)AUDIO.toggle();await S.play(v==='liked'?{uris:await S.liked()}:{uri:v});if(sps.getAttribute('aria-pressed')==='true')S.shuffle(true)}catch(e){spMsg('Could not start that: '+e.message,true)}
+    try{if(AUDIO&&AUDIO.on)AUDIO.toggle();await S.play(v==='liked'?{uris:await S.liked()}:{uri:v});if(SP.shuffle)S.shuffle(true);if(SP.repeat===2)S.repeat('track')}catch(e){spMsg('Could not start that: '+e.message,true)}
   };
   spt.onclick=()=>{S.activate();S.toggle()};spp.onclick=()=>S.prev();spn.onclick=()=>S.next();
-  sps.onclick=()=>{const on=sps.getAttribute('aria-pressed')!=='true';sps.setAttribute('aria-pressed',on?'true':'false');sps.innerHTML='&#128256; Shuffle: '+(on?'on':'off');S.shuffle(on).catch(e=>spMsg(e.message,true))};
+  sps.onclick=()=>{const on=!SP.shuffle;SP.shuffle=on;onSess();S.shuffle(on).catch(e=>spMsg(e.message,true))};
+  spr.onclick=()=>{const on=SP.repeat!==2;SP.repeat=on?2:0;onSess();S.repeat(on?'track':'off').catch(e=>spMsg(e.message,true))};
   spx.onclick=()=>{S.disconnect();spShow()};
   /* tap tempo: average of recent taps; also snaps the beat so the dancers land on it */
   let taps=[];
