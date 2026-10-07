@@ -104,12 +104,23 @@ section{max-width:1180px;margin:0 auto;padding:80px 6% 70px}
 footer{text-align:center;padding:50px 20px;border-top:1px solid rgba(255,46,136,.3);color:var(--muted)}
 footer a{color:var(--cyan)}
 html.beach:not(.embed) body{background:radial-gradient(ellipse at 80% 10%,rgba(255,214,120,.35),transparent 55%),radial-gradient(ellipse at 10% 90%,rgba(80,200,255,.22),transparent 50%),#15324f}
+#spbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+#spbar button,#spbar select{font:inherit}
+#spbar .sps{color:#9a93b0;font-size:.9rem;flex:1 1 220px;min-width:0}
+#spbar .sps b{color:#ffb347}
+#spsetup{margin-top:10px;padding:12px 14px;border:1px solid #27e8ff55;background:rgba(10,6,18,.7);font-size:.92rem;line-height:1.55}
+#spsetup ol{margin:6px 0 8px 1.1em;padding:0}#spsetup code{color:#ffb347;word-break:break-all}
+#spsetup input{width:min(420px,100%);padding:7px 9px;background:#0a0612;color:#f3ead8;border:1px solid #27e8ff;font:inherit}
+#spsetup[hidden],#spbar [hidden]{display:none}
+html.embed #spbar{flex-wrap:wrap}
 #np{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:50;padding:7px 16px;border:2px solid #ff2e88;background:rgba(10,6,18,.88);color:#f3ead8;font:700 14px/1.2 'Share Tech Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;box-shadow:4px 4px 0 #000;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
 #np b{color:#ffb347;font-weight:700}#np i{font-style:normal;color:#27e8ff}#np[hidden]{display:none}
 html.embed #np{display:none}
 </style>
-<script src="lp3d.js?v=20261007zh"></script>
-<script src="house.js?v=20261007zh"></script>
+<script src="lp3d.js?v=20261007zi"></script>
+<script src="house.js?v=20261007zi"></script>
+<script src="spotify-config.js?v=20261007zi"></script>
+<script src="spotify.js?v=20261007zi"></script>
 <script>(function(){if(/[?&]embed/.test(location.search)){document.documentElement.className="embed";var e=document.createElement("style");e.textContent="header,header.bar,main>:not(.stage),footer,.rules,.districts{display:none!important}html,body{background:#05020a!important}body{padding:6px!important;margin:0!important;min-height:0!important}main{padding:0!important;margin:0 auto!important;max-width:none!important}";document.head.appendChild(e)}})()</script>
 </head>
 
@@ -140,6 +151,18 @@ html.embed #np{display:none}
       <span>In the club: <b id="who">0</b>/40 &nbsp;&middot;&nbsp; Mode: <b id="mode">pogo</b> &nbsp;&middot;&nbsp; BPM: <b id="bpm">124</b> &nbsp;&middot;&nbsp; Track: <b id="trk">Rain Groove</b> &nbsp;&middot;&nbsp; Plays: <b id="plays">0</b> &nbsp;&middot;&nbsp; Drops: <b id="drops">0</b></span>
       <span class="btns"><button id="battle" type="button" aria-pressed="false" title="Two dancers battle in the middle while everyone cheers">🥊 Battle: off</button> <button id="dance" type="button" title="Change the dancing style">💃 Style: Mosh</button> <button id="hype" type="button" title="Bring one more person into the club">&#128293; Hype</button> <button id="rep" type="button" aria-pressed="false" title="Repeat on: keep looping this track. Repeat off: the DJ shuffles to a new track every 30 seconds">&#128257; Repeat: off</button> <button id="shf" type="button" title="Generate a new house track">&#10551; Shuffle</button> <button id="fav" type="button" aria-pressed="false" title="Save this track to your playlist">&#9825; Save</button> <select id="pl" aria-label="Your playlist"><option value="">Playlist (0)</option></select> <button id="beachbtn" type="button" aria-pressed="false" title="Switch between Casa Sofia and the beach version, Playa Sofia">&#127958; Beach</button> <button id="snd" type="button" aria-pressed="false">&#9834; Sound: off</button> <button id="pause" type="button">Pause</button></span>
     </div>
+    <div id="spbar" class="btns" aria-label="Spotify">
+      <button id="spc" type="button" title="Play your own music from Spotify (Premium)">&#127911; Spotify</button>
+      <select id="spl" aria-label="Your Spotify playlists" hidden></select>
+      <button id="spp" type="button" title="Previous track" aria-label="Previous track" hidden>&#9198;</button>
+      <button id="spt" type="button" title="Play / pause" aria-label="Play or pause" hidden>&#9199;</button>
+      <button id="spn" type="button" title="Next track" aria-label="Next track" hidden>&#9197;</button>
+      <button id="sps" type="button" aria-pressed="false" title="Shuffle your Spotify playlist" hidden>&#128256; Shuffle: off</button>
+      <button id="spb" type="button" title="Tap along to the beat so the dancers keep time (Spotify no longer shares tempo data)" hidden>&#128065; Tap BPM: 122</button>
+      <button id="spx" type="button" title="Disconnect Spotify" hidden>Disconnect</button>
+      <span class="sps" id="spmsg" role="status"></span>
+    </div>
+    <div id="spsetup" hidden></div>
   </div>
 
   <section id="districts">
@@ -188,9 +211,10 @@ const AUDIO=(()=>{try{if(EMBED&&parent&&parent.House)return parent.House}catch(e
 
 /* ---------- beat clock: follows the music when it plays, free-runs otherwise ---------- */
 let time=0,beat=0,kick=0,bar4=0;
-const bpmNow=()=>(AUDIO&&AUDIO.bpm)||124;
+const SP={playing:false,bpm:+(function(){try{return localStorage.getItem('jowo.spbpm')}catch(e){return 0}})()||122,t:null,genre:null,raw:null,aid:null};
+const bpmNow=()=>SP.playing?SP.bpm:((AUDIO&&AUDIO.bpm)||124);
 function updBeat(dt){
-  const ph=AUDIO&&AUDIO.phase?AUDIO.phase():-1;
+  const ph=!SP.playing&&AUDIO&&AUDIO.phase?AUDIO.phase():-1;
   if(ph>=0)beat=ph;else beat+=dt*bpmNow()/60;
   const fr=beat-Math.floor(beat);kick=Math.exp(-fr*5.5);bar4=Math.floor(beat/4);
 }
@@ -559,7 +583,7 @@ function movers(d,dt,jump){
 function hype(){
   flash=Math.max(flash,.35);
   if(total()>=CAP)return 'full';
-  const g=AUDIO&&AUDIO.track&&AUDIO.track.genre,d=mkDancer(0,false,g);d.state='enter';d.alpha=0;d.e.x=DOOR.x;d.e.z=DOOR.z-.1;d.e.yaw=Math.PI;
+  const g=curGenre(),d=mkDancer(0,false,g);d.state='enter';d.alpha=0;d.e.x=DOOR.x;d.e.z=DOOR.z-.1;d.e.yaw=Math.PI;
   d.tx=PIT.x+rnd(-1.6,1.6);d.tz=PIT.z+rnd(-1,1);d.x=d.e.x;d.z=d.e.z;dancers.push(d);burst(DOOR.x,DOOR.z-.4,GREET[CUL[g]]?pick(GREET[CUL[g]]):pick(['WOO!','乾杯!','УРА!','야호!','¡VAMOS!','Ayo!']));return 'ok';
 }
 const BN_PARTS=LP.compile(LP.human({coat:'#0c0c12',pant:'#0c0c12',skin:'#7a4a30',hair:'#0c0c12'}).concat([
@@ -925,16 +949,98 @@ function syncRep(){if(rpb){rpb.textContent='\u{1F501} Repeat: '+(repeat?'on':'of
 if(rpb)rpb.onclick=()=>{repeat=!repeat;autoT=0;try{localStorage.setItem('jowo.repeat',repeat?'1':'0')}catch(e){}syncRep()};
 syncRep();
 function autoShuffle(){
-  if(!AUDIO||!AUDIO.track)return;
+  if(SP.playing||!AUDIO||!AUDIO.track)return;
   const now=performance.now(),id=trackId(AUDIO.track);
   if(id!==autoId||repeat||!autoT){autoId=id;autoT=now;return}
   if(now-autoT>=30000){autoT=now;AUDIO.shuffle();autoId=trackId(AUDIO.track);burst(PIT.x,PIT.z-.6,pick(['NEXT TRACK!','\u6b21\u306e\u66f2!','NEXT!']))}
 }
 setInterval(autoShuffle,1000);   /* keeps shuffling when the tab is in the background (animation frames pause there) */
 const ORIGIN={'House':'Chicago','Soul house':'USA','Latin house':'Latin America','Afro house':'Africa','City pop':'Japan','Grime':'London, UK','Amapiano':'South Africa','Gqom':'Durban, South Africa','Brazilian phonk':'Brazil'};
-function syncNP(){const n=el('np');if(!n||EMBED)return;const t=AUDIO&&AUDIO.track;if(!t||!t.genre){n.hidden=true;return}
-  n.hidden=false;n.innerHTML='\u266a Now playing: <b></b> <i></i> \u00b7 <span></span>';n.querySelector('b').textContent=t.genre;n.querySelector('i').textContent=ORIGIN[t.genre]?'('+ORIGIN[t.genre]+')':'';n.querySelector('span').textContent=t.name+' \u00b7 '+Math.round(t.bpm||bpmNow())+' BPM'}
+function curGenre(){return SP.playing?SP.genre:(AUDIO&&AUDIO.track&&AUDIO.track.genre)||null}
+function npInfo(){
+  if(SP.playing&&SP.t)return{html:'\u266a Spotify: <b></b> <i></i> \u00b7 <span></span>',b:SP.t.name,i:SP.raw?'('+SP.raw+')':'',s:SP.t.artists+' \u00b7 '+SP.bpm+' BPM'};
+  const t=AUDIO&&AUDIO.track;if(!t||!t.genre)return null;
+  return{html:'\u266a Now playing: <b></b> <i></i> \u00b7 <span></span>',b:t.genre,i:ORIGIN[t.genre]?'('+ORIGIN[t.genre]+')':'',s:t.name+' \u00b7 '+Math.round(t.bpm||bpmNow())+' BPM'}
+}
+function syncNP(){
+  const x=npInfo();
+  if(EMBED){try{parent.postMessage({jowoNP:SP.playing&&x?{sp:1,b:x.b,i:x.i,s:x.s}:null},location.origin)}catch(e){}return}
+  const n=el('np');if(!n)return;if(!x){n.hidden=true;return}
+  n.hidden=false;n.innerHTML=x.html;n.querySelector('b').textContent=x.b;n.querySelector('i').textContent=x.i;n.querySelector('span').textContent=x.s}
 setInterval(syncNP,500);syncNP();
+/* ---------- Spotify (needs Premium): play your own playlists; the dancers follow your tapped tempo ---------- */
+const GMAP=[[/amapiano|kwaito|south african/,'Amapiano'],[/gqom|durban/,'Gqom'],[/afro ?house|afrobeat|afropop|afro-?tech|naija|nigerian|ghanaian|highlife|african/,'Afro house'],
+ [/phonk|funk carioca|funk brasileiro|brazilian|baile|brasil|brazil|mpb|sertanejo|pagode|bossa/,'Brazilian phonk'],[/latin|salsa|reggaeton|cumbia|bachata|merengue|urbano|mambo|tango|mexican|colombian|dembow/,'Latin house'],
+ [/city pop|j-pop|japanese|j-rock|shibuya|anime/,'City pop'],[/grime|uk hip hop|uk drill|drill|uk garage/,'Grime'],[/soul|r&b|funk|motown|disco|gospel/,'Soul house'],[/house|techno|edm|electro|dance|trance|club/,'House']];
+const mapGenre=list=>{const s=(list||[]).join(' | ').toLowerCase();for(const [re,g] of GMAP)if(re.test(s))return g;return null};
+const spb=el('spbar'),spc=el('spc'),spl=el('spl'),spt=el('spt'),spp=el('spp'),spn=el('spn'),sps=el('sps'),spbt=el('spb'),spx=el('spx'),spm=el('spmsg'),spsu=el('spsetup');
+const spMsg=(t,warn)=>{if(spm){spm.textContent=t||'';spm.style.color=warn?'#ff7a9a':''}};
+function spShow(){
+  const S=window.Spot;if(!spc||!S)return;
+  const conn=S.connected(),conf=S.configured();
+  [spl,spp,spt,spn,sps,spbt,spx].forEach(e=>e&&(e.hidden=!conn));
+  spc.hidden=conn;spc.textContent=conf?'\u{1F3A7} Connect Spotify':'\u{1F3A7} Spotify: set up';
+}
+function spSetup(){
+  const S=window.Spot;if(!spsu||!S)return;
+  spsu.hidden=false;
+  spsu.innerHTML='<b>Spotify setup (once, free, needs Spotify Premium)</b><ol>'+
+   '<li>Open <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener">developer.spotify.com/dashboard</a> and log in, then <i>Create app</i>.</li>'+
+   '<li>Redirect URI: <code></code> (copy it exactly). Tick <i>Web Playback SDK</i> and <i>Web API</i>.</li>'+
+   '<li>Open the app\u2019s Settings, copy the <i>Client ID</i> and paste it here (no secret is needed):</li></ol>'+
+   '<input id="spid" placeholder="Client ID" autocomplete="off" spellcheck="false"> <button id="spsave" type="button">Save</button>';
+  spsu.querySelector('code').textContent=S.redirectUri();
+  spsu.querySelector('#spid').value=S.clientId()||'';
+  spsu.querySelector('#spsave').onclick=()=>{const v=spsu.querySelector('#spid').value.trim();if(!/^[a-z0-9]{20,40}$/i.test(v)){spMsg('That does not look like a Client ID (32 letters and numbers).',true);return}
+    S.setClientId(v);spsu.hidden=true;spMsg('Saved. Now press Connect Spotify.');spShow()};
+}
+async function spLoadLists(){
+  const S=window.Spot;spl.innerHTML='<option value="">Pick a playlist\u2026</option><option value="liked">\u2665 Liked Songs</option>';
+  try{(await S.playlists()).forEach(p=>{const o=document.createElement('option');o.value=p.uri;o.textContent=p.name;spl.appendChild(o)})}catch(e){spMsg('Could not load your playlists ('+e.message+').',true)}
+}
+async function spStart(){
+  const S=window.Spot;
+  try{spMsg('Starting the player\u2026');await S.init();S.activate();spShow();spMsg('Ready. Pick a playlist.');spLoadLists()}catch(e){spMsg(e.message,true)}
+}
+if(window.Spot&&spc){
+  const S=window.Spot;spShow();
+  S.on('auth',ok=>{spShow();if(ok)spStart();else{SP.playing=false;SP.t=null;spMsg('Disconnected.')}});
+  S.on('error',e=>{spMsg(e.kind==='account_error'?'Spotify says this account cannot stream here (Premium is required).':e.kind==='authentication_error'?'Spotify login expired. Press Connect again.':(e.message||'Spotify error'),true)});
+  S.on('ready',()=>spMsg('Ready. Pick a playlist.'));
+  S.on('state',async s=>{
+    if(!s||!s.track_window||!s.track_window.current_track){SP.playing=false;return}
+    const c=s.track_window.current_track,was=SP.playing&&SP.t&&SP.t.uri;
+    SP.playing=!s.paused;
+    if(SP.playing&&AUDIO&&AUDIO.on)AUDIO.toggle();             /* only one source at a time */
+    SP.t={uri:c.uri,name:c.name,artists:(c.artists||[]).map(a=>a.name).join(', ')};
+    const aid=((c.artists||[])[0]||{}).uri;const id=aid&&aid.split(':')[2];
+    if(id&&id!==SP.aid){SP.aid=id;SP.raw=null;SP.genre=null;
+      const gl=await S.artistGenres(id);if(SP.aid===id){SP.raw=gl[0]?gl[0].replace(/\b\w/g,m=>m.toUpperCase()):null;SP.genre=mapGenre(gl)}}
+    if(SP.playing&&was&&was!==c.uri)burst(PIT.x,PIT.z-.6,pick(['NEXT TRACK!','\u6b21\u306e\u66f2!','NEXT!']));
+    spMsg((SP.playing?'Playing: ':'Paused: ')+SP.t.name+' \u2014 '+SP.t.artists);
+    spt.innerHTML=SP.playing?'&#9208;':'&#9654;';
+  });
+  if(AUDIO&&AUDIO.onchange)AUDIO.onchange(on=>{if(on&&SP.playing)S.pause()});
+  spc.onclick=async()=>{
+    if(!S.configured()){spSetup();return}
+    try{await S.connect();spMsg('Finish logging in in the popup window\u2026')}catch(e){spMsg(e.message,true)}
+  };
+  spl.onchange=async()=>{
+    const v=spl.value;if(!v)return;spMsg('Loading\u2026');S.activate();
+    try{if(AUDIO&&AUDIO.on)AUDIO.toggle();await S.play(v==='liked'?{uris:await S.liked()}:{uri:v});if(sps.getAttribute('aria-pressed')==='true')S.shuffle(true)}catch(e){spMsg('Could not start that: '+e.message,true)}
+  };
+  spt.onclick=()=>{S.activate();S.toggle()};spp.onclick=()=>S.prev();spn.onclick=()=>S.next();
+  sps.onclick=()=>{const on=sps.getAttribute('aria-pressed')!=='true';sps.setAttribute('aria-pressed',on?'true':'false');sps.innerHTML='&#128256; Shuffle: '+(on?'on':'off');S.shuffle(on).catch(e=>spMsg(e.message,true))};
+  spx.onclick=()=>{S.disconnect();SP.playing=false;SP.t=null;spShow()};
+  /* tap tempo: average of recent taps; also snaps the beat so the dancers land on it */
+  let taps=[];
+  const bl=()=>{spbt.innerHTML='&#128065; Tap BPM: '+SP.bpm};
+  spbt.onclick=()=>{const now=performance.now();if(taps.length&&now-taps[taps.length-1]>2000)taps=[];taps.push(now);taps=taps.slice(-8);
+    if(taps.length>=3){const iv=[];for(let i=1;i<taps.length;i++)iv.push(taps[i]-taps[i-1]);const m=iv.reduce((a,b)=>a+b,0)/iv.length;let b=60000/m;while(b<80)b*=2;while(b>180)b/=2;SP.bpm=Math.round(b);try{localStorage.setItem('jowo.spbpm',String(SP.bpm))}catch(e){}}
+    beat=Math.round(beat);bl()};
+  bl();
+  if(S.connected())spStart();
+}
 const shf=el('shf');
 if(shf)shf.onclick=()=>{if(!AUDIO)return;AUDIO.shuffle();if(!AUDIO.on)AUDIO.toggle()};
 /* ---------- playlist: saved tracks are stored as tiny seeds in localStorage AND a long-lived cookie ---------- */

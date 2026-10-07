@@ -838,7 +838,7 @@ const apps={
   skills:{jp:'技',t:'SKILLS',t2:'навыки · 技能 · कौशल',w:420},
   map:{jp:'地',t:'DISTRICT MAP',t2:'خريطة · 지도 · Карта',w:null,init:initMap,x:.4,y:80,w:600},
   contact:{jp:'連',t:'CONTACT',t2:'связь · 連絡 · اتصال',w:380},
-  club:{jp:'踊',get t(){return BEACH.on?'PLAYA SOFIA':'CASA SOFIA'},t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007zh',cls:'app-win',ar:1.5}
+  club:{jp:'踊',get t(){return BEACH.on?'PLAYA SOFIA':'CASA SOFIA'},t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007zi',cls:'app-win',ar:1.5}
 };
 const open={};let zTop=100,n=0;
 function openApp(id){
@@ -847,7 +847,7 @@ function openApp(id){
   const w=document.createElement('div');w.className='win '+(a.cls||'');
   w.innerHTML=`<div class="bar"><span class="jp">${a.jp}</span><span class="t">${a.t}</span><span class="t2">${a.t2||""}</span><button aria-label="Close">×</button></div><div class="body"></div>`;
   const body=w.querySelector('.body');
-  if(a.frame){const ifr=document.createElement('iframe');ifr.className='frame';ifr.src=a.frame;ifr.title=a.t;ifr.loading='lazy';ifr.style.setProperty('--ar',a.ar||1.78);ifr.style.aspectRatio=String(a.ar||1.78);body.appendChild(ifr)}
+  if(a.frame){const ifr=document.createElement('iframe');ifr.className='frame';ifr.src=a.frame;ifr.title=a.t;ifr.loading='lazy';ifr.allow='autoplay; encrypted-media';ifr.style.setProperty('--ar',a.ar||1.78);ifr.style.aspectRatio=String(a.ar||1.78);body.appendChild(ifr)}
   else body.appendChild(document.getElementById('t-'+id).content.cloneNode(true));
   if(a.w)w.style.width=a.w+'px';
   document.body.appendChild(w);
@@ -1408,8 +1408,10 @@ window.openApp=openApp;
 })();
 
 /* ---------- sound toggle: synthesised house music (house.js) ---------- */
-{const ORIGIN={'House':'Chicago','Soul house':'USA','Latin house':'Latin America','Afro house':'Africa','City pop':'Japan','Grime':'London, UK','Amapiano':'South Africa','Gqom':'Durban, South Africa','Brazilian phonk':'Brazil'},np=document.getElementById('np');
- if(np)setInterval(()=>{const H=window.House,t=H&&H.on&&H.track;if(!t||!t.genre){np.hidden=true;return}
+{let spNP=null;addEventListener('message',e=>{if(e.origin!==location.origin||!e.data||!('jowoNP' in e.data))return;const d=e.data.jowoNP;spNP=d&&d.sp?{b:String(d.b||''),i:String(d.i||''),s:String(d.s||''),at:Date.now()}:null});
+ const ORIGIN={'House':'Chicago','Soul house':'USA','Latin house':'Latin America','Afro house':'Africa','City pop':'Japan','Grime':'London, UK','Amapiano':'South Africa','Gqom':'Durban, South Africa','Brazilian phonk':'Brazil'},np=document.getElementById('np');
+ if(np)setInterval(()=>{if(spNP&&Date.now()-spNP.at<3000){np.hidden=false;np.innerHTML='\u266a Spotify: <b></b> <i></i> \u00b7 <span></span>';np.querySelector('b').textContent=spNP.b;np.querySelector('i').textContent=spNP.i;np.querySelector('span').textContent=spNP.s;return}
+  const H=window.House,t=H&&H.on&&H.track;if(!t||!t.genre){np.hidden=true;return}
   np.hidden=false;np.innerHTML='\u266a Now playing: <b></b> <i></i> \u00b7 <span></span>';np.querySelector('b').textContent=t.genre;np.querySelector('i').textContent=ORIGIN[t.genre]?'('+ORIGIN[t.genre]+')':'';np.querySelector('span').textContent=t.name+' \u00b7 '+Math.round(t.bpm||0)+' BPM'},500)}
 (function(){
   const b=document.getElementById('snd');if(!b||!window.House)return;
