@@ -182,16 +182,73 @@ M.oldlady=()=>{const L=human({coat:'#5b7a52',pant:'#3a3030',skin:'#d8b090',hair:
   hold('R',.3,1.48,[{dy:-.21,w:.24,h:.34,d:.18,c:'#c8a46a'},{dy:.04,w:.04,h:.2,d:.04,c:'#4cc54a'},{dy:.0,x:.04,w:.05,h:.14,d:.04,c:'#e8a23a'}],'h',o1).forEach(q=>L.push(q));
   hold('L',-.3,1.48,[{dy:-.2,w:.22,h:.3,d:.18,c:'#c8a46a'}],'h',o2).forEach(q=>L.push(q));
   return{parts:L,sp:[.4,.7],h:1.8,sc:.88,age:[68,93],arms:{eL:-.25,eR:-.25},bub:['あらまぁ','My knees…','Ох уж…','아이고','يا ساتر','उफ़']}};
-M.mascot=()=>{const L=[];
-  L.push({p:[-.13,0,0],s:[.18,.55,.2],c:'#c8283c',sw:.5,ph:0});L.push({p:[.13,0,0],s:[.18,.55,.2],c:'#c8283c',sw:.5,ph:Math.PI});
-  L.push({p:[0,.5,0],s:[.5,.55,.3],c:'#ffd42a',tp:.9});
-  L.push({p:[-.34,.52,0],s:[.14,.5,.15],c:'#ffd42a',ak:'L',sw:.3,ph:Math.PI});L.push({p:[.34,.52,0],s:[.14,.5,.15],c:'#ffd42a',ak:'R',sw:.3,ph:0});
-  /* burger head, tilted forward and down */
-  L.push({p:[0,.95,.12],s:[.9,.2,.82],c:'#d89a3a',tp:.82});L.push({p:[0,1.12,.12],s:[.96,.1,.9],c:'#4cc54a'});
-  L.push({p:[0,1.2,.12],s:[.92,.16,.86],c:'#6a3a22'});L.push({p:[0,1.34,.12],s:[.9,.28,.82],c:'#e8a23a',tp:.7});
-  L.push({p:[-.2,1.18,.54],s:[.14,.14,.02],c:'#fff',e:true});L.push({p:[.2,1.18,.54],s:[.14,.14,.02],c:'#fff',e:true});
-  L.push({p:[0,1.0,.55],s:[.4,.05,.02],c:'#c8283c',e:true});
-  return{parts:L,sp:[.5,.8],h:1.8,bub:['I\'m lovin\' it…','バーガー…','Бургер…','버거…','برغر…']}};
+/* fast-food mascot parodies: original archetypes with punny names, picked at random each time */
+const MASC=[
+ {n:'Sir Patty',leg:'#c8283c',bod:'#ffd42a',say:['Free patties!','バーガー!','Бургер!','버거 공짜!','¡Hamburguesas!'],
+  head:L=>{L.push({p:[0,.95,.12],s:[.9,.2,.82],c:'#d89a3a',tp:.82});L.push({p:[0,1.12,.12],s:[.96,.1,.9],c:'#4cc54a'});
+   L.push({p:[0,1.2,.12],s:[.92,.16,.86],c:'#6a3a22'});L.push({p:[0,1.34,.12],s:[.9,.28,.82],c:'#e8a23a',tp:.7});
+   L.push({p:[-.2,1.18,.54],s:[.14,.14,.02],c:'#fff',e:true});L.push({p:[.2,1.18,.54],s:[.14,.14,.02],c:'#fff',e:true});
+   L.push({p:[0,1.0,.55],s:[.4,.05,.02],c:'#c8283c',e:true})}},
+ {n:'Chuckles McMunch',leg:'#7c5cff',bod:'#3dff9a',say:['Hee-hee, burgers!','Catch!','Free lunch!','Honk honk!','¡Atrapa!'],
+  head:L=>{L.push({p:[0,.98,.05],s:[.5,.5,.46],c:'#f5efe0',tp:.9});
+   [[-.34,1.3],[.34,1.3],[-.3,1.52],[.3,1.52],[0,1.58]].forEach(q=>L.push({p:[q[0],q[1],.05],s:[.3,.3,.3],c:'#19e3ff'}));
+   L.push({p:[0,1.12,.3],s:[.14,.14,.12],c:'#e0352b',e:true});
+   L.push({p:[-.12,1.26,.29],s:[.08,.08,.02],c:'#111',e:true});L.push({p:[.12,1.26,.29],s:[.08,.08,.02],c:'#111',e:true});
+   L.push({p:[0,1.02,.29],s:[.3,.05,.02],c:'#e0352b',e:true});
+   L.push({p:[-.13,-.06,.1],s:[.26,.1,.42],c:'#ff2e88'});L.push({p:[.13,-.06,.1],s:[.26,.1,.42],c:'#ff2e88'})}},
+ {n:'Duke Spud',leg:'#2b3a7a',bod:'#9a1f3a',say:['Fry for the realm!','Royal burgers!','Bow, eat!','Gold for all!','¡Viva el rey!'],
+  head:L=>{L.push({p:[0,.98,.05],s:[.46,.46,.42],c:'#d8a37a',tp:.9});
+   L.push({p:[0,1.44,.05],s:[.5,.1,.46],c:'#ffd42a'});
+   [-.2,0,.2].forEach(x=>L.push({p:[x,1.54,.05],s:[.1,.22,.1],c:'#ffd42a'}));
+   L.push({p:[-.1,1.18,.27],s:[.07,.07,.02],c:'#111',e:true});L.push({p:[.1,1.18,.27],s:[.07,.07,.02],c:'#111',e:true});
+   L.push({p:[0,1.07,.27],s:[.3,.06,.03],c:'#3a2414'});
+   L.push({p:[0,.5,-.2],s:[.6,.8,.06],c:'#e0352b'});
+   [-.1,0,.1].forEach(x=>L.push({p:[.46+x,1.28,.25],s:[.05,.34,.05],c:'#ffd42a',e:true}))}},
+ {n:'Admiral Drumstick',leg:'#f5efe0',bod:'#1b2a5c',say:['All hands, burgers!','Chicken ahoy!','Catch, sailor!','¡Al abordaje!','À table, matelots!'],
+  head:L=>{L.push({p:[0,1.0,.05],s:[.46,.5,.44],c:'#c8782a',tp:.9});L.push({p:[0,1.5,.05],s:[.22,.2,.2],c:'#c8782a'});
+   L.push({p:[-.06,1.66,.05],s:[.1,.12,.1],c:'#f5efe0'});L.push({p:[.06,1.66,.05],s:[.1,.12,.1],c:'#f5efe0'});
+   L.push({p:[0,1.3,.05],s:[.62,.1,.5],c:'#f5efe0'});L.push({p:[0,1.38,.05],s:[.4,.1,.36],c:'#f5efe0'});
+   L.push({p:[-.1,1.12,.27],s:[.07,.07,.02],c:'#111',e:true});L.push({p:[.1,1.12,.27],s:[.07,.07,.02],c:'#111',e:true});
+   L.push({p:[0,1.0,.27],s:[.22,.05,.02],c:'#111',e:true})}},
+ {n:'Señor Crunch',leg:'#3a2a1a',bod:'#e0352b',say:['¡Crunch time!','Taco-bout free burgers!','¡Ándale!','Tacos y burgers!','Free grub!'],
+  head:L=>{L.push({p:[0,.98,.05],s:[.9,.12,.5],c:'#f0b840'});L.push({p:[0,1.1,.05],s:[.84,.2,.46],c:'#f0b840'});
+   L.push({p:[0,1.3,.05],s:[.72,.2,.4],c:'#f0b840'});L.push({p:[0,1.48,.05],s:[.5,.16,.3],c:'#f0b840'});
+   L.push({p:[0,1.18,.3],s:[.7,.12,.06],c:'#4cc54a'});L.push({p:[-.2,1.22,.34],s:[.18,.1,.04],c:'#e0352b'});
+   L.push({p:[0,1.34,.3],s:[.56,.08,.04],c:'#111',e:true});L.push({p:[0,1.12,.32],s:[.3,.05,.02],c:'#111',e:true})}},
+ {n:'Papa Pepperoni',leg:'#f5efe0',bod:'#f5efe0',say:['Mamma mia, burgers!','Fresh from the oven!','Pizza? No, burgers!','Bellissimo!','Mangia!'],
+  head:L=>{L.push({p:[0,1.5,.05],s:[.9,.14,.4],c:'#f0b840'});L.push({p:[0,1.36,.05],s:[.7,.14,.4],c:'#f0b840'});
+   L.push({p:[0,1.22,.05],s:[.5,.14,.4],c:'#f0b840'});L.push({p:[0,1.08,.05],s:[.3,.14,.4],c:'#f0b840'});
+   L.push({p:[0,.96,.05],s:[.14,.14,.4],c:'#f0b840'});
+   L.push({p:[-.18,1.44,.26],s:[.16,.16,.02],c:'#c8283c',e:true});L.push({p:[.2,1.38,.26],s:[.14,.14,.02],c:'#c8283c',e:true});
+   L.push({p:[0,1.18,.26],s:[.14,.14,.02],c:'#c8283c',e:true});
+   L.push({p:[0,1.66,.05],s:[.5,.22,.4],c:'#f5efe0'});
+   L.push({p:[-.1,1.28,.27],s:[.06,.06,.02],c:'#111',e:true});L.push({p:[.1,1.28,.27],s:[.06,.06,.02],c:'#111',e:true})}},
+ {n:'Dunk-O',leg:'#ff2e88',bod:'#19e3ff',say:['Glazed and amazed!','Free burgers, no hole!','Dunk it!','Sweet deal!','¡Rosquilla!'],
+  head:L=>{L.push({p:[-.3,.98,.05],s:[.3,.6,.5],c:'#e8b86a'});L.push({p:[.3,.98,.05],s:[.3,.6,.5],c:'#e8b86a'});
+   L.push({p:[0,.98,.05],s:[.3,.18,.5],c:'#e8b86a'});L.push({p:[0,1.4,.05],s:[.3,.18,.5],c:'#e8b86a'});
+   L.push({p:[-.3,1.4,.05],s:[.3,.18,.5],c:'#ff2e88'});L.push({p:[.3,1.4,.05],s:[.3,.18,.5],c:'#ff2e88'});
+   L.push({p:[-.3,1.52,.05],s:[.3,.1,.5],c:'#ff2e88'});L.push({p:[.3,1.52,.05],s:[.3,.1,.5],c:'#ff2e88'});
+   [[-.3,1.56],[.28,1.58],[-.1,1.5],[.12,1.6]].forEach((q,i)=>L.push({p:[q[0],q[1]+.04,.3],s:[.06,.03,.06],c:['#ffd42a','#fff','#3dff9a','#19e3ff'][i],e:true}));
+   L.push({p:[-.3,1.12,.3],s:[.08,.08,.02],c:'#111',e:true});L.push({p:[.3,1.12,.3],s:[.08,.08,.02],c:'#111',e:true})}},
+ {n:'Sir Slurps-a-lot',leg:'#e0352b',bod:'#f5efe0',say:['Shake it, grab it!','Slurp slurp!','Brain freeze burgers!','Cherry on top!','¡Batido!'],
+  head:L=>{L.push({p:[0,.98,.05],s:[.5,.12,.5],c:'#e0352b'});L.push({p:[0,1.1,.05],s:[.62,.14,.58],c:'#f5efe0'});
+   L.push({p:[0,1.24,.05],s:[.7,.14,.64],c:'#e0352b'});L.push({p:[0,1.38,.05],s:[.78,.14,.7],c:'#f5efe0'});
+   L.push({p:[0,1.5,.05],s:[.72,.1,.64],c:'#ffd0e0'});
+   L.push({p:[0,1.58,.05],s:[.12,.12,.12],c:'#e0352b',e:true});L.push({p:[.12,1.72,.05],s:[.05,.34,.05],c:'#3dff9a'});
+   L.push({p:[-.14,1.22,.4],s:[.1,.1,.02],c:'#111',e:true});L.push({p:[.14,1.22,.4],s:[.1,.1,.02],c:'#111',e:true});
+   L.push({p:[0,1.1,.4],s:[.26,.05,.02],c:'#111',e:true})}},
+ {n:'Cluck Rogers',leg:'#ffb347',bod:'#f5efe0',say:['Bawk bawk, burgers!','Cluck yeah!','Beak to the future!','Egg-cellent!','¡Pío pío!'],
+  head:L=>{L.push({p:[0,.98,.05],s:[.54,.5,.5],c:'#f5efe0',tp:.9});
+   L.push({p:[0,1.5,.05],s:[.1,.2,.2],c:'#e0352b'});L.push({p:[0,1.46,.15],s:[.1,.12,.1],c:'#e0352b'});
+   L.push({p:[0,1.1,.34],s:[.14,.1,.14],c:'#ffb347',e:true});L.push({p:[0,.98,.3],s:[.1,.14,.08],c:'#e0352b'});
+   L.push({p:[-.13,1.26,.31],s:[.07,.07,.02],c:'#111',e:true});L.push({p:[.13,1.26,.31],s:[.07,.07,.02],c:'#111',e:true})}}
+];
+M.mascot=()=>{const V=MASC[Math.floor(Math.random()*MASC.length)],L=[];
+  L.push({p:[-.13,0,0],s:[.18,.55,.2],c:V.leg,sw:.5,ph:0});L.push({p:[.13,0,0],s:[.18,.55,.2],c:V.leg,sw:.5,ph:Math.PI});
+  L.push({p:[0,.5,0],s:[.5,.55,.3],c:V.bod,tp:.9});
+  L.push({p:[-.34,.52,0],s:[.14,.5,.15],c:V.bod,ak:'L',sw:.3,ph:Math.PI});L.push({p:[.34,.52,0],s:[.14,.5,.15],c:V.bod,ak:'R',sw:.3,ph:0});
+  V.head(L);
+  return{parts:L,sp:[.5,.8],h:1.8,mname:V.n,bub:V.say}};
 M.kidball=(f)=>{const L=human({coat:f?'#d6246e':'#2b6fd6',pant:'#222',hair:'#111',hat:'cap',hatC:f?'#19e3ff':'#e0352b',legSw:.7,armSw:.6,j:'R',fem:f});
   /* basketball: orange body with black seams (all parts bounce together) */
   const bx=.32,by=.5,bz=.42,B=.2,K='#241208';
