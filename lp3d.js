@@ -356,8 +356,11 @@ function drawEnt(c,ent,cam,alpha){
     c.globalAlpha=1;return B;
   }
   for(const p of B.polys){
-    c.fillStyle=p.col;c.strokeStyle=p.col;c.lineWidth=.6;
-    c.beginPath();c.moveTo(p.pts[0][0],p.pts[0][1]);for(let i=1;i<4;i++)c.lineTo(p.pts[i][0],p.pts[i][1]);c.closePath();c.fill();c.stroke();
+    const q=p.pts;c.fillStyle=p.col;
+    c.beginPath();c.moveTo(q[0][0],q[0][1]);for(let i=1;i<4;i++)c.lineTo(q[i][0],q[i][1]);c.closePath();c.fill();
+    /* the hairline stroke only hides seams between neighbouring faces; on tiny faces it costs more than it shows */
+    const bw=Math.max(q[0][0],q[1][0],q[2][0],q[3][0])-Math.min(q[0][0],q[1][0],q[2][0],q[3][0]),bh=Math.max(q[0][1],q[1][1],q[2][1],q[3][1])-Math.min(q[0][1],q[1][1],q[2][1],q[3][1]);
+    if(bw*bh>14){c.strokeStyle=p.col;c.lineWidth=.6;c.stroke()}
   }
   c.globalAlpha=1;
   if(!ent.mir&&B.glows.length){

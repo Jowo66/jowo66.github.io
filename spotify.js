@@ -68,6 +68,18 @@ async function play(ctx){
   try{await api('/me/player',{method:'PUT',headers:JSONH,body:JSON.stringify({device_ids:[deviceId],play:false})})}catch(e){}
   await api('/me/player/play?device_id='+encodeURIComponent(deviceId),{method:'PUT',headers:JSONH,body:JSON.stringify(ctx.uris?{uris:ctx.uris}:{context_uri:ctx.uri})});
 }
+/* skip / rewind: the Web API call is the reliable path (the SDK's nextTrack/previousTrack silently do nothing
+   for some contexts); rewind restarts the song first if it is more than 3 s in, like Spotify's own button */
+async function skip(dir){
+  if(!player||!deviceId)throw new Error('The player is still starting. Try again in a second.');
+  if(dir<0&&state&&state.position>3000){await player.seek(0);return}
+  const q='?device_id='+encodeURIComponent(deviceId);
+  try{await api('/me/player/'+(dir>0?'next':'previous')+q,{method:'POST'})}
+  catch(e){
+    try{await (dir>0?player.nextTrack():player.previousTrack())}
+    catch(e2){if(dir<0){await player.seek(0)}else throw e}
+  }
+}
 const guard=f=>function(){return player?f.apply(null,arguments):Promise.resolve()};
 const genreCache={};
 async function artistGenres(id){
@@ -99,7 +111,7 @@ const Spot={session,off,mapGenre,
   me:()=>api('/me'),
   playlists:async()=>{const j=await api('/me/playlists?limit=50');return((j&&j.items)||[]).filter(Boolean).map(p=>({id:p.id,name:p.name,uri:p.uri}))},
   liked:async()=>{const j=await api('/me/tracks?limit=50');return((j&&j.items)||[]).map(i=>i.track&&i.track.uri).filter(Boolean)},
-  toggle:guard(()=>player.togglePlay()),pause:guard(()=>player.pause()),resume:guard(()=>player.resume()),next:guard(()=>player.nextTrack()),prev:guard(()=>player.previousTrack()),
+  toggle:guard(()=>player.togglePlay()),pause:guard(()=>player.pause()),resume:guard(()=>player.resume()),next:()=>skip(1),prev:()=>skip(-1),
   activate:()=>{try{player&&player.activateElement&&player.activateElement()}catch(e){}},
   shuffle:b=>deviceId?api('/me/player/shuffle?state='+(b?'true':'false')+'&device_id='+encodeURIComponent(deviceId),{method:'PUT'}):Promise.resolve(),
   repeat:m=>deviceId?api('/me/player/repeat?state='+(m==='track'?'track':m==='context'?'context':'off')+'&device_id='+encodeURIComponent(deviceId),{method:'PUT'}):Promise.resolve(),

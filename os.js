@@ -578,7 +578,7 @@ tick();setInterval(tick,1000);
       const fogk=CAM.fogK(e.z);
       const fade=(1-(ch.vanish||0))*clamp(Math.min((33-e.z)/3,1,ch.age/.6,ch.stat?ch.life/1.2:1),0,1)*clamp((e.z-1.4)/1.2,0,1);
       if(fade<=0)return;
-      const m=Object.assign({},e,{mir:true});LP.drawEnt(c,m,CAM,.16*(1-fogk)*fade);
+      if(e.z<15&&QS>.5){const m=Object.assign({},e,{mir:true});LP.drawEnt(c,m,CAM,.16*(1-fogk)*fade)}
       /* contact shadow */
       const sp=P(e.x,FLOOR,e.z),rr=f/e.z*.35*e.sc;c.fillStyle='rgba(0,0,0,'+.4*fade+')';c.beginPath();c.ellipse(sp[0],sp[1],rr,rr*.22,0,0,7);c.fill();
       const B=LP.drawEnt(c,e,CAM,fade);ch.bb=B.bb;ch.vis=true;
@@ -680,13 +680,15 @@ tick();setInterval(tick,1000);
     c.save();c.globalCompositeOperation='lighter';c.globalAlpha=al;
     const g=c.createLinearGradient(0,y-r*.6,0,y+r*2.5);g.addColorStop(0,LOGO.c1+'59');g.addColorStop(1,LOGO.c1+'00');
     c.fillStyle=g;c.beginPath();c.moveTo(x-r*.3,y-r*.5);c.lineTo(x+r*.3,y-r*.5);c.lineTo(x+r*.9,y+r*2.5);c.lineTo(x-r*.9,y+r*2.5);c.fill();
-    c.strokeStyle=LOGO.c1;c.shadowColor=LOGO.c1;c.shadowBlur=8;c.lineWidth=Math.max(1,r*.07);
-    if(LOGO.shape==='rings'){
-      for(let k=0;k<3;k++){c.beginPath();c.ellipse(x,cy0,r*1.25*Math.abs(Math.cos(a+k*1.0472)),r*1.25,k*.55-.55+Math.sin(a*.3)*.2,0,7);c.stroke()}
-    }else{
-      const pr=G.V.map(v=>{const X=v[0]*ca+v[2]*sa,Z=-v[0]*sa+v[2]*ca,Y=v[1]*ct-Z*st;return[x+X*r,cy0-Y*r*.9]});
-      c.beginPath();G.E.forEach(e=>{c.moveTo(pr[e[0]][0],pr[e[0]][1]);c.lineTo(pr[e[1]][0],pr[e[1]][1])});c.stroke();
+    /* the glow is a wide faint stroke under the sharp one: much cheaper than canvas shadowBlur */
+    c.strokeStyle=LOGO.c1;const lw0=Math.max(1,r*.07);
+    const pr=LOGO.shape==='rings'?null:G.V.map(v=>{const X=v[0]*ca+v[2]*sa,Z=-v[0]*sa+v[2]*ca,Y=v[1]*ct-Z*st;return[x+X*r,cy0-Y*r*.9]});
+    for(let pass=0;pass<2;pass++){
+      c.lineWidth=pass?lw0:lw0*3.2;c.globalAlpha=pass?al:al*.22;
+      if(!pr){for(let k=0;k<3;k++){c.beginPath();c.ellipse(x,cy0,r*1.25*Math.abs(Math.cos(a+k*1.0472)),r*1.25,k*.55-.55+Math.sin(a*.3)*.2,0,7);c.stroke()}}
+      else{c.beginPath();G.E.forEach(e=>{c.moveTo(pr[e[0]][0],pr[e[0]][1]);c.lineTo(pr[e[1]][0],pr[e[1]][1])});c.stroke()}
     }
+    c.globalAlpha=al;c.lineWidth=lw0;
     c.strokeStyle=LOGO.c2;c.beginPath();c.ellipse(x,cy0,r*1.45,r*.3,0,0,7);c.stroke();
     c.shadowBlur=0;c.fillStyle='#e8fbff';const L=[...LOGO.txt].length;c.font=`800 ${Math.round(r*(L>2?.55:.9))}px "Share Tech Mono","Zen Kaku Gothic New",monospace`;c.textAlign='center';c.textBaseline='middle';
     c.save();c.translate(x,cy0);c.scale(Math.max(.12,Math.abs(ca)),1);c.fillText(LOGO.txt,0,0);c.restore();
@@ -944,7 +946,7 @@ const apps={
   skills:{jp:'技',t:'SKILLS',t2:'навыки · 技能 · कौशल',w:420},
   map:{jp:'地',t:'DISTRICT MAP',t2:'خريطة · 지도 · Карта',w:null,init:initMap,x:.4,y:80,w:600},
   contact:{jp:'連',t:'CONTACT',t2:'связь · 連絡 · اتصال',w:380},
-  club:{jp:'踊',get t(){return BEACH.on?'PLAYA SOFIA':'CASA SOFIA'},t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007zm',cls:'app-win',ar:1.5}
+  club:{jp:'踊',get t(){return BEACH.on?'PLAYA SOFIA':'CASA SOFIA'},t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007zn',cls:'app-win',ar:1.5}
 };
 const open={};let zTop=100,n=0;
 function openApp(id){

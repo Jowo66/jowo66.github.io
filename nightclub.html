@@ -117,10 +117,10 @@ html.embed #spbar{flex-wrap:wrap}
 #np b{color:#ffb347;font-weight:700}#np i{font-style:normal;color:#27e8ff}#np[hidden]{display:none}
 html.embed #np{display:none}
 </style>
-<script src="lp3d.js?v=20261007zm"></script>
-<script src="house.js?v=20261007zm"></script>
-<script src="spotify-config.js?v=20261007zm"></script>
-<script src="spotify.js?v=20261007zm"></script>
+<script src="lp3d.js?v=20261007zn"></script>
+<script src="house.js?v=20261007zn"></script>
+<script src="spotify-config.js?v=20261007zn"></script>
+<script src="spotify.js?v=20261007zn"></script>
 <script>(function(){if(/[?&]embed/.test(location.search)){document.documentElement.className="embed";var e=document.createElement("style");e.textContent="header,header.bar,main>:not(.stage),footer,.rules,.districts{display:none!important}html,body{background:#05020a!important}body{padding:6px!important;margin:0!important;min-height:0!important}main{padding:0!important;margin:0 auto!important;max-width:none!important}";document.head.appendChild(e)}})()</script>
 </head>
 
@@ -654,7 +654,8 @@ function glitchAll(){                                   /* the drop: all three c
   HFS.forEach((f,k)=>{f.ci=idx[k];f.to=HCOLS[idx[k]];f.g=.3;f.slices=newSlices()});
 }
 let SCANPAT=null;
-function drawHolo(){HFS.forEach(drawHoloFig)}
+let holoN=0;
+function drawHolo(){holoN++;HFS.forEach(drawHoloFig)}
 function drawHoloFig(f){
   let arms,yaw=Math.PI,ph=0,el=.03+kick*.04;
   if(f.dj)arms=djMode==='up'?{L:-2.5+Math.sin(beat*Math.PI*2)*.45,R:-2.5-Math.sin(beat*Math.PI*2)*.45}:{L:-1.15+Math.sin(beat*Math.PI*4)*.2,R:-1.15+Math.cos(beat*Math.PI*3)*.25};
@@ -664,6 +665,8 @@ function drawHoloFig(f){
     holo:[f.col[0],f.col[1],f.col[2],f.dj?.26:.36],arms});
   const bp=P(f.x,BOOTH_Y,DJZ),top=P(f.x,BOOTH_Y-3.4*k,DJZ),col=f.col;
   const RWm=f.dj?520:300,RX=Math.max(0,Math.floor(bp[0]-RWm/2)),RY=Math.max(0,Math.floor(top[1]-40)),RW=Math.min(W-RX,RWm),RH=Math.min(H-RY,Math.ceil(bp[1]-top[1]+90));
+  const due=((holoN+HFS.indexOf(f))&1)===0||f.g>0||!f.warm;f.warm=true;   /* each figure re-renders every other frame; the blit below still runs every frame */
+  if(due){
   lh.clearRect(RX,RY,RW,RH);
   const rg=lh.createLinearGradient(0,bp[1],0,top[1]);
   rg.addColorStop(0,`rgba(${col},.35)`);rg.addColorStop(1,`rgba(${col},0)`);
@@ -673,10 +676,11 @@ function drawHoloFig(f){
   LP.drawEnt(lh,e,CAM,1);
   if(f.dj){
     lh.font='700 13px '+SERIF;lh.textAlign='center';
-    rainDrops.forEach(r=>{r.y+=r.v*.032;if(r.y>3){r.y=0;r.ch=RAIN[ri(0,RAIN.length-1)]}const q=P(r.x,BOOTH_Y-r.y,r.z);lh.fillStyle=`rgba(${col},${.65-r.y*.18})`;lh.fillText(r.ch,q[0],q[1])});
+    rainDrops.forEach(r=>{r.y+=r.v*.064;if(r.y>3){r.y=0;r.ch=RAIN[ri(0,RAIN.length-1)]}const q=P(r.x,BOOTH_Y-r.y,r.z);lh.fillStyle=`rgba(${col},${.65-r.y*.18})`;lh.fillText(r.ch,q[0],q[1])});
   }
   lh.globalCompositeOperation='destination-out';lh.fillStyle=SCANPAT||(SCANPAT=lh.createPattern(SCAN,'repeat'));lh.fillRect(RX,RY,RW,RH);lh.globalCompositeOperation='source-over';
   const sy=((time*90+f.seed*140)%420)+40;lh.fillStyle=`rgba(${col},.1)`;lh.globalCompositeOperation='source-atop';lh.fillRect(RX,sy,RW,10);lh.globalCompositeOperation='source-over';
+  }
   ctx.save();ctx.globalCompositeOperation='lighter';
   const fl=.85+.15*Math.sin(time*40+f.seed)+(f.g>0?(Math.random()-.5)*.5:0);ctx.globalAlpha=clamp(fl,.3,1);
   const dh=(dx)=>ctx.drawImage(LH,RX,RY,RW,RH,RX+dx,RY,RW,RH);
@@ -1040,7 +1044,7 @@ if(Spot&&spc){
     const v=spl.value;if(!v)return;spMsg('Loading\u2026');S.activate();
     try{if(AUDIO&&AUDIO.on)AUDIO.toggle();await S.play(v==='liked'?{uris:await S.liked()}:{uri:v});if(SP.shuffle)S.shuffle(true);if(SP.repeat===2)S.repeat('track')}catch(e){spMsg('Could not start that: '+e.message,true)}
   };
-  spt.onclick=()=>{S.activate();S.toggle()};spp.onclick=()=>S.prev();spn.onclick=()=>S.next();
+  spt.onclick=()=>{S.activate();S.toggle()};spp.onclick=()=>{S.activate();S.prev().catch(e=>spMsg('Could not go back: '+e.message,true))};spn.onclick=()=>{S.activate();S.next().catch(e=>spMsg('Could not skip: '+e.message,true))};
   sps.onclick=()=>{const on=!SP.shuffle;SP.shuffle=on;onSess();S.shuffle(on).catch(e=>spMsg(e.message,true))};
   spr.onclick=()=>{const on=SP.repeat!==2;SP.repeat=on?2:0;onSess();S.repeat(on?'track':'off').catch(e=>spMsg(e.message,true))};
   spx.onclick=()=>{S.disconnect();spShow()};
@@ -1106,6 +1110,7 @@ if(snd){
 if(document.fonts&&document.fonts.load){document.fonts.load('800 40px "Shippori Mincho B1"','夜踊れクラブ出口');document.fonts.load('800 40px Rajdhani','NEO-JOWO').then(()=>{bake();bakeBeach()})}
 let last=performance.now(),stat=0;
 function loop(t){
+  if(EMBED&&t-last<30){requestAnimationFrame(loop);return}   /* inside the OS the club only needs 30fps and leaves the rest for the alley */
   const dt=Math.min(.05,(t-last)/1000);last=t;
   if(!paused){update(dt);autoShuffle();stat-=dt;if(stat<=0){stat=.5;syncFav();el('who').textContent=total();el('mode').textContent=battle.on?'battle':style==='mosh'?mode:STYLE_NAMES[styleI].toLowerCase();el('drops').textContent=drops;el('bpm').textContent=bpmNow();el('trk').textContent=(AUDIO&&AUDIO.track&&AUDIO.track.name)||'Rain Groove'}}
   render();requestAnimationFrame(loop);
@@ -1113,6 +1118,6 @@ function loop(t){
 requestAnimationFrame(loop);
 </script>
 <div id="np" role="status" aria-live="polite" hidden></div>
-<script src="lang.js?v=20261007zm"></script>
+<script src="lang.js?v=20261007zn"></script>
 </body>
 </html>
