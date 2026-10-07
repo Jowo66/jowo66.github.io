@@ -235,7 +235,7 @@ M.kidrun=(f)=>{const L=human({coat:f?'#ff7ab6':'#ffd42a',pant:'#2a3a6a',hair:'#3
 function compile(parts){return parts.map(p=>Object.assign({},p,{rgb:hex(p.c)}))}
 function build(ent,cam){
   const polys=[],glows=[];let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
-  const cos=Math.cos(ent.yaw||0),sin=Math.sin(ent.yaw||0),sc=ent.sc||1,zc=ent.z,P=cam.P;
+  const cos=Math.cos(ent.yaw||0),sin=Math.sin(ent.yaw||0),sc=ent.sc||1,sw=ent.sw||1,sh=ent.sh||1,zc=ent.z,P=cam.P;
   const fogk=cam.fogK?cam.fogK(zc):0,fc=cam.fogC||[0,0,0],holo=ent.holo,tint=ent.tint;
   const baseY=ent.y==null?cam.floorY:ent.y,mir=ent.mir,el=(ent.elev||0)+(ent.bob||0),clock=ent.clock||0;
   const arms=ent.arms||{};
@@ -253,7 +253,7 @@ function build(ent,cam){
       if(pt.pk){const a1=arms[pt.pk]!=null?arms[pt.pk]:(pt.psw?Math.sin((ent.ph||0)+(pt.pph||0))*pt.psw:0);if(a1){const pv1=pt.pv[0],pz1=pt.pv[1],y1=y-pv1,z1=z-pz1;y=pv1+y1*Math.cos(a1)-z1*Math.sin(a1);z=pz1+y1*Math.sin(a1)+z1*Math.cos(a1)}}
       if(pt.sp){const a2=clock*25,xx=x-px,zz=z-pz;x=px+xx*Math.cos(a2)-zz*Math.sin(a2);z=pz+xx*Math.sin(a2)+zz*Math.cos(a2)}
       const X=x*cos+z*sin,Z=-x*sin+z*cos;
-      vs.push([ent.x+X*sc,mir?(baseY+(y+el)*sc):(baseY-(y+el)*sc),zc+Z*sc]);
+      vs.push([ent.x+X*sc*sw,mir?(baseY+(y+el)*sc*sh):(baseY-(y+el)*sc*sh),zc+Z*sc*sw]);
     }
     if(vs.some(v=>v[2]<.35))return;
     const cen=vs.reduce((a,v)=>[a[0]+v[0]/8,a[1]+v[1]/8,a[2]+v[2]/8],[0,0,0]);
@@ -278,7 +278,7 @@ function build(ent,cam){
       r+=(fc[0]-r)*fogk;gg+=(fc[1]-gg)*fogk;b+=(fc[2]-b)*fogk;
       polys.push({z:zz,pts,col:`rgb(${r|0},${gg|0},${b|0})`});
     });
-    if(pt.e&&!mir){const pp=P(ent.x+(px*cos+pz*sin)*sc,baseY-(py+h/2+el)*sc,zc+(-px*sin+pz*cos)*sc);glows.push([pp,pt.rgb,Math.max(w,h,d)*sc*cam.f/zc])}
+    if(pt.e&&!mir){const pp=P(ent.x+(px*cos+pz*sin)*sc*sw,baseY-(py+h/2+el)*sc*sh,zc+(-px*sin+pz*cos)*sc*sw);glows.push([pp,pt.rgb,Math.max(w,h,d)*sc*cam.f/zc])}
   });
   polys.sort((a,b)=>b.z-a.z);
   return{polys,glows,bb:[x0,y0,x1,y1]};

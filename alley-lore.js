@@ -281,12 +281,37 @@ function fact(m){
   if(m&&m.key&&MYTH[m.key]&&Math.random()<.68)return pick(MYTH[m.key]);
   if(m&&m.cult){const C=CULT[m.cult];if(m.key&&C.fig[m.key]&&Math.random()<.8)return pick(C.fig[m.key]);if(Math.random()<.6)return pick(C.facts)}
   return generic()}
-function age(def){
-  if(def&&def.age)return ri(def.age[0],def.age[1]);return ri(19,71);
+/* ages that fit the kind of person, then a body that fits the age: height and weight vary independently */
+const AGEB={umbrella:[22,68],courier:[18,34],kimono:[20,70],dog:[1,14,' (dog yrs)'],ramen:[32,68],hotdog:[24,62],lover:[19,36],ripperdoc:[38,65],netrunner:[16,31],monk:[38,92],dealer:[24,52],preacher:[36,78],robocop:[29,46],mascot:[18,27],detective:[36,62]};
+function age(def,name){
+  if(def&&def.age)return ri(def.age[0],def.age[1]);
+  const a=AGEB[name];if(a)return ri(a[0],a[1]);
+  return ri(19,71);
 }
+const gauss=()=>{let u=0;for(let i=0;i<4;i++)u+=Math.random();return(u-2)*1.73};
+function meanCm(a,fem){
+  if(a<=12)return 75+6.4*a;
+  if(a<18)return 152+(a-12)*(fem?1.9:4.5);
+  return(fem?163:176)-(a>65?(a-65)*.15:0);
+}
+/* returns {cm,kg,sh,sw} for people; {kg,sh,sw} for dogs; null for machines */
+function body(name,fem,a,def){
+  if(name==='drone')return null;
+  if(name==='dog'){const k=.72+Math.random()*.62;return{cm:0,kg:Math.round(5+k*k*30),sh:k,sw:k*(.9+Math.random()*.25)}}
+  if(name==='robocop'){const cm=Math.round(188+Math.random()*16),kg=Math.round(105+Math.random()*50);return{cm,kg,sh:1.04+Math.random()*.1,sw:1.12+Math.random()*.2}}
+  const real=a>110?ri(28,60):a;                       /* ghosts and sages are drawn as adults */
+  const nomAge=def&&def.age?(def.age[0]+def.age[1])/2:real,nom=meanCm(nomAge>110?40:nomAge,fem);
+  const mu=meanCm(real,fem),sd=real<18?5.5:6.8,cm=Math.round(mu+clamp2(gauss(),2.3)*sd);
+  const kid=real<18,bmi=kid?clampN(16+clamp2(gauss(),2.3)*2.4,12.5,27):clampN(24.5+clamp2(gauss(),2.3)*4.6,16,41);
+  const kg=Math.round(bmi*Math.pow(cm/100,2));
+  let sh=clampN(1+(cm/nom-1)*1.7,.74,1.3),sw=clampN(Math.pow(bmi/(kid?16:21.5),.8),.68,1.7);   /* exaggerated a little so the differences read at alley distance */
+  if(name==='ramen'||name==='hotdog'){sh=1+(sh-1)*.3;sw=1+(sw-1)*.3}   /* the cart is part of the model */
+  return{cm,kg,sh,sw};
+}
+const clamp2=(v,m)=>Math.max(-m,Math.min(m,v)),clampN=(v,a,b)=>Math.max(a,Math.min(b,v));
 function profile(ch){
-  const m=ch.myth,def=ch.def;
-  return{name:(m?m.first+' '+m.last:'Unknown').toUpperCase(),flags:m?(m.f1===m.f2?m.f1:m.f1+' '+m.f2):'',codes:m?(m.c1===m.c2?[m.c1]:[m.c1,m.c2]):[],age:age(def)+(def&&def.ageUnit||''),passion:passion(),genre:genre(),fact:fact(m)};
+  const m=ch.myth,def=ch.def,a=ch.agev!=null?ch.agev:age(def,ch.name),b=ch.body,unit=(def&&def.ageUnit)||(AGEB[ch.name]&&AGEB[ch.name][2])||'';
+  return{name:(m?m.first+' '+m.last:'Unknown').toUpperCase(),flags:m?(m.f1===m.f2?m.f1:m.f1+' '+m.f2):'',codes:m?(m.c1===m.c2?[m.c1]:[m.c1,m.c2]):[],age:a+unit,body:b?(b.cm?b.cm+' cm \u00b7 ':'')+b.kg+' kg':'',passion:passion(),genre:genre(),fact:fact(m)};
 }
-g.Lore={parable,mythName,profile,genre,passion,fact};
+g.Lore={parable,mythName,profile,genre,passion,fact,age,body};
 })(typeof window!=='undefined'?window:globalThis);
