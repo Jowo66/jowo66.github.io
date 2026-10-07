@@ -163,3 +163,7 @@ a{color:var(--cyan)}
   .hud{overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
   .hud::-webkit-scrollbar{display:none}
 }
+
+/* now-playing genre chip, just above the dock */
+#np{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);z-index:8000;padding:5px 14px;border:2px solid var(--pink);background:rgba(10,6,18,.88);color:var(--paper);font-size:13px;letter-spacing:.08em;text-transform:uppercase;box-shadow:3px 3px 0 #000;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+#np b{color:var(--amber);font-weight:400}#np i{font-style:normal;color:var(--cyan)}#np[hidden]{display:none}

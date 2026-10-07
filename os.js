@@ -838,7 +838,7 @@ const apps={
   skills:{jp:'技',t:'SKILLS',t2:'навыки · 技能 · कौशल',w:420},
   map:{jp:'地',t:'DISTRICT MAP',t2:'خريطة · 지도 · Карта',w:null,init:initMap,x:.4,y:80,w:600},
   contact:{jp:'連',t:'CONTACT',t2:'связь · 連絡 · اتصال',w:380},
-  club:{jp:'踊',get t(){return BEACH.on?'PLAYA SOFIA':'CASA SOFIA'},t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007zg',cls:'app-win',ar:1.5}
+  club:{jp:'踊',get t(){return BEACH.on?'PLAYA SOFIA':'CASA SOFIA'},t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007zh',cls:'app-win',ar:1.5}
 };
 const open={};let zTop=100,n=0;
 function openApp(id){
@@ -1408,6 +1408,9 @@ window.openApp=openApp;
 })();
 
 /* ---------- sound toggle: synthesised house music (house.js) ---------- */
+{const ORIGIN={'House':'Chicago','Soul house':'USA','Latin house':'Latin America','Afro house':'Africa','City pop':'Japan','Grime':'London, UK','Amapiano':'South Africa','Gqom':'Durban, South Africa','Brazilian phonk':'Brazil'},np=document.getElementById('np');
+ if(np)setInterval(()=>{const H=window.House,t=H&&H.on&&H.track;if(!t||!t.genre){np.hidden=true;return}
+  np.hidden=false;np.innerHTML='\u266a Now playing: <b></b> <i></i> \u00b7 <span></span>';np.querySelector('b').textContent=t.genre;np.querySelector('i').textContent=ORIGIN[t.genre]?'('+ORIGIN[t.genre]+')':'';np.querySelector('span').textContent=t.name+' \u00b7 '+Math.round(t.bpm||0)+' BPM'},500)}
 (function(){
   const b=document.getElementById('snd');if(!b||!window.House)return;
   const lab=on=>{b.textContent=on?'\u266A SOUND ON':'\u266A SOUND OFF';b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false')};

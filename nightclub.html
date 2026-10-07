@@ -104,9 +104,12 @@ section{max-width:1180px;margin:0 auto;padding:80px 6% 70px}
 footer{text-align:center;padding:50px 20px;border-top:1px solid rgba(255,46,136,.3);color:var(--muted)}
 footer a{color:var(--cyan)}
 html.beach:not(.embed) body{background:radial-gradient(ellipse at 80% 10%,rgba(255,214,120,.35),transparent 55%),radial-gradient(ellipse at 10% 90%,rgba(80,200,255,.22),transparent 50%),#15324f}
+#np{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:50;padding:7px 16px;border:2px solid #ff2e88;background:rgba(10,6,18,.88);color:#f3ead8;font:700 14px/1.2 'Share Tech Mono',ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;box-shadow:4px 4px 0 #000;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
+#np b{color:#ffb347;font-weight:700}#np i{font-style:normal;color:#27e8ff}#np[hidden]{display:none}
+html.embed #np{display:none}
 </style>
-<script src="lp3d.js?v=20261007zg"></script>
-<script src="house.js?v=20261007zg"></script>
+<script src="lp3d.js?v=20261007zh"></script>
+<script src="house.js?v=20261007zh"></script>
 <script>(function(){if(/[?&]embed/.test(location.search)){document.documentElement.className="embed";var e=document.createElement("style");e.textContent="header,header.bar,main>:not(.stage),footer,.rules,.districts{display:none!important}html,body{background:#05020a!important}body{padding:6px!important;margin:0!important;min-height:0!important}main{padding:0!important;margin:0 auto!important;max-width:none!important}";document.head.appendChild(e)}})()</script>
 </head>
 
@@ -134,7 +137,7 @@ html.beach:not(.embed) body{background:radial-gradient(ellipse at 80% 10%,rgba(2
         aria-label="Animated low-poly 3D cyberpunk nightclub. A hologram DJ in headphones plays behind a booth between two speaker stacks while a crowd moshes and circles on a pulsing tiled dance floor under lasers."></canvas>
     </div>
     <div class="status" role="status" aria-live="off">
-      <span>In the club: <b id="who">0</b>/28 &nbsp;&middot;&nbsp; Mode: <b id="mode">pogo</b> &nbsp;&middot;&nbsp; BPM: <b id="bpm">124</b> &nbsp;&middot;&nbsp; Track: <b id="trk">Rain Groove</b> &nbsp;&middot;&nbsp; Plays: <b id="plays">0</b> &nbsp;&middot;&nbsp; Drops: <b id="drops">0</b></span>
+      <span>In the club: <b id="who">0</b>/40 &nbsp;&middot;&nbsp; Mode: <b id="mode">pogo</b> &nbsp;&middot;&nbsp; BPM: <b id="bpm">124</b> &nbsp;&middot;&nbsp; Track: <b id="trk">Rain Groove</b> &nbsp;&middot;&nbsp; Plays: <b id="plays">0</b> &nbsp;&middot;&nbsp; Drops: <b id="drops">0</b></span>
       <span class="btns"><button id="battle" type="button" aria-pressed="false" title="Two dancers battle in the middle while everyone cheers">🥊 Battle: off</button> <button id="dance" type="button" title="Change the dancing style">💃 Style: Mosh</button> <button id="hype" type="button" title="Bring one more person into the club">&#128293; Hype</button> <button id="rep" type="button" aria-pressed="false" title="Repeat on: keep looping this track. Repeat off: the DJ shuffles to a new track every 30 seconds">&#128257; Repeat: off</button> <button id="shf" type="button" title="Generate a new house track">&#10551; Shuffle</button> <button id="fav" type="button" aria-pressed="false" title="Save this track to your playlist">&#9825; Save</button> <select id="pl" aria-label="Your playlist"><option value="">Playlist (0)</option></select> <button id="beachbtn" type="button" aria-pressed="false" title="Switch between Casa Sofia and the beach version, Playa Sofia">&#127958; Beach</button> <button id="snd" type="button" aria-pressed="false">&#9834; Sound: off</button> <button id="pause" type="button">Pause</button></span>
     </div>
   </div>
@@ -265,8 +268,8 @@ function femParts(l){
 }
 function rawParts(l){return (l.fem?femParts(l):LP.human({coat:l.coat,pant:l.pant,skin:l.skin,hair:l.hair,hat:l.hat})).concat(costumeParts(l))}
 /* ---------- costumes: new arrivals dress to the culture of the track that is playing ---------- */
-const CUL={'Amapiano':'sa','Gqom':'sa','Afro house':'af','Latin house':'la','Soul house':'so','City pop':'cp','Grime':'gr'};
-const GREET={sa:['Yebo!','Sharp!','Ewe!','Heita!'],af:['Ayo!','Eyaa!','Wahala!','Jejeje!'],la:['\u00a1VAMOS!','\u00a1Dale!','\u00a1Ay\u00e1!'],so:['Groovy!','Right on!','Soul!'],cp:['\u3044\u3044\u306d!','\u30ca\u30a4\u30b9!','\u30d5\u30a1\u30f3\u30ad\u30fc!'],gr:['Oi oi!','Bruv!','Lyrical!']};
+const CUL={'Amapiano':'sa','Gqom':'sa','Afro house':'af','Latin house':'la','Soul house':'so','City pop':'cp','Grime':'gr','Brazilian phonk':'br'};
+const GREET={sa:['Yebo!','Sharp!','Ewe!','Heita!'],af:['Ayo!','Eyaa!','Wahala!','Jejeje!'],la:['\u00a1VAMOS!','\u00a1Dale!','\u00a1Ay\u00e1!'],so:['Groovy!','Right on!','Soul!'],cp:['\u3044\u3044\u306d!','\u30ca\u30a4\u30b9!','\u30d5\u30a1\u30f3\u30ad\u30fc!'],gr:['Oi oi!','Bruv!','Lyrical!'],br:['\u00ca!','Bora!','Partiu!','T\u00e1 ligado!']};
 function themeLook(l,g){
   const c=CUL[g];if(!c)return l;l.cul=c;
   const vivid=()=>pick(['#ffb800','#e63946','#00a86b','#2a6fdb','#ff6b1a','#8f2de0']),a=l.acc={c1:vivid(),c2:pick(['#ffffff','#e63946','#2a6fdb','#00a86b','#ffd23f'])};
@@ -281,6 +284,9 @@ function themeLook(l,g){
   }else if(c==='cp'){ /* 80s Tokyo pastels with shoulder pads */
     const ps=()=>pick(['#ff9ecf','#7fe0d6','#b9a7ff','#ffd27f','#9ad0ff']);a.c1=ps();
     if(l.fem){l.outfit='crop';l.c1=ps();l.c2=ps();l.pat=null}else{l.coat=ps();l.hat=null}
+  }else if(c==='br'){ /* Brazilian funk/phonk: yellow-green-blue streetwear, cap, shades, gold chain */
+    const bc=()=>pick(['#ffd200','#009c3b','#002776','#ffffff']);a.c1=bc();
+    if(l.fem){l.outfit='crop';l.c1=bc();l.c2=pick(['#009c3b','#002776','#ffd200']);l.pat=null}else{l.coat=bc();l.pant=pick(['#14161e','#1d2b3a','#262033']);l.hat=null}
   }else if(c==='gr'){ /* London: dark tracksuit, cap, chain */
     if(l.fem){l.outfit='crop';l.c1='#1b1f2a';l.c2='#2b2b36';l.pat=null}else{l.coat='#1b1f2a';l.pant='#14161e';l.hat=null}
   }
@@ -302,6 +308,9 @@ function costumeParts(l){
   }else if(c==='cp'){
     L.push(box(0,1.6,.115,.27,.06,.03,'#101018'),box(0,1.6,.118,.1,.03,.02,'#ff7ac8',{e:true}),box(-.3,1.42,0,.2,.1,.3,a.c1),box(.3,1.42,0,.2,.1,.3,a.c1),box(0,1.7,0,.25,.04,.25,'#ff6ec7'));
     if(f)L.push(box(0,1.8,-.1,.34,.1,.08,'#ff6ec7'));
+  }else if(c==='br'){
+    L.push(box(0,1.72,0,.26,.1,.26,a.c1),box(0,1.72,.16,.22,.03,.14,a.c1),box(0,1.6,.115,.27,.06,.03,'#101018'),box(0,1.26,.14,.24,.04,.03,'#ffc846',{e:true}),box(0,1.17,.145,.08,.08,.03,'#ffc846',{e:true}));
+    if(!f)L.push(box(0,.95,.135,.14,.14,.02,l.coat==='#ffd200'?'#009c3b':'#ffd200'));
   }else if(c==='gr'){
     L.push(box(0,1.72,0,.26,.1,.26,'#101018'),box(0,1.72,.16,.22,.03,.14,'#101018'),box(0,1.28,.14,.22,.04,.03,'#ffc846',{e:true}),box(0,1.2,.145,.07,.07,.03,'#ffc846',{e:true}));
     if(!f)L.push(box(-.2,.5,.132,.04,.7,.02,'#ffffff'),box(.2,.5,.132,.04,.7,.02,'#ffffff'));
@@ -327,19 +336,19 @@ function newLook(g){
 }
 const BANGS=['ドン!','BAM!','OOF!','쾅!','БАМ!','¡PUM!','Ewo!','OI!','ぐっ','AIE!'];
 const PIT={x:0,z:6.6};
-const CAP=28,QUOTA=Math.round(CAP*.3),DOOR={x:4.95,z:11.2};
+const CAP=40,QUOTA=Math.round(CAP*.3),DOOR={x:4.95,z:11.2};
 let battle={on:false,A:null,B:null,turn:0,t:0,phase:'idle',scoreA:0,scoreB:0,round:1,move:null,mv:0};
 const STYLES=['mosh','disco','rave','wave','sway','minister'],STYLE_NAMES=['Mosh','Disco','Rave','Wave','Sway','Minister of Enjoyment'];
 let style='mosh',styleI=0;
 let dancers=[],edge=[],bns=[],sw={removed:0,assigned:0,xt:0},sweeping=false,mode='pogo',modeT=6,spinDir=1,bursts=[],drops=0,flash=0;
 function mkDancer(i,isEdge,g){
-  const look=newLook(g),a=Math.random()*TAU,r=Math.sqrt(Math.random())*1.9;
+  const look=newLook(g),a=Math.random()*TAU,r=Math.sqrt(Math.random())*2.9;
   const d={look,x:PIT.x+Math.cos(a)*r,z:PIT.z+Math.sin(a)*r*.8,vx:0,vz:0,ang:a,rad:.7+Math.random()*1.3,seed:Math.random()*9,lunge:0,tgt:null,nextL:rnd(.5,3),spin:0,e:null,state:'dance',alpha:1};
-  if(isEdge){d.x=(Math.random()<.5?-1:1)*rnd(3.6,5.3);d.z=rnd(4.3,9.3);d.home=[d.x,d.z]}
+  if(isEdge){d.x=(Math.random()<.5?-1:1)*rnd(5.0,5.8);d.z=rnd(3.6,9.3);d.home=[d.x,d.z]}
   d.e=ent(walkParts(look),d.x,d.z,{sc:rnd(.95,1.06),yaw:rnd(0,TAU)});
   return d;
 }
-function initCrowd(){for(let i=0;i<15;i++)dancers.push(mkDancer(i));for(let i=0;i<7;i++)edge.push(mkDancer(i,true))}
+function initCrowd(){for(let i=0;i<24;i++)dancers.push(mkDancer(i));for(let i=0;i<8;i++)edge.push(mkDancer(i,true))}
 function burst(x,z,txt){bursts.push({x,z,t:0,txt:txt||pick(BANGS),r:rnd(-.25,.25)})}
 function updCrowd(dt){
   modeT-=dt;if(modeT<=0){
@@ -375,7 +384,7 @@ function updCrowd(dt){
       if(d.lunge<=0){e.yaw+=Math.sin(time*.9+d.seed)*dt*.8}
       e.ph+=dt*(5+Math.hypot(d.vx,d.vz)*3);
     }
-    d.x=clamp(d.x,-3.9,3.9);d.z=clamp(d.z,4.3,8.8);
+    d.x=clamp(d.x,-4.6,4.6);d.z=clamp(d.z,3.8,9.2);
     if(d.spin>0){d.spin-=dt;e.yaw+=dt*16}
     e.x=d.x;e.z=d.z;e.elev=jump*(mode==='circle'?.12:.3)+(d.lunge>0?.1:0);
     e.arms.L=-2.5+Math.sin(beat*Math.PI*2+d.seed)*.5;e.arms.R=-2.6+Math.cos(beat*Math.PI*2+d.seed*1.3)*.5;
@@ -383,11 +392,18 @@ function updCrowd(dt){
   });
   edge.forEach(d=>{const e=d.e;e.clock=time;if(d.state!=='dance'){movers(d,dt,jump);return}e.x=d.home[0];e.z=d.home[1]+Math.sin(time*.7+d.seed)*.15;e.elev=jump*.16;e.ph+=dt*2.4;e.yaw=Math.PI*.5*(d.home[0]<0?1:-1)*.5+Math.sin(time+d.seed)*.5;
     e.arms.L=-1.2+Math.sin(beat*Math.PI*2+d.seed)*1.3;e.arms.R=-1.0+Math.sin(beat*Math.PI*2+d.seed+1.5)*1.1});
-  /* now and then someone heads home; about 5s later a new dancer arrives dressed for the current track's culture */
+  /* patrons come and go all night: the crowd size drifts around ~32 (24-38), up to 40 if you hit Hype */
+  popT_t-=dt;if(popT_t<=0){popT_t=rnd(10,20);popT=clamp(32+Math.round((Math.random()+Math.random()+Math.random()-1.5)*8),24,38)}
   churnT-=dt;
-  if(churnT<=0){churnT=rnd(7,15);
-    const pool=dancers.filter(d=>d.state==='dance'&&!d.claimed&&!d.role&&d!==mn.c&&d!==battle.A&&d!==battle.B);
-    if(pool.length>8){const v=pick(pool);v.state='out';v.e.arms.L=-1;burst(v.e.x,v.e.z,pick(['BYE!','\u307e\u305f\u306d','Ciao!','Au revoir','Hamba kahle','See ya']));arrivals.push(time+5)}}
+  if(churnT<=0){churnT=rnd(1.2,3.2);
+    const tot=dancers.concat(edge).filter(d=>d.state!=='out').length+arrivals.length;
+    const leave=()=>{const pool=dancers.concat(edge).filter(d=>d.state==='dance'&&!d.claimed&&!d.role&&d!==mn.c&&d!==battle.A&&d!==battle.B);
+      if(pool.length<=8)return false;const v=pick(pool);v.state='out';v.e.arms.L=-1;burst(v.e.x,v.e.z,pick(['BYE!','\u307e\u305f\u306d','Ciao!','Au revoir','Hamba kahle','See ya','Tchau!']));return true};
+    if(tot>popT){leave()}
+    else if(tot<popT){arrivals.push(time+rnd(.2,1.2))}
+    else if(leave())arrivals.push(time+5);          /* a swap: someone leaves, a new person arrives ~5s later */
+  }
+  arrivals.sort((x,y)=>x-y);
   if(arrivals.length&&arrivals[0]<=time){arrivals.shift();hype()}
   updBattle(dt);
   bursts.forEach(b=>b.t+=dt);bursts=bursts.filter(b=>b.t<.9);
@@ -395,7 +411,7 @@ function updCrowd(dt){
   updBouncer(dt);
 }
 /* ---------- Minister of Enjoyment: a ring forms round one dancer, who performs for 10-20s, then rejoins the crowd ---------- */
-let churnT=9;const arrivals=[];
+let churnT=4,popT=32,popT_t=0;const arrivals=[];
 const mn={c:null,t:0,dur:0,mv:-1,mt:0,dir:1,last:null};
 function endMinister(rotate){
   const d=mn.c;if(d){endBattleDancer(d);d.e.parts=LP.compile(walkParts(d.look));d.e.arms={};d.e.elev=0;d.role=null;mn.last=d}
@@ -425,16 +441,16 @@ function ministerDancer(d,dt,jump,live){
     return;
   }
   const ring=live.filter(o=>o!==c),n=Math.max(1,ring.length),k=Math.max(0,ring.indexOf(d));
-  const a=k/n*TAU+time*.3*mn.dir,r=1.55+n*.045;
+  const a=k/n*TAU+time*.3*mn.dir,r=1.7+n*.055;
   const tx=PIT.x+Math.cos(a)*r,tz=PIT.z+Math.sin(a)*r*.72;
-  d.x+=(tx-d.x)*Math.min(1,dt*3.5);d.z+=(tz-d.z)*Math.min(1,dt*3.5);d.x=clamp(d.x,-3.9,3.9);d.z=clamp(d.z,4.3,8.8);
+  d.x+=(tx-d.x)*Math.min(1,dt*3.5);d.z+=(tz-d.z)*Math.min(1,dt*3.5);d.x=clamp(d.x,-4.7,4.7);d.z=clamp(d.z,3.8,9.2);
   e.x=d.x;e.z=d.z;e.elev=jump*.22;e.ph+=dt*3;e.pt=e.rl=0;
   const want=Math.atan2(PIT.x-d.x,PIT.z-d.z);e.yaw+=((want-e.yaw+Math.PI*3)%(Math.PI*2)-Math.PI)*Math.min(1,dt*8);
   e.arms.L=-2.7+Math.sin(beat*Math.PI*2+d.seed)*.4;e.arms.R=-2.7-Math.sin(beat*Math.PI*2+d.seed)*.4;
 }
 /* ---------- dance styles: everyone drifts into a grid and does one routine ---------- */
 function choreo(d,k,dt,jump){
-  const e=d.e,col=k%6,row=Math.floor(k/6),tx=(col-2.5)*.85,tz=clamp(5.0+row*.85,4.6,8.6);
+  const e=d.e,col=k%9,row=Math.floor(k/9),tx=(col-4)*.9,tz=clamp(4.2+row*.85,3.9,9.0);
   d.x+=(tx-d.x)*Math.min(1,dt*2.6);d.z+=(tz-d.z)*Math.min(1,dt*2.6);d.vx=d.vz=0;d.spin=0;d.lunge=0;
   const bp=beat*Math.PI*2,ph=d.seed;let x=d.x,elev=0,yaw=Math.PI,L,R;
   if(style==='disco'){
@@ -500,7 +516,7 @@ function battleDancer(d,k,dt,jump){
   const e=d.e;e.clock=time;d.spin=0;d.lunge=0;d.vx=d.vz=0;
   if(!d.role||(d.role!=='A'&&d.role!=='B'))d.role='side';
   if(d.role==='side'){
-    const left=k%2===0,i=Math.floor(k/2),tx=(left?-1:1)*(2.5+(i%3)*.62),tz=5.3+Math.floor(i/3)*.85+(i%2)*.15;
+    const left=k%2===0,i=Math.floor(k/2),tx=(left?-1:1)*(2.3+(i%4)*.62),tz=4.2+Math.floor(i/4)*.85+(i%2)*.15;
     d.x+=(tx-d.x)*Math.min(1,dt*3);d.z+=(tz-d.z)*Math.min(1,dt*3);
     const hype=battle.phase==='result'?1.6:1,pp=Math.sin(beat*Math.PI*2+d.seed);
     e.arms.L=-2.7+Math.sin(beat*Math.PI*2+d.seed)*.35*hype;e.arms.R=-2.7-Math.sin(beat*Math.PI*2+d.seed)*.35*hype;
@@ -668,7 +684,7 @@ function drawWall(){
   ctx.fillStyle='#ff2e88';ctx.shadowColor='#ff2e88';ctx.shadowBlur=14;ctx.fillText('NEO-JOWO UNDERGROUND · ナイトクラブ · نادي ليلي · 나이트클럽',q[0],q[1]);ctx.restore();
 }
 function drawTiles(){
-  const cols=8,rows=6,x0=-3.2,z0=4.6,s=.8;
+  const cols=12,rows=8,x0=-4.8,z0=3.2,s=.8;
   for(let r=0;r<rows;r++)for(let k=0;k<cols;k++){
     const ph=beat*.5+(k*.17+r*.23),hue=(ph*80+k*18)%360,on=(Math.floor(beat)+k+r)%2===0;
     const L=on?22+kick*30:9+kick*8;
@@ -852,7 +868,7 @@ function drawBeachBack(){
   ctx.restore();
 }
 function drawBeachFloor(){
-  const cols=8,rows=6,x0=-3.2,z0=4.6,s=.8;
+  const cols=12,rows=8,x0=-4.8,z0=3.2,s=.8;
   for(let r=0;r<rows;r++)for(let k=0;k<cols;k++){
     const on=(k+r)%2===0,L=on?52+kick*7:47+kick*5;
     ctx.fillStyle=`hsl(${28+((k*3+r*5)%8)},${48+kick*10}%,${L}%)`;
@@ -915,6 +931,10 @@ function autoShuffle(){
   if(now-autoT>=30000){autoT=now;AUDIO.shuffle();autoId=trackId(AUDIO.track);burst(PIT.x,PIT.z-.6,pick(['NEXT TRACK!','\u6b21\u306e\u66f2!','NEXT!']))}
 }
 setInterval(autoShuffle,1000);   /* keeps shuffling when the tab is in the background (animation frames pause there) */
+const ORIGIN={'House':'Chicago','Soul house':'USA','Latin house':'Latin America','Afro house':'Africa','City pop':'Japan','Grime':'London, UK','Amapiano':'South Africa','Gqom':'Durban, South Africa','Brazilian phonk':'Brazil'};
+function syncNP(){const n=el('np');if(!n||EMBED)return;const t=AUDIO&&AUDIO.track;if(!t||!t.genre){n.hidden=true;return}
+  n.hidden=false;n.innerHTML='\u266a Now playing: <b></b> <i></i> \u00b7 <span></span>';n.querySelector('b').textContent=t.genre;n.querySelector('i').textContent=ORIGIN[t.genre]?'('+ORIGIN[t.genre]+')':'';n.querySelector('span').textContent=t.name+' \u00b7 '+Math.round(t.bpm||bpmNow())+' BPM'}
+setInterval(syncNP,500);syncNP();
 const shf=el('shf');
 if(shf)shf.onclick=()=>{if(!AUDIO)return;AUDIO.shuffle();if(!AUDIO.on)AUDIO.toggle()};
 /* ---------- playlist: saved tracks are stored as tiny seeds in localStorage AND a long-lived cookie ---------- */
@@ -970,5 +990,6 @@ function loop(t){
 }
 requestAnimationFrame(loop);
 </script>
+<div id="np" role="status" aria-live="polite" hidden></div>
 </body>
 </html>
