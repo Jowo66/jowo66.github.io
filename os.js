@@ -682,7 +682,7 @@ tick();setInterval(tick,1000);
   });
   const dbtn=document.getElementById('day');
   if(dbtn){const sync=()=>{dbtn.textContent=dayOn?'\u263E NIGHT':'\u2600 DAY';dbtn.setAttribute('aria-pressed',dayOn?'true':'false');document.documentElement.classList.toggle('day',dayOn)};
-    dbtn.addEventListener('click',()=>{dayOn=!dayOn;try{localStorage.setItem('jowo.day',dayOn?'1':'0')}catch(e){}sync()});sync()}
+    dbtn.addEventListener('click',()=>{dayOn=!dayOn;try{localStorage.setItem('jowo.day',dayOn?'1':'0')}catch(e){}sync();if(reduce){dayK=dayOn?1:0;updSky(0);frame(0)}});sync()}
   if(/[?&]debug/.test(location.search))window.__alley={couple:spawnCouple,day:v=>{dayOn=v},monster:()=>{dayOn=true;dayK=1;startMonster()},sky:()=>({dayK,mon:MON.on,t:MON.t,last:MON.last,next:MON.next,clock:skyClock}),bolt:()=>{flashT=0;nextBolt=99;boltPts=[[0,-.5],[.03,-.3],[-.02,-.15],[.01,-.03]]},spawn:spawn,chars:()=>chars,turn:()=>{nextTurn=0},J:()=>J,pan:()=>pan,alleyNo:()=>alleyNo};
   let last=0;
   function loop(t){
@@ -705,7 +705,7 @@ const apps={
   skills:{jp:'技',t:'SKILLS',t2:'навыки · 技能 · कौशल',w:420},
   map:{jp:'地',t:'DISTRICT MAP',t2:'خريطة · 지도 · Карта',w:null,init:initMap,x:.4,y:80,w:600},
   contact:{jp:'連',t:'CONTACT',t2:'связь · 連絡 · اتصال',w:380},
-  club:{jp:'踊',t:'THE RUSTY KOI NIGHTCLUB',t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007c',cls:'app-win',ar:1.5}
+  club:{jp:'踊',t:'THE RUSTY KOI NIGHTCLUB',t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007d',cls:'app-win',ar:1.5}
 };
 const open={};let zTop=100,n=0;
 function openApp(id){
