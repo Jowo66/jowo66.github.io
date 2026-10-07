@@ -117,10 +117,10 @@ html.embed #spbar{flex-wrap:wrap}
 #np b{color:#ffb347;font-weight:700}#np i{font-style:normal;color:#27e8ff}#np[hidden]{display:none}
 html.embed #np{display:none}
 </style>
-<script src="lp3d.js?v=20261007zi"></script>
-<script src="house.js?v=20261007zi"></script>
-<script src="spotify-config.js?v=20261007zi"></script>
-<script src="spotify.js?v=20261007zi"></script>
+<script src="lp3d.js?v=20261007zj"></script>
+<script src="house.js?v=20261007zj"></script>
+<script src="spotify-config.js?v=20261007zj"></script>
+<script src="spotify.js?v=20261007zj"></script>
 <script>(function(){if(/[?&]embed/.test(location.search)){document.documentElement.className="embed";var e=document.createElement("style");e.textContent="header,header.bar,main>:not(.stage),footer,.rules,.districts{display:none!important}html,body{background:#05020a!important}body{padding:6px!important;margin:0!important;min-height:0!important}main{padding:0!important;margin:0 auto!important;max-width:none!important}";document.head.appendChild(e)}})()</script>
 </head>
 
@@ -211,7 +211,9 @@ const AUDIO=(()=>{try{if(EMBED&&parent&&parent.House)return parent.House}catch(e
 
 /* ---------- beat clock: follows the music when it plays, free-runs otherwise ---------- */
 let time=0,beat=0,kick=0,bar4=0;
-const SP={playing:false,bpm:+(function(){try{return localStorage.getItem('jowo.spbpm')}catch(e){return 0}})()||122,t:null,genre:null,raw:null,aid:null};
+/* inside the OS window the Spotify player lives in the main page, so it keeps playing when this window is closed */
+const Spot=(function(){try{if(EMBED&&parent&&parent.Spot)return parent.Spot}catch(e){}return window.Spot})();
+const SP=Spot?Spot.session:{playing:false,bpm:122,t:null,genre:null,raw:null,aid:null};
 const bpmNow=()=>SP.playing?SP.bpm:((AUDIO&&AUDIO.bpm)||124);
 function updBeat(dt){
   const ph=!SP.playing&&AUDIO&&AUDIO.phase?AUDIO.phase():-1;
@@ -964,25 +966,21 @@ function npInfo(){
 }
 function syncNP(){
   const x=npInfo();
-  if(EMBED){try{parent.postMessage({jowoNP:SP.playing&&x?{sp:1,b:x.b,i:x.i,s:x.s}:null},location.origin)}catch(e){}return}
+  if(EMBED)return;
   const n=el('np');if(!n)return;if(!x){n.hidden=true;return}
   n.hidden=false;n.innerHTML=x.html;n.querySelector('b').textContent=x.b;n.querySelector('i').textContent=x.i;n.querySelector('span').textContent=x.s}
 setInterval(syncNP,500);syncNP();
 /* ---------- Spotify (needs Premium): play your own playlists; the dancers follow your tapped tempo ---------- */
-const GMAP=[[/amapiano|kwaito|south african/,'Amapiano'],[/gqom|durban/,'Gqom'],[/afro ?house|afrobeat|afropop|afro-?tech|naija|nigerian|ghanaian|highlife|african/,'Afro house'],
- [/phonk|funk carioca|funk brasileiro|brazilian|baile|brasil|brazil|mpb|sertanejo|pagode|bossa/,'Brazilian phonk'],[/latin|salsa|reggaeton|cumbia|bachata|merengue|urbano|mambo|tango|mexican|colombian|dembow/,'Latin house'],
- [/city pop|j-pop|japanese|j-rock|shibuya|anime/,'City pop'],[/grime|uk hip hop|uk drill|drill|uk garage/,'Grime'],[/soul|r&b|funk|motown|disco|gospel/,'Soul house'],[/house|techno|edm|electro|dance|trance|club/,'House']];
-const mapGenre=list=>{const s=(list||[]).join(' | ').toLowerCase();for(const [re,g] of GMAP)if(re.test(s))return g;return null};
 const spb=el('spbar'),spc=el('spc'),spl=el('spl'),spt=el('spt'),spp=el('spp'),spn=el('spn'),sps=el('sps'),spbt=el('spb'),spx=el('spx'),spm=el('spmsg'),spsu=el('spsetup');
 const spMsg=(t,warn)=>{if(spm){spm.textContent=t||'';spm.style.color=warn?'#ff7a9a':''}};
 function spShow(){
-  const S=window.Spot;if(!spc||!S)return;
+  const S=Spot;if(!spc||!S)return;
   const conn=S.connected(),conf=S.configured();
   [spl,spp,spt,spn,sps,spbt,spx].forEach(e=>e&&(e.hidden=!conn));
   spc.hidden=conn;spc.textContent=conf?'\u{1F3A7} Connect Spotify':'\u{1F3A7} Spotify: set up';
 }
 function spSetup(){
-  const S=window.Spot;if(!spsu||!S)return;
+  const S=Spot;if(!spsu||!S)return;
   spsu.hidden=false;
   spsu.innerHTML='<b>Spotify setup (once, free, needs Spotify Premium)</b><ol>'+
    '<li>Open <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener">developer.spotify.com/dashboard</a> and log in, then <i>Create app</i>.</li>'+
@@ -995,32 +993,26 @@ function spSetup(){
     S.setClientId(v);spsu.hidden=true;spMsg('Saved. Now press Connect Spotify.');spShow()};
 }
 async function spLoadLists(){
-  const S=window.Spot;spl.innerHTML='<option value="">Pick a playlist\u2026</option><option value="liked">\u2665 Liked Songs</option>';
+  const S=Spot;spl.innerHTML='<option value="">Pick a playlist\u2026</option><option value="liked">\u2665 Liked Songs</option>';
   try{(await S.playlists()).forEach(p=>{const o=document.createElement('option');o.value=p.uri;o.textContent=p.name;spl.appendChild(o)})}catch(e){spMsg('Could not load your playlists ('+e.message+').',true)}
 }
 async function spStart(){
-  const S=window.Spot;
-  try{spMsg('Starting the player\u2026');await S.init();S.activate();spShow();spMsg('Ready. Pick a playlist.');spLoadLists()}catch(e){spMsg(e.message,true)}
+  const S=Spot;
+  try{if(!SP.t)spMsg('Starting the player\u2026');await S.init();S.activate();spShow();if(!SP.t)spMsg('Ready. Pick a playlist.');spLoadLists()}catch(e){spMsg(e.message,true)}
 }
-if(window.Spot&&spc){
-  const S=window.Spot;spShow();
-  S.on('auth',ok=>{spShow();if(ok)spStart();else{SP.playing=false;SP.t=null;spMsg('Disconnected.')}});
-  S.on('error',e=>{spMsg(e.kind==='account_error'?'Spotify says this account cannot stream here (Premium is required).':e.kind==='authentication_error'?'Spotify login expired. Press Connect again.':(e.message||'Spotify error'),true)});
-  S.on('ready',()=>spMsg('Ready. Pick a playlist.'));
-  S.on('state',async s=>{
-    if(!s||!s.track_window||!s.track_window.current_track){SP.playing=false;return}
-    const c=s.track_window.current_track,was=SP.playing&&SP.t&&SP.t.uri;
-    SP.playing=!s.paused;
-    if(SP.playing&&AUDIO&&AUDIO.on)AUDIO.toggle();             /* only one source at a time */
-    SP.t={uri:c.uri,name:c.name,artists:(c.artists||[]).map(a=>a.name).join(', ')};
-    const aid=((c.artists||[])[0]||{}).uri;const id=aid&&aid.split(':')[2];
-    if(id&&id!==SP.aid){SP.aid=id;SP.raw=null;SP.genre=null;
-      const gl=await S.artistGenres(id);if(SP.aid===id){SP.raw=gl[0]?gl[0].replace(/\b\w/g,m=>m.toUpperCase()):null;SP.genre=mapGenre(gl)}}
-    if(SP.playing&&was&&was!==c.uri)burst(PIT.x,PIT.z-.6,pick(['NEXT TRACK!','\u6b21\u306e\u66f2!','NEXT!']));
-    spMsg((SP.playing?'Playing: ':'Paused: ')+SP.t.name+' \u2014 '+SP.t.artists);
-    spt.innerHTML=SP.playing?'&#9208;':'&#9654;';
-  });
-  if(AUDIO&&AUDIO.onchange)AUDIO.onchange(on=>{if(on&&SP.playing)S.pause()});
+if(Spot&&spc){
+  const S=Spot;spShow();
+  const onAuth=ok=>{spShow();if(ok)spStart();else spMsg('Disconnected.')};S.on('auth',onAuth);
+  const onErr=e=>{spMsg(e.kind==='account_error'?'Spotify says this account cannot stream here (Premium is required).':e.kind==='authentication_error'?'Spotify login expired. Press Connect again.':(e.message||'Spotify error'),true)};S.on('error',onErr);
+  const onReady=()=>{if(!SP.t)spMsg('Ready. Pick a playlist.')};S.on('ready',onReady);
+  const onSess=()=>{
+    if(SP.t)spMsg((SP.playing?'Playing: ':'Paused: ')+SP.t.name+' \u2014 '+SP.t.artists);
+    spt.innerHTML=SP.playing?'&#9208;':'&#9654;'};
+  const onTrack=()=>burst(PIT.x,PIT.z-.6,pick(['NEXT TRACK!','\u6b21\u306e\u66f2!','NEXT!']));
+  S.on('session',onSess);S.on('track',onTrack);onSess();
+  /* detach from the shared player when this window is closed or reloaded */
+  const bye=()=>{S.off('auth',onAuth);S.off('error',onErr);S.off('ready',onReady);S.off('session',onSess);S.off('track',onTrack)};
+  addEventListener('pagehide',bye);
   spc.onclick=async()=>{
     if(!S.configured()){spSetup();return}
     try{await S.connect();spMsg('Finish logging in in the popup window\u2026')}catch(e){spMsg(e.message,true)}
@@ -1031,7 +1023,7 @@ if(window.Spot&&spc){
   };
   spt.onclick=()=>{S.activate();S.toggle()};spp.onclick=()=>S.prev();spn.onclick=()=>S.next();
   sps.onclick=()=>{const on=sps.getAttribute('aria-pressed')!=='true';sps.setAttribute('aria-pressed',on?'true':'false');sps.innerHTML='&#128256; Shuffle: '+(on?'on':'off');S.shuffle(on).catch(e=>spMsg(e.message,true))};
-  spx.onclick=()=>{S.disconnect();SP.playing=false;SP.t=null;spShow()};
+  spx.onclick=()=>{S.disconnect();spShow()};
   /* tap tempo: average of recent taps; also snaps the beat so the dancers land on it */
   let taps=[];
   const bl=()=>{spbt.innerHTML='&#128065; Tap BPM: '+SP.bpm};
@@ -1085,7 +1077,11 @@ const db=el('dance');
 if(db)db.onclick=()=>{styleI=(styleI+1)%STYLES.length;style=STYLES[styleI];db.textContent='\u{1F483} Style: '+STYLE_NAMES[styleI]};
 if(snd){
   const lab=on=>{snd.textContent=on?'♪ Sound: on':'♪ Sound: off';snd.setAttribute('aria-pressed',on?'true':'false')};
-  lab(false);snd.onclick=()=>{if(AUDIO)AUDIO.toggle()};if(AUDIO){AUDIO.onchange(lab);lab(AUDIO.on)}
+  const cur=()=>!!(AUDIO&&AUDIO.on)||SP.playing,sync=()=>lab(cur());
+  lab(false);snd.onclick=()=>{if(SP.playing&&Spot){Spot.pause();return}if(AUDIO)AUDIO.toggle()};          /* Sound off also stops Spotify */
+  if(AUDIO){AUDIO.onchange(sync)}
+  if(Spot){Spot.on('session',sync);addEventListener('pagehide',()=>Spot.off('session',sync))}
+  sync();
 }
 if(document.fonts&&document.fonts.load){document.fonts.load('800 40px "Shippori Mincho B1"','夜踊れクラブ出口');document.fonts.load('800 40px Rajdhani','NEO-JOWO').then(()=>{bake();bakeBeach()})}
 let last=performance.now(),stat=0;

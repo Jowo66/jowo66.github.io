@@ -838,7 +838,7 @@ const apps={
   skills:{jp:'技',t:'SKILLS',t2:'навыки · 技能 · कौशल',w:420},
   map:{jp:'地',t:'DISTRICT MAP',t2:'خريطة · 지도 · Карта',w:null,init:initMap,x:.4,y:80,w:600},
   contact:{jp:'連',t:'CONTACT',t2:'связь · 連絡 · اتصال',w:380},
-  club:{jp:'踊',get t(){return BEACH.on?'PLAYA SOFIA':'CASA SOFIA'},t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007zi',cls:'app-win',ar:1.5}
+  club:{jp:'踊',get t(){return BEACH.on?'PLAYA SOFIA':'CASA SOFIA'},t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007zj',cls:'app-win',ar:1.5}
 };
 const open={};let zTop=100,n=0;
 function openApp(id){
@@ -1408,15 +1408,18 @@ window.openApp=openApp;
 })();
 
 /* ---------- sound toggle: synthesised house music (house.js) ---------- */
-{let spNP=null;addEventListener('message',e=>{if(e.origin!==location.origin||!e.data||!('jowoNP' in e.data))return;const d=e.data.jowoNP;spNP=d&&d.sp?{b:String(d.b||''),i:String(d.i||''),s:String(d.s||''),at:Date.now()}:null});
+{
  const ORIGIN={'House':'Chicago','Soul house':'USA','Latin house':'Latin America','Afro house':'Africa','City pop':'Japan','Grime':'London, UK','Amapiano':'South Africa','Gqom':'Durban, South Africa','Brazilian phonk':'Brazil'},np=document.getElementById('np');
- if(np)setInterval(()=>{if(spNP&&Date.now()-spNP.at<3000){np.hidden=false;np.innerHTML='\u266a Spotify: <b></b> <i></i> \u00b7 <span></span>';np.querySelector('b').textContent=spNP.b;np.querySelector('i').textContent=spNP.i;np.querySelector('span').textContent=spNP.s;return}
+ if(np)setInterval(()=>{const sp=window.Spot&&window.Spot.session;if(sp&&sp.playing&&sp.t){np.hidden=false;np.innerHTML='\u266a Spotify: <b></b> <i></i> \u00b7 <span></span>';np.querySelector('b').textContent=sp.t.name;np.querySelector('i').textContent=sp.raw?'('+sp.raw+')':'';np.querySelector('span').textContent=sp.t.artists+' \u00b7 '+sp.bpm+' BPM';return}
   const H=window.House,t=H&&H.on&&H.track;if(!t||!t.genre){np.hidden=true;return}
   np.hidden=false;np.innerHTML='\u266a Now playing: <b></b> <i></i> \u00b7 <span></span>';np.querySelector('b').textContent=t.genre;np.querySelector('i').textContent=ORIGIN[t.genre]?'('+ORIGIN[t.genre]+')':'';np.querySelector('span').textContent=t.name+' \u00b7 '+Math.round(t.bpm||0)+' BPM'},500)}
 (function(){
   const b=document.getElementById('snd');if(!b||!window.House)return;
   const lab=on=>{b.textContent=on?'\u266A SOUND ON':'\u266A SOUND OFF';b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false')};
-  b.addEventListener('click',()=>House.toggle());House.onchange(lab);lab(false);
+  const spOn=()=>!!(window.Spot&&window.Spot.session.playing);
+  const refresh=()=>lab(House.on||spOn());
+  b.addEventListener('click',()=>{if(spOn()){Spot.pause();return}House.toggle()});          /* Sound off also stops Spotify */
+  House.onchange(refresh);lab(false);if(window.Spot)Spot.on('session',refresh);
   const sh=document.getElementById('shf'),toast=document.querySelector('.toast');
   const say=t=>{if(!toast)return;toast.textContent='\u266A NOW PLAYING \u00b7 '+t.name.toUpperCase()+' \u00b7 '+t.key+' \u00b7 '+t.bpm+' BPM';toast.classList.add('show');clearTimeout(say.t);say.t=setTimeout(()=>toast.classList.remove('show'),3200)};
   if(sh)sh.addEventListener('click',()=>{const t=House.shuffle();if(!House.on)House.toggle();say(t)});
