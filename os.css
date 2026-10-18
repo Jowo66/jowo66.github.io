@@ -167,3 +167,7 @@ a{color:var(--cyan)}
 /* now-playing genre chip, just above the dock */
 #np{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);z-index:8000;padding:5px 14px;border:2px solid var(--pink);background:rgba(10,6,18,.88);color:var(--paper);font-size:13px;letter-spacing:.08em;text-transform:uppercase;box-shadow:3px 3px 0 #000;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
 #np b{color:var(--amber);font-weight:400}#np i{font-style:normal;color:var(--cyan)}#np[hidden]{display:none}
+
+.hero .hl{max-width:none;display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 0;pointer-events:auto}
+.hero .hl a{font-family:var(--disp);font-size:18px;letter-spacing:.08em;color:var(--cyan);border:1px solid rgba(25,227,255,.6);padding:0 10px;line-height:26px;text-decoration:none;background:rgba(10,6,18,.6)}
+.hero .hl a:hover,.hero .hl a:focus-visible{background:var(--cyan);color:#05161c;outline:none}
