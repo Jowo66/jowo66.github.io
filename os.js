@@ -992,7 +992,7 @@ const apps={
   skills:{jp:'技',t:'SKILLS',t2:'навыки · 技能 · कौशल',w:420},
   map:{jp:'地',t:'DISTRICT MAP',t2:'خريطة · 지도 · Карта',w:null,init:initMap,x:.4,y:80,w:600},
   contact:{jp:'連',t:'CONTACT',t2:'связь · 連絡 · اتصال',w:380},
-  club:{jp:'踊',get t(){return BEACH.on?'PLAYA SOFIA':'CASA SOFIA'},t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007zp',cls:'app-win',ar:1.5}
+  club:{jp:'踊',get t(){return BEACH.on?'PLAYA SOFIA':'CASA SOFIA'},t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007zq',cls:'app-win',ar:1.5}
 };
 const open={};let zTop=100,n=0;
 function openApp(id){
@@ -1582,4 +1582,14 @@ window.openApp=openApp;
   const sh=document.getElementById('shf'),toast=document.querySelector('.toast');
   const say=t=>{if(!toast)return;toast.textContent='\u266A NOW PLAYING \u00b7 '+t.name.toUpperCase()+' \u00b7 '+t.key+' \u00b7 '+t.bpm+' BPM';toast.classList.add('show');clearTimeout(say.t);say.t=setTimeout(()=>toast.classList.remove('show'),3200)};
   if(sh)sh.addEventListener('click',()=>{const t=House.shuffle();if(!House.on)House.toggle();say(t)});
+})();
+
+/* "Jowo's Worlds" dropdown: links to the other projects */
+(function(){
+  const b=document.getElementById('wdb'),m=document.getElementById('wdm');if(!b||!m)return;
+  const set=o=>{m.hidden=!o;b.setAttribute('aria-expanded',o?'true':'false')};
+  b.addEventListener('click',e=>{e.stopPropagation();set(m.hidden);if(!m.hidden){const a=m.querySelector('a');if(a&&e.detail===0)a.focus()}});
+  document.addEventListener('click',e=>{if(!m.hidden&&!m.contains(e.target))set(false)});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!m.hidden){set(false);b.focus()}});
+  m.addEventListener('click',()=>set(false));
 })();

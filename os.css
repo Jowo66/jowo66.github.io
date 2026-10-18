@@ -168,6 +168,13 @@ a{color:var(--cyan)}
 #np{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);z-index:8000;padding:5px 14px;border:2px solid var(--pink);background:rgba(10,6,18,.88);color:var(--paper);font-size:13px;letter-spacing:.08em;text-transform:uppercase;box-shadow:3px 3px 0 #000;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
 #np b{color:var(--amber);font-weight:400}#np i{font-style:normal;color:var(--cyan)}#np[hidden]{display:none}
 
-.hero .hl{max-width:none;display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 0;pointer-events:auto}
-.hero .hl a{font-family:var(--disp);font-size:18px;letter-spacing:.08em;color:var(--cyan);border:1px solid rgba(25,227,255,.6);padding:0 10px;line-height:26px;text-decoration:none;background:rgba(10,6,18,.6)}
-.hero .hl a:hover,.hero .hl a:focus-visible{background:var(--cyan);color:#05161c;outline:none}
+.wd{position:relative;display:inline-block;margin-top:12px;pointer-events:auto}
+.wdb{all:unset;cursor:pointer;font-family:var(--disp);font-size:20px;letter-spacing:.08em;color:var(--cyan);border:1px solid rgba(25,227,255,.6);padding:0 12px;line-height:30px;background:rgba(10,6,18,.7);white-space:nowrap}
+.wdb:hover,.wdb:focus-visible,.wdb[aria-expanded=true]{background:var(--cyan);color:#05161c;outline:none}
+.wdb .car{display:inline-block;transition:transform .15s}.wdb[aria-expanded=true] .car{transform:rotate(180deg)}
+.wdm{position:absolute;left:0;bottom:calc(100% + 6px);margin:0;padding:4px;list-style:none;min-width:100%;background:rgba(10,6,18,.94);border:1px solid rgba(25,227,255,.6);box-shadow:0 0 18px rgba(25,227,255,.25);z-index:5}
+.wdm[hidden]{display:none}
+.wdm li a{display:flex;align-items:center;gap:10px;padding:7px 12px;color:var(--paper);text-decoration:none;font-family:var(--disp);font-size:18px;letter-spacing:.06em;white-space:nowrap}
+.wdm a .ic{display:inline-flex;color:var(--pink)}
+.wdm a:hover,.wdm a:focus-visible{background:rgba(25,227,255,.16);color:var(--cyan);outline:none}
+.wdm a:hover .ic,.wdm a:focus-visible .ic{color:var(--cyan)}
