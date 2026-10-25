@@ -21,7 +21,7 @@ tick();setInterval(tick,1000);
 (function(){
   const lines=['<b>NEO-JOWO OS</b>','mounting /district ........ ok','loading neon ............. ok','tuning rain .............. ok','warming up the club ...... ok','calibrating the bass ..... ok','waking the monsters ...... ok','ようこそ · welcome · добро пожаловать · 환영합니다 · مرحبا'];
   const pre=$('#bootText');let i=0;
-  const hide=()=>{$('#boot').classList.add('gone');openApp('about');if(innerWidth>760)openApp('map')};
+  const hide=()=>{$('#boot').classList.add('gone');if(/[?&]nowin/.test(location.search))return;openApp('about');if(innerWidth>760)openApp('map')};
   let done=false;const fin=()=>{if(done)return;done=true;hide()};
   if(reduce){setTimeout(fin,0);return}
   const next=()=>{if(done)return;if(i<lines.length){pre.innerHTML+=lines[i++]+'\n';setTimeout(next,i===1?350:170)}else{pre.innerHTML+='<small>click anywhere to skip</small>';setTimeout(fin,500)}};
@@ -31,6 +31,8 @@ tick();setInterval(tick,1000);
 
 /* ---------- 3D alley ---------- */
 (function(){
+  /* ?pixel: the hand-drawn pixel street (street.js) takes the canvas instead of the 3D alley */
+  if(/[?&]pixel/.test(location.search)&&window.PixelStreet){PixelStreet.start({cv:$('#alley'),DAYST,setBeach,reduce});return}
   const cv=$('#alley'),c=cv.getContext('2d');
   let W,H,f,mx=0,my=0,smx=0,smy=0,scroll=0;
   const mouse={x:-1,y:-1,on:false};
@@ -38,7 +40,8 @@ tick();setInterval(tick,1000);
   const SIGNS=['酒','夜','龍','電','猫','麺','薬','バー','ラーメン','БАР','ПИВО','주점','한식','ΜΠΑΡ','ΟΥΖΟ','مقهى','بار','बार','ผับ','ยา','PHARMA','NOODLE','SUSHI','CAFÉ','APTEKA','ÇAY','24H','OPEN','Ụlọ Nri','NNỌỌ','ỤLỌ AKWỤKWỌ'];
   const NEON=['#ff2e88','#19e3ff','#ffb347','#7c5cff','#3dff9a'];
   let QS=.8,ema=16.7,slowN=0,fastN=0;
-  function size(){const s=Math.min(devicePixelRatio||1,1.5)*QS;W=cv.width=Math.floor(innerWidth*s);H=cv.height=Math.floor(innerHeight*s);f=H*.95}
+  function size(){
+    const s=Math.min(devicePixelRatio||1,1.5)*QS;W=cv.width=Math.floor(innerWidth*s);H=cv.height=Math.floor(innerHeight*s);f=H*.95}
   size();addEventListener('resize',size);
   addEventListener('pointermove',e=>{mx=e.clientX/innerWidth-.5;my=e.clientY/innerHeight-.5;mouse.on=(e.target===cv);mouse.x=e.clientX*W/innerWidth;mouse.y=e.clientY*H/innerHeight});
   let SALT=0,alleyNo=1,J=null,pan=null,nextTurn=75+Math.random()*50,pulse=0;

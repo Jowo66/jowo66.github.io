@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neo-Jowo OS | style comparison</title>
+<style>
+  :root{--ink:#0a0612;--paper:#f3ead8;--pink:#ff2e88;--cyan:#19e3ff;--amber:#ffb347}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--ink);color:var(--paper);font:14px 'Share Tech Mono',ui-monospace,monospace}
+  header{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding:10px 16px;border-bottom:2px solid var(--pink)}
+  header b{color:var(--pink);letter-spacing:.1em}
+  header button{font:inherit;background:#150b24;color:var(--paper);border:2px solid var(--paper);padding:3px 8px;cursor:pointer}
+  main{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px;height:calc(100% - 52px)}
+  figure{margin:0;display:flex;flex-direction:column;min-height:0}
+  figcaption{padding:4px 2px;color:var(--amber);letter-spacing:.08em}
+  iframe{flex:1;width:100%;border:3px solid var(--paper);background:#000}
+  @media (max-width:900px){main{grid-template-columns:1fr;height:auto}iframe{height:70vh}}
+</style>
+</head>
+<body>
+<header>
+  <b>NEO-JOWO OS // STYLE COMPARISON</b>
+  <button id="sync" type="button" title="Reload both sides so they start together">&#8635; RELOAD BOTH</button>
+</header>
+<main>
+  <figure><figcaption>CURRENT · 3D low-poly alley</figcaption><iframe id="a" title="Current alley"></iframe></figure>
+  <figure><figcaption>PIXEL · hand-drawn street (Cyberpunk Street by Ansimuz, CC0)</figcaption><iframe id="b" title="Pixel street"></iframe></figure>
+</main>
+<script>
+  const a=document.getElementById('a'),b=document.getElementById('b');
+  function load(){a.src='index.html?nowin';b.src='index.html?nowin&pixel'}
+  document.getElementById('sync').onclick=load;
+  load();
+</script>
+</body>
+</html>

@@ -10,6 +10,10 @@
 html,body{margin:0;height:100%;overflow:hidden;background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:15px}
 a{color:var(--cyan)}
 #alley{position:fixed;inset:0;width:100%;height:100%;display:block}
+#alley.pix{image-rendering:pixelated}
+/* pixel street speech bubbles: page elements over the canvas so the text stays sharp */
+.pbub{position:fixed;z-index:5;transform:translate(-50%,-100%);pointer-events:none;padding:1px 6px 2px;background:var(--paper);color:var(--ink);border:2px solid var(--ink);box-shadow:2px 2px 0 #000;font-family:var(--disp);font-size:18px;line-height:1;white-space:nowrap}
+.pbub::after{content:"";position:absolute;left:50%;bottom:-6px;width:6px;height:6px;background:var(--paper);border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:translateX(-50%) rotate(45deg)}
 .vig{position:fixed;inset:0;pointer-events:none;background:
   radial-gradient(ellipse at 50% 45%,transparent 40%,rgba(5,2,10,.75) 100%),
   repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
