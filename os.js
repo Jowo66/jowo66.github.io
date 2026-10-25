@@ -1451,6 +1451,14 @@ window.openApp=openApp;
   if(sh)sh.addEventListener('click',()=>{const t=House.shuffle();if(!House.on)House.toggle();say(t)});
 })();
 
+/* hero fold: HIDE shrinks the intro to its tag line so the street shows; remembered between visits */
+(function(){
+  const h=document.getElementById('hero'),b=document.getElementById('herot');if(!h||!b)return;
+  const set=min=>{h.classList.toggle('min',min);b.innerHTML=min?'SHOW &#9652;':'HIDE &#9662;';b.setAttribute('aria-expanded',min?'false':'true');try{localStorage.setItem('jowo.hero',min?'0':'1')}catch(e){}};
+  let min=false;try{min=localStorage.getItem('jowo.hero')==='0'}catch(e){}
+  set(min);b.addEventListener('click',()=>set(!h.classList.contains('min')));
+})();
+
 /* "Jowo's Worlds" dropdown: links to the other projects */
 (function(){
   const b=document.getElementById('wdb'),m=document.getElementById('wdm');if(!b||!m)return;

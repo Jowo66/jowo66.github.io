@@ -14,3 +14,5 @@ The alley, its people, the nightclub and the music are generated in code. The mo
 ### Pixel street (`?pixel`)
 
 Add `?pixel` to the URL (for example `index.html?pixel`) to replace the 3D alley with a hand-drawn pixel-art street, built on [Cyberpunk Street](https://ansimuz.itch.io/cyberpunk-street-environment) by **Ansimuz** (CC0, public domain). The scene's people are drawn pixel by pixel in `street.js`. `tools/pixel/build-street.js` rebuilds the images in `assets/pixel/` (night palette, props, cars) from the original pack, and `compare.html` shows the 3D alley and the pixel street side by side.
+
+The drawn townspeople, street animals and drones on the pixel street come from [CraftPix](https://craftpix.net)'s free **Cyberpunk Townspeople**, **Street Animals** and **Drones Pack** (free licence, no attribution required, credited anyway). The pixel fonts are **Not Jam Mono Clean** and **Not Jam UI Condensed** from the Not Jam Font Pack (CC0). `tools/pixel/build-sprites.js` packs them into `assets/pixel/town.png`, `animals.png`, `drones.png` and `assets/fonts/`.

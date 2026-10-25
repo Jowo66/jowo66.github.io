@@ -1,5 +1,5 @@
 /* Pixel street (?pixel): Ansimuz's Cyberpunk Street (CC0) as a fixed stage, drawn 1:1 and scaled up with hard edges.
-   People, cars, rain and neon flicker are drawn on it pixel by pixel. The images come from tools/pixel/build-street.js.
+   People (drawn in code or from the CraftPix townspeople), animals, drones, cars, rain and neon flicker are drawn on it pixel by pixel. The images come from tools/pixel/build-street.js and build-sprites.js.
    os.js hands over the #alley canvas, the shared day state and setBeach instead of starting the 3D alley. */
 (function(g){
 'use strict';
@@ -24,7 +24,7 @@ function polyAt(pts,d){
 const polyLen=pts=>pts.slice(1).reduce((s,b,i)=>s+Math.hypot(b[0]-pts[i][0],b[1]-pts[i][1]),0);
 
 /* ---- who walks the street: the same types and lore as the 3D alley ---- */
-const WEIGHTS={umbrella:3,courier:2,kimono:1,drone:1,detective:1,samurai:1,kidrun:1,oldlady:1,robocop:1,netrunner:1,monk:1,sage:1,preacher:1,dealer:1,ripperdoc:1,walker:4};
+const WEIGHTS={umbrella:3,courier:2,kimono:1,detective:1,samurai:1,kidrun:1,oldlady:1,robocop:1,netrunner:1,monk:1,sage:1,preacher:1,dealer:1,ripperdoc:1,walker:4};
 const WLIST=Object.keys(WEIGHTS).flatMap(k=>Array(WEIGHTS[k]).fill(k));
 const FEMOK=new Set(['umbrella','courier','detective','kidrun','sage','ripperdoc','netrunner','preacher','dealer','walker']);
 const SKIN=['#f6cab6','#f1bd82','#c68947','#ad714c','#936041','#5c3a26','#3b2418'];
@@ -109,17 +109,38 @@ function outline(c,W,H){
     if((x>0&&a[i-1])||(x<W-1&&a[i+7])||(y>0&&a[i-W*4+3])||(y<H-1&&a[i+W*4+3])){o[i]=12;o[i+1]=8;o[i+2]=37;o[i+3]=255}}
   c.putImageData(new ImageData(o,W,H),0,0);
 }
-/* the drone: a small hovering box with rotors and a blinking light */
-function renderDrone(H,fr){
-  const w=Math.max(4,Math.round(H*.45)),cv=document.createElement('canvas');cv.width=w+8;cv.height=Math.max(6,Math.round(H*.3))+6;
-  const c=cv.getContext('2d'),R=(x,y,ww,hh,col)=>{c.fillStyle=col;c.fillRect(x,y,ww,hh)},bh=Math.max(2,Math.round(H*.14));
-  R(4,3,w,1,fr%2?'#c4d7bb':'#7d90b2');R(4+Math.floor(w/2),3,1,2,'#7d90b2');R(4+1,5,w-2,bh,'#4a5778');R(4+Math.floor(w/2),5+Math.floor(bh/2),1,1,fr<2?'#ff4d60':'#63ffff');
-  outline(c,cv.width,cv.height);return{cv,ax:4+Math.floor(w/2),ay:cv.height-2};
-}
+/* ---- drawn sprites from the Craftpix free packs, packed by tools/pixel/build-sprites.js ----
+   town.png: Cyberpunk Townspeople, 48px frames, three rows each (walk, idle, special); n is the frame count per row, 0 for none.
+   type and fem pick the alley lore their ID file is written from; ax is the column their feet stand on. They face right. */
+const TOWN=[
+  {n:[6,6,6],type:'dealer',fem:false},           /* smoking */
+  {n:[6,4,4],type:'netrunner',fem:false},        /* hooded */
+  {n:[6,4,6],type:'walker',fem:true},
+  {n:[6,4,4],type:'walker',fem:true},            /* shopping bag */
+  {n:[6,4,0],type:'walker',fem:false,busk:true}, /* plays the guitar when standing */
+  {n:[6,4,6],type:'courier',fem:false},
+  {n:[0,4,6],type:'sage',fem:false,sit:true},
+  {n:[0,4,4],type:'monk',fem:false,sit:true},
+  {n:[6,4,0],type:'walker',fem:true},
+  {n:[4,4,6],type:'walker',fem:false,ax:20},     /* wheelchair */
+  {n:[6,4,0],type:'kidrun',fem:false},
+  {n:[6,4,0],type:'kidrun',fem:true}
+];
+const TFR=48,TREF=35,TAX=16;  /* an adult is 35px tall in the frame, so a townsperson is drawn at tall(y)/35 */
+const TMIN=.55;               /* below this scale they would turn to mush, so they fade into the dark instead */
+/* animals.png: Street Animals at half size, rows walk and idle in 24px bands; fw is the frame width, foot the row their feet are on */
+const ANIM={
+  dog:{r:0,fw:24,n:[6,4],foot:24,say:'woof'},dog2:{r:2,fw:24,n:[6,4],foot:24,say:'woof!'},
+  cat:{r:4,fw:24,n:[6,4],foot:24,say:'mrrp'},cat2:{r:6,fw:24,n:[6,4],foot:24,say:'meow'},
+  rat:{r:8,fw:16,n:[4,4],foot:16,say:'squeak'},rat2:{r:10,fw:16,n:[4,4],foot:16,say:'squeak'},
+  crow:{r:12,fw:16,n:[6,4],foot:16,say:'caw'},pigeon:{r:14,fw:16,n:[6,4],foot:16,say:'coo'}
+};
+/* drones.png: one 48px row per drone, its flying loop; face is the way the art points */
+const DRN=[{n:8,face:1},{n:4,face:-1},{n:4,face:1},{n:4,face:1}];
 
 function start(o){
   const cv=o.cv,c=cv.getContext('2d'),DAYST=o.DAYST,reduce=o.reduce;
-  cv.classList.add('pix');
+  cv.classList.add('pix');document.documentElement.classList.add('pixmode');
   let W,H,S,ox=0,oy=0,mx=0,smx=0;
   function size(){S=Math.max(1,Math.round(innerHeight/SH),Math.ceil(innerWidth/SW));W=cv.width=Math.ceil(innerWidth/S);H=cv.height=Math.ceil(innerHeight/S);c.imageSmoothingEnabled=false}
   size();addEventListener('resize',size);
@@ -150,59 +171,141 @@ function start(o){
   function carBox(car){const s=car.s;return[VP[0]+(car.x-VP[0])*s,VP[1]+(car.y-VP[1])*s,car.w*s,car.h*s]}
 
   /* ---- people ---- */
-  let chars=[],spawnT=0,bubT=3;
-  function makeChar(name){
-    const fem=FEMOK.has(name)&&Math.random()<.5,cy=name!=='drone'&&Math.random()<.15;
+  /* chars holds everyone who can be hovered: kind 'code' people drawn in code, 'town' drawn townspeople, 'bot' drones */
+  let chars=[],spawnT=0,townT=1,botT=rnd(3,8),bubT=3;
+  function makeChar(name,femIn){
+    const fem=femIn===undefined?FEMOK.has(name)&&Math.random()<.5:femIn,cy=name!=='drone'&&Math.random()<.15;
     const def=g.LP?LP.make(name==='walker'?'umbrella':(name==='sage'&&fem?'sageF':name),fem,cy):{bub:['…']};
     const agev=g.Lore?Lore.age(def,name):30,isF=fem||name==='kimono'||name==='oldlady',body=g.Lore?Lore.body(name,isF,agev,def):null;
-    const ch={name,fem,cy,def,agev,body,myth:g.Lore?Lore.mythName():null,look:look(name,fem),sw:body&&body.sw?clamp(body.sw,.75,1.5):1,
-      hk:body&&body.cm?clamp(body.cm/175,.5,1.2):(name==='drone'?.6:1),fly:name==='drone',cache:new Map(),ph:Math.random()*4,id:Math.random()};
+    const ch={kind:'code',name,fem,cy,def,agev,body,myth:g.Lore?Lore.mythName():null,look:look(name,fem),sw:body&&body.sw?clamp(body.sw,.75,1.5):1,
+      hk:body&&body.cm?clamp(body.cm/175,.5,1.2):1,cache:new Map(),ph:Math.random()*4,id:Math.random()};
     if(name==='walker')ch.look.umb=null;
     if(cy&&!ch.look.eye&&!ch.look.visor)ch.look.eye=rndp(NEONS);
     return ch;
   }
+  /* put a walker on a path: d runs from the far end (0) to the near end (len); toward means walking toward the near end */
+  function onPath(ch,pk,lane){const P=PATHS[pk];ch.path=pk;ch.lane=lane;ch.pts=lanePts(P,lane);ch.len=polyLen(ch.pts)}
+  /* where on a path a drawn sprite reaches its smallest readable size */
+  function dMin(ch){for(let d=0;d<ch.len;d+=2)if(tall(polyAt(ch.pts,d)[1])/TREF>=TMIN)return d;return ch.len}
   function spawn(initial){
     const name=rndp(WLIST),ch=makeChar(name);
-    const pk=carsAway()&&!ch.fly&&Math.random()<.35?'X':(Math.random()<.35?'L':'R'),P=PATHS[pk];  /* the near end of the left sidewalk is usually off-screen, so most people take the right one */
-    ch.path=pk;ch.lane=ch.fly?rnd(.2,.8):rnd(.08,.92);ch.pts=lanePts(P,ch.lane);ch.len=polyLen(ch.pts);
+    const pk=carsAway()&&Math.random()<.35?'X':(Math.random()<.35?'L':'R');  /* the near end of the left sidewalk is usually off-screen, so most people take the right one */
+    onPath(ch,pk,rnd(.08,.92));
     ch.toward=pk==='X'?Math.random()<.5:Math.random()<.62;
-    ch.sp=(name==='kidrun'?30:name==='oldlady'?10:name==='courier'?26:name==='drone'?22:16)+rnd(-3,4);
+    ch.sp=(name==='kidrun'?30:name==='oldlady'?10:name==='courier'?26:16)+rnd(-3,4);
     ch.d=initial?rnd(.05,.85)*ch.len:(ch.toward?0:ch.len);
     if(pk!=='X'&&ch.toward&&!initial)ch.d=rnd(0,.15)*ch.len;
     chars.push(ch);return ch;
   }
+  /* drawn townspeople keep to the near part of the street: they come out of the dark or in from the edge, and fade into the dark going away */
+  function makeTown(i){const t=TOWN[i],ch=makeChar(t.type,t.fem);ch.kind='town';ch.town=i;ch.row=0;ch.face=1;ch.alpha=1;return ch}
+  function spawnTown(initial){
+    const walkers=TOWN.map((t,i)=>i).filter(i=>TOWN[i].n[0]&&!chars.some(q=>q.kind==='town'&&q.town===i));if(!walkers.length)return;
+    const ch=makeTown(rndp(walkers)),pk=carsAway()&&Math.random()<.35?'X':(Math.random()<.1?'L':'R');
+    onPath(ch,pk,pk==='X'?rnd(.2,.8):rnd(.3,.95));
+    ch.sp=(TOWN[ch.town].type==='kidrun'?24:15)+rnd(-2,3);
+    const lo=pk==='X'?0:dMin(ch);ch.toward=Math.random()<.5;
+    ch.d=initial?rnd(lo,ch.len):(ch.toward?lo:ch.len);
+    chars.push(ch);
+  }
   /* a few people stand around: outside the bar, by the pizza place, at the toy shop door */
   const SPOTS=[[352,185,'f'],[64,207,'f'],[548,214,'f'],[312,183,'r']];
   function spawnIdle(sp){const ch=makeChar(rndp(['walker','walker','detective','netrunner','dealer','kimono','umbrella','ripperdoc']));ch.idle=true;ch.x=sp[0];ch.y=sp[1];ch.dir=sp[2];ch.life=rnd(25,60);chars.push(ch)}
-  for(let i=0;i<9;i++)spawn(true);
-  SPOTS.slice(0,3).forEach(spawnIdle);
+  /* and the drawn ones have their own corners: a busker, someone sitting against the wall, people waiting about */
+  /* most screens show x 100-580 of the street, so the corners sit inside that */
+  const TSPOTS=[[470,207,-1,'busk'],[418,200,1,'sit'],[536,214,-1,'any'],[566,210,-1,'any']];
+  function spawnTownIdle(sp){
+    const pool=TOWN.map((t,i)=>i).filter(i=>(sp[3]==='busk'?TOWN[i].busk:sp[3]==='sit'?TOWN[i].sit:TOWN[i].n[0]&&!TOWN[i].busk&&TOWN[i].ax===undefined)&&!chars.some(q=>q.kind==='town'&&q.town===i));
+    if(!pool.length)return;const ch=makeTown(rndp(pool));ch.idle=true;ch.spot=sp;ch.x=sp[0];ch.y=sp[1];ch.face=sp[2];ch.row=1;ch.life=rnd(30,70);ch.spT=rnd(3,8);chars.push(ch);
+  }
+  /* drones cross above the street at the depth of some point on the road, and can be hovered like anyone else */
+  function spawnBot(){
+    const b=Math.floor(Math.random()*DRN.length),ch=makeChar('drone',false);ch.kind='bot';ch.bot=b;ch.idle=false;
+    ch.y=rnd(186,214);const s=tall(ch.y)/TREF;ch.alt=rnd(70,150)-(s-.6)*40;ch.vx=(Math.random()<.5?1:-1)*rnd(16,30)*s;ch.x=ch.vx>0?-40:SW+40;ch.face=Math.sign(ch.vx);
+    chars.push(ch);
+  }
+  for(let i=0;i<7;i++)spawn(true);
+  for(let i=0;i<3;i++)spawnTown(true);
+  SPOTS.slice(0,2).forEach(spawnIdle);
+  TSPOTS.slice(0,2).forEach(spawnTownIdle);
 
   function updChars(dt){
-    spawnT-=dt;
-    if(spawnT<=0&&chars.filter(q=>!q.idle).length<12){spawn(false);spawnT=rnd(1.2,3.5)}
+    const n=k=>chars.filter(q=>q.kind===k&&!q.idle).length;
+    spawnT-=dt;if(spawnT<=0&&n('code')<9){spawn(false);spawnT=rnd(1.5,4)}
+    townT-=dt;if(townT<=0&&n('town')<4){spawnTown(false);townT=rnd(2.5,6)}
+    botT-=dt;if(botT<=0&&n('bot')<2){spawnBot();botT=rnd(8,20)}
     for(const ch of chars){
-      ch.ph+=dt*(ch.idle?0:ch.sp/7);
+      if(ch.kind==='bot'){ch.ph+=dt*8;ch.x+=ch.vx*dt;ch.alt+=Math.sin(ch.ph*.4)*dt*2;if(ch.x<-60||ch.x>SW+60)ch.dead=true;continue}
+      if(ch.kind==='town'&&ch.idle){ch.ph+=dt*6;ch.life-=dt;ch.spT-=dt;
+        /* now and then an idle townsperson does their special move once (smokes, waves, flexes) */
+        const t=TOWN[ch.town];if(ch.row===1&&ch.spT<=0&&t.n[2]){ch.row=2;ch.ph=0}else if(ch.row===2&&ch.ph>=t.n[2]){ch.row=1;ch.ph=0;ch.spT=rnd(4,10)}
+        if(ch.life<=0)ch.dead=true;continue}
+      ch.ph+=dt*(ch.idle?0:ch.kind==='town'?ch.sp/2.4:ch.sp/7);
       if(ch.idle){ch.life-=dt;if(ch.life<=0)ch.dead=true;continue}
       const k=Math.max(.15,tall(ch.y||200)/50);
       ch.d+=(ch.toward?1:-1)*ch.sp*dt*k;
       const at=polyAt(ch.pts,clamp(ch.d,0,ch.len));ch.x=at[0];ch.y=at[1];
       ch.dir=ch.path==='X'?((at[2]>0)===ch.toward?'r':'l'):(ch.toward?'f':'b');
-      if(ch.d>ch.len||ch.d<0||tall(ch.y)<4)ch.dead=true;
+      if(ch.kind==='town'){ch.face=(at[2]>0)===ch.toward?1:-1;
+        const s=tall(ch.y)/TREF;ch.alpha=ch.path==='X'?1:clamp((s-TMIN)/.08,0,1);
+        if(ch.d>ch.len||ch.d<0||(ch.path!=='X'&&!ch.toward&&s<TMIN))ch.dead=true}
+      else if(ch.d>ch.len||ch.d<0||tall(ch.y)<4)ch.dead=true;
     }
-    if(chars.filter(q=>q.idle).length<3&&Math.random()<dt*.2){const free=SPOTS.filter(s=>!chars.some(q=>q.idle&&q.x===s[0]));if(free.length)spawnIdle(rndp(free))}
+    if(chars.filter(q=>q.idle&&q.kind==='code').length<2&&Math.random()<dt*.2){const free=SPOTS.filter(s=>!chars.some(q=>q.idle&&q.x===s[0]));if(free.length)spawnIdle(rndp(free))}
+    if(chars.filter(q=>q.idle&&q.kind==='town').length<3&&Math.random()<dt*.15){const free=TSPOTS.filter(s=>!chars.some(q=>q.spot===s));if(free.length)spawnTownIdle(rndp(free))}
     for(const ch of chars)if(ch.dead){if(ch.bubEl)ch.bubEl.remove();if(termCh===ch&&!pinned)closeTerm()}
     chars=chars.filter(q=>!q.dead);
     /* someone says something every few seconds */
     bubT-=dt;
-    if(bubT<=0){bubT=rnd(2.5,6);const vis=chars.filter(q=>tall(q.y)>=16&&!q.bubEl&&q.def.bub);if(vis.length){const ch=rndp(vis);say(ch,rndp(ch.def.bub),2.6)}}
+    if(bubT<=0){bubT=rnd(2.5,6);const vis=chars.filter(q=>tall(q.y)>=16&&!q.bubEl&&q.def.bub&&(q.alpha===undefined||q.alpha>.9));if(vis.length){const ch=rndp(vis);say(ch,rndp(ch.def.bub),2.6)}}
     for(const ch of chars)if(ch.bubEl){ch.bubL-=dt;if(ch.bubL<=0){ch.bubEl.remove();ch.bubEl=null}}
   }
   function sprite(ch){
     const h=Math.max(4,Math.round(tall(ch.y)*ch.hk)),fr=ch.idle?0:Math.floor(ch.ph)%4,key=h+'|'+ch.dir+'|'+fr;
     let sp=ch.cache.get(key);
-    if(!sp){sp=ch.fly?renderDrone(Math.round(tall(ch.y)),fr):render(ch,h,ch.dir,fr);if(ch.cache.size>48)ch.cache.clear();ch.cache.set(key,sp)}
+    if(!sp){sp=render(ch,h,ch.dir,fr);if(ch.cache.size>48)ch.cache.clear();ch.cache.set(key,sp)}
     return sp;
   }
+  /* one frame of a sheet, scaled with hard edges and mirrored when facing the other way; feet (or centre) at x,y */
+  function blit(im,sx,sy,sw,sh,ax,ay,x,y,s,face){
+    x=Math.round(x);const dw=Math.round(sw*s),dh=Math.round(sh*s),dx=Math.round(x-ax*s),dy=Math.round(y-ay*s);
+    if(face<0){c.save();c.translate(x*2,0);c.scale(-1,1);c.drawImage(im,sx,sy,sw,sh,dx,dy,dw,dh);c.restore()}
+    else c.drawImage(im,sx,sy,sw,sh,dx,dy,dw,dh);
+  }
+
+  /* ---- animals: dogs and cats on the pavement, rats at night, pigeons by day, crows over the roofs ---- */
+  let pets=[],petT=rnd(2,6);
+  function spawnPet(kind,initial){
+    const p={kind,a:ANIM[kind],ph:Math.random()*6,row:0,alpha:1,face:1};
+    if(kind==='crow'){p.fly=true;p.y=rnd(30,120);p.vx=(Math.random()<.5?1:-1)*rnd(30,50);p.x=p.vx>0?-20:SW+20;p.face=Math.sign(p.vx);p.s=1}
+    else if(kind==='pigeon'){p.home=[rnd(480,560),rnd(209,216)];p.x=p.home[0]+rnd(-10,10);p.y=p.home[1];p.row=1;p.t=rnd(1,3);p.life=rnd(40,80);p.face=Math.random()<.5?1:-1}
+    else{onPath(p,Math.random()<.75?'R':'L',kind.startsWith('rat')?rnd(0,.08):rnd(.5,.95));const lo=dMin(p);p.toward=Math.random()<.5;
+      p.d=initial?rnd(lo,p.len):(p.toward?lo:p.len);p.sp=kind.startsWith('rat')?rnd(40,55):kind.startsWith('cat')?rnd(14,20):rnd(18,26);p.t=rnd(3,8)}
+    pets.push(p);
+  }
+  function updPets(dt){
+    const night=dayK<.5;petT-=dt;
+    if(petT<=0){petT=rnd(4,12);
+      const pool=['dog','dog2','cat','cat2','crow',night?'rat':'pigeon',night?'rat2':'pigeon'].filter(k=>pets.filter(p=>p.kind===k).length<(k==='pigeon'?4:1));
+      if(pool.length)spawnPet(rndp(pool))}
+    for(const p of pets){
+      p.ph+=dt*(p.row===1?5:8);
+      if(p.fly){p.x+=p.vx*dt;if(p.x<-30||p.x>SW+30)p.dead=true;continue}
+      if(p.kind==='pigeon'){
+        /* pecking about: stand, take a few steps, stand again; they leave when the light goes */
+        p.t-=dt;p.life-=dt;if(p.t<=0){p.row=p.row?0:1;p.t=p.row?rnd(1.5,4):rnd(.4,1);if(!p.row)p.face=p.x>p.home[0]+8?-1:p.x<p.home[0]-8?1:(Math.random()<.5?1:-1)}
+        if(!p.row)p.x+=p.face*10*dt;if(p.life<=0||night)p.dead=true;continue}
+      /* dogs and cats stop to sniff now and then; rats never stop */
+      p.t-=dt;if(p.t<=0&&!p.kind.startsWith('rat')){p.row=p.row?0:1;p.t=p.row?rnd(1.5,3):rnd(4,9)}
+      if(!p.row){const k=Math.max(.15,tall(p.y||200)/50);p.d+=(p.toward?1:-1)*p.sp*dt*k}
+      const at=polyAt(p.pts,clamp(p.d,0,p.len));p.x=at[0];p.y=at[1];if(!p.row)p.face=(at[2]>0)===p.toward?1:-1;
+      const s=tall(p.y)/TREF;p.alpha=clamp((s-TMIN)/.08,0,1);
+      if(p.d>p.len||p.d<0||(!p.toward&&s<TMIN)||(p.kind.startsWith('rat')&&!night))p.dead=true;
+    }
+    pets=pets.filter(p=>{if(p.dead&&p.bubEl)p.bubEl.remove();return!p.dead});
+    for(const p of pets)if(p.bubEl){p.bubL-=dt;if(p.bubL<=0){p.bubEl.remove();p.bubEl=null}}
+  }
+  for(let i=0;i<2;i++)spawnPet(rndp(['dog','cat','cat2','dog2']),true);
 
   /* ---- speech bubbles are page elements, so their text stays sharp and the language filter can translate them ---- */
   function say(ch,txt,dur){const el=document.createElement('div');el.className='pbub';el.textContent=txt;document.body.appendChild(el);ch.bubEl=el;ch.bubL=dur}
@@ -236,9 +339,11 @@ function start(o){
     else placeTerm();
   }
   const hitAt=(px,py)=>chars.filter(q=>q.bb&&px>=q.bb[0]&&px<=q.bb[2]&&py>=q.bb[1]&&py<=q.bb[3]).sort((a,b)=>b.y-a.y)[0];
-  cv.addEventListener('pointerdown',e=>{const hit=hitAt(e.clientX*W/innerWidth,e.clientY*H/innerHeight);if(hit){if(termCh===hit){pinned=true;term.classList.add('pin')}else showTerm(hit,true)}else closeTerm()});
+  /* animals have no files: clicking one just gets a noise out of it */
+  const petAt=(px,py)=>pets.find(p=>p.bb&&p.alpha>.5&&px>=p.bb[0]&&px<=p.bb[2]&&py>=p.bb[1]&&py<=p.bb[3]);
+  cv.addEventListener('pointerdown',e=>{const px=e.clientX*W/innerWidth,py=e.clientY*H/innerHeight,hit=hitAt(px,py),pet=hit?null:petAt(px,py);if(pet&&!pet.bubEl){say(pet,pet.a.say,1.6);return}if(hit){if(termCh===hit){pinned=true;term.classList.add('pin')}else showTerm(hit,true)}else closeTerm()});
   addEventListener('pointermove',e=>{
-    if(e.target!==cv)return;const hit=hitAt(e.clientX*W/innerWidth,e.clientY*H/innerHeight);cv.style.cursor=hit?'pointer':'default';
+    if(e.target!==cv)return;const px=e.clientX*W/innerWidth,py=e.clientY*H/innerHeight,hit=hitAt(px,py);cv.style.cursor=hit||petAt(px,py)?'pointer':'default';
     if(pinned)return;if(hit){if(termCh!==hit)showTerm(hit,false)}else if(termCh)closeTerm();
   });
   document.addEventListener('pointerdown',e=>{if(term.hidden||term.contains(e.target)||e.target===cv)return;closeTerm()},true);
@@ -280,10 +385,25 @@ function start(o){
     for(const car of CARS){if(car.st==='gone')continue;const b=carBox(car);items.push({y:VP[1]+(car.y+car.base-VP[1])*car.s,draw:()=>{
       const sx=Math.round(b[0])+ox,sy=Math.round(b[1])+oy,sw=Math.max(1,Math.round(b[2])),sh=Math.max(1,Math.round(b[3]));
       const a=img('car-'+car.n),an=img('car-'+car.n+'-n');if(dk>0&&a.naturalWidth)c.drawImage(a,sx,sy,sw,sh);if(n>0&&an.naturalWidth){c.globalAlpha=n;c.drawImage(an,sx,sy,sw,sh);c.globalAlpha=1}}})}
-    for(const ch of chars){const sp=sprite(ch),lift=ch.fly?Math.round(tall(ch.y)*.95):0;items.push({y:ch.y,draw:()=>{
-      const x=Math.round(ch.x)+ox-sp.ax,y=Math.round(ch.y)+oy-sp.ay-lift;c.drawImage(sp.cv,x,y);
+    const bubAt=(q,x,y)=>{if(q.bubEl){q.bubEl.style.left=(x*innerWidth/W)+'px';q.bubEl.style.top=((y-3)*innerHeight/H)+'px'}};
+    const town=img('town'),drones=img('drones'),anim=img('animals');
+    for(const ch of chars){
+      if(ch.kind==='bot'){if(!drones.naturalWidth)continue;items.push({y:ch.y,draw:()=>{
+        const s=Math.max(1,Math.round(tall(ch.y)))/TREF,b=DRN[ch.bot],x=ch.x+ox,y=ch.alt+oy;
+        blit(drones,(Math.floor(ch.ph)%b.n)*TFR,ch.bot*TFR,TFR,TFR,24,24,x,y,s,ch.face*b.face);
+        ch.bb=[x-18*s,y-14*s,x+18*s,y+16*s];bubAt(ch,x,y-14*s)}});continue}
+      if(ch.kind==='town'){if(!town.naturalWidth)continue;items.push({y:ch.y,draw:()=>{
+        const t=TOWN[ch.town],s=Math.max(1,Math.round(tall(ch.y)))/TREF,x=ch.x+ox,y=ch.y+oy,n=t.n[ch.row]||1;
+        c.globalAlpha=ch.alpha;blit(town,(Math.floor(ch.ph)%n)*TFR,(ch.town*3+ch.row)*TFR,TFR,TFR,t.ax||TAX,TFR,x,y,s,ch.face);c.globalAlpha=1;
+        const top=t.sit?24:t.type==='kidrun'?27:36;ch.bb=ch.alpha>.5?[x-10*s,y-top*s,x+10*s,y]:null;bubAt(ch,x,y-(top+1)*s)}});continue}
+      const sp=sprite(ch);items.push({y:ch.y,draw:()=>{
+      const x=Math.round(ch.x)+ox-sp.ax,y=Math.round(ch.y)+oy-sp.ay;c.drawImage(sp.cv,x,y);
       const hh=Math.round(tall(ch.y)*ch.hk);ch.bb=[x+sp.ax-hh*.3,y+sp.ay-hh-2,x+sp.ax+hh*.3,y+sp.ay];
-      if(ch.bubEl){ch.bubEl.style.left=((x+sp.ax)*innerWidth/W)+'px';ch.bubEl.style.top=((y+sp.ay-hh-(ch.look.umb?hh*.35:0)-3)*innerHeight/H)+'px'}}})}
+      bubAt(ch,x+sp.ax,y+sp.ay-hh-(ch.look.umb?hh*.35:0))}})}
+    for(const p of pets){if(!anim.naturalWidth)break;items.push({y:p.fly?0:p.y,draw:()=>{
+      const a=p.a,s=p.fly?1:Math.max(1,Math.round(tall(p.y)))/TREF,x=p.x+ox,y=(p.fly?p.y+a.foot:p.y)+oy,n=a.n[p.row];
+      c.globalAlpha=p.alpha;blit(anim,(Math.floor(p.ph)%n)*a.fw,(a.r+p.row)*24,a.fw,a.foot,a.fw/2,a.foot,x,y,s,p.face);c.globalAlpha=1;
+      p.bb=[x-a.fw/2*s,y-a.foot*s*.8,x+a.fw/2*s,y];bubAt(p,x,y-a.foot*s*.8)}})}
     items.push({y:223.5,draw:()=>{const p=img('props'),pn=img('props-n');if(dk>0&&p.naturalWidth)c.drawImage(p,ox,oy);if(n>0&&pn.naturalWidth){c.globalAlpha=n;c.drawImage(pn,ox,oy);c.globalAlpha=1}}});
     items.sort((a,b)=>a.y-b.y).forEach(it=>it.draw());
     /* rain */
@@ -298,12 +418,12 @@ function start(o){
   const mbtn=document.getElementById('mon');
   if(mbtn){mbtn.disabled=true;mbtn.title='The monster has not been drawn for the pixel street yet'}
 
-  if(/[?&]debug/.test(location.search))g.__street={chars:()=>chars,cars:()=>CARS,day:v=>{dayOn=v},say:(i,t)=>say(chars[i],t,3)};
+  if(/[?&]debug/.test(location.search))g.__street={chars:()=>chars,pets:()=>pets,cars:()=>CARS,day:v=>{dayOn=v},say:(i,t)=>say(chars[i],t,3)};
   let last=0;
   function loop(t){
     const dt=Math.min((t-last)/1000||0,.05);last=t;
     try{dayK=clamp(dayK+(dayOn?1:-1)*dt/1.3,0,1);DAYST.on=dayOn;DAYST.k=dayK;
-      updCars(dt);updChars(dt);updFlick(dt);if(dayK<.5)updRain(dt);frame();updTerm(dt)}catch(err){console.error('street frame error',err)}
+      updCars(dt);updChars(dt);updPets(dt);updFlick(dt);if(dayK<.5)updRain(dt);frame();updTerm(dt)}catch(err){console.error('street frame error',err)}
     requestAnimationFrame(loop);
   }
   if(reduce){const once=()=>{updChars(0);frame()};addEventListener('load',once);addEventListener('resize',once);setTimeout(once,300)}else requestAnimationFrame(loop);
