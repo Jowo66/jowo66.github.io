@@ -10,3 +10,7 @@ Run them locally with `npm install`, `npx playwright install chromium`, then `np
 ## Assets
 
 The alley, its people, the nightclub and the music are generated in code. The monster event and the district map's buildings use free 3D models by [Quaternius](https://quaternius.com) (CC0, public domain): **Ultimate Monsters**, **Cute Animated Monsters** and the **Ultimate Textured Building Pack**. They are pre-rendered offline with three.js into the sprite sheets in `assets/`, which are listed in `sprites.js`.
+
+### Pixel street (`?pixel`)
+
+Add `?pixel` to the URL (for example `index.html?pixel`) to replace the 3D alley with a hand-drawn pixel-art street, built on [Cyberpunk Street](https://ansimuz.itch.io/cyberpunk-street-environment) by **Ansimuz** (CC0, public domain). The scene's people are drawn pixel by pixel in `street.js`. `tools/pixel/build-street.js` rebuilds the images in `assets/pixel/` (night palette, props, cars) from the original pack, and `compare.html` shows the 3D alley and the pixel street side by side.
