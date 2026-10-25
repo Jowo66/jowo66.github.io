@@ -1,11 +1,12 @@
 # Neo-Jowo OS: design process, tools, techniques and next projects
 
-Author: Ejovwo Obahor (GitHub: Jowo66) · Site: https://jowo66.github.io · Written 2026-10-10
+Author: Ejovwo Obahor (GitHub: Jowo66) · Site: https://jowo66.github.io · Written 2026-10-10, updated 2026-10-24
 
 This report combines two sources:
 
 1. **`README.md`** from the repository. It is short: a test-status badge and instructions for the Playwright test suite that runs on GitHub Actions.
 2. **The build conversation** between Ejovwo and Claude (Claude Code), from 5 to 7 October 2026. It covered about 65 commits and roughly 5,500 lines of hand-written JavaScript, HTML and CSS.
+3. **Later sessions** on 18 October (links to Jowo's other projects) and 24 October (3D models for the monster event and the district map). See Phase 7.
 
 The README only covers testing, so the report treats testing as one section among several.
 
@@ -13,7 +14,7 @@ The README only covers testing, so the report treats testing as one section amon
 
 ## 1. What was built
 
-A static personal site on GitHub Pages with no framework, no build step and no image assets. Everything is drawn in code.
+A static personal site on GitHub Pages with no framework and no build step. The alley, its people, the nightclub and the music are generated in code. Since 24 October the monster event and the district map's buildings use free CC0 3D models by Quaternius, pre-rendered offline into sprite images (see section 4.9).
 
 | Page | Purpose |
 |---|---|
@@ -31,18 +32,19 @@ Supporting modules:
 | `house.js` | Procedural music: 9 genres synthesised with Web Audio, plus a scheduler. |
 | `spotify.js` | Spotify login (PKCE) and Web Playback SDK integration. |
 | `lang.js` | English / French / Spanish hover translator. |
+| `sprites.js`, `assets/` | Sprite sheets pre-rendered from the Quaternius 3D packs (about 4.1 MB, loaded on demand) and the list of their frame sizes and anchor points. |
 | `tests/site.spec.js`, `.github/workflows/tests.yml` | Playwright tests and CI (the README's subject). |
 
 ---
 
 ## 2. Design iteration process
 
-The work followed a loop of **request → build → headless check → ship → feedback**. Each user message was a small design brief. Claude implemented it, ran it in a headless browser, pushed it to `main`, and the user reviewed it live and sent the next brief. The history falls into six phases.
+The work followed a loop of **request → build → headless check → ship → feedback**. Each user message was a small design brief. Claude implemented it, ran it in a headless browser, pushed it to `main`, and the user reviewed it live and sent the next brief. The history falls into seven phases.
 
 ### Phase 1: Concept and 3D alley (5–6 Oct)
 - Started as "Neo-Edo": a cabaret bar, a sumo dojo and a homepage. The homepage was redesigned into a **3D neon alley** with manga windows, an isometric district map, a holo-glass overlay, rain and a system monitor.
 - A shared **low-poly character engine** replaced one-off drawings. Characters gained jointed arms and held props (umbrellas, staffs, bags, signs).
-- Decision: keep everything procedural, so there are no assets to host and every character can vary.
+- Decision: keep everything procedural, so there are no assets to host and every character can vary. (Revisited on 24 October for the monsters and map buildings; see Phase 7.)
 
 ### Phase 2: Living-world behaviour (7 Oct)
 - Inhabitants got behaviours: shopping, arguing (three exchanges, then an angry hop), couples, a detective who questions people, and a sage who speaks parables.
@@ -53,8 +55,8 @@ The work followed a loop of **request → build → headless check → ship → 
 
 ### Phase 3: Sky, weather, monsters and the map
 - Day/night toggle, skyline, lightning and a hologram logo that changes per alley.
-- **Monster attacks** (kaiju, mecha, kraken, winged): everyone runs into the nearest shop and re-emerges afterward. A summon button has a 30-second cooldown.
-- The same monsters were added to the district map, with crumbling, chunk-ripped and burning buildings.
+- **Monster attacks** (originally four hand-drawn monsters: kaiju, mecha, kraken and winged): everyone runs into the nearest shop and re-emerges afterward. A summon button has a 30-second cooldown.
+- The same monsters were added to the district map, with crumbling, chunk-ripped and burning buildings. Both were later replaced by 3D models (Phase 7).
 
 ### Phase 4: The nightclub and the music engine
 - Replaced the cabaret and dojo with **Casa Sofia**: a hologram DJ, a mosh pit and laser floor, and a synthesised house track.
@@ -85,6 +87,14 @@ The work followed a loop of **request → build → headless check → ship → 
 - **Performance pass**: measured first, then optimised (see section 4.6).
 - **Developer experience**: VS Code auto-indent settings (Prettier, EditorConfig, Black for Python).
 
+### Phase 7: Links out and 3D models (18 and 24 Oct)
+- **18 Oct:** a **Jowo's Worlds** dropdown and Contact links to Ejovwo's other projects: Mini Gym, Reverb and Weather Report.
+- **24 Oct:** the monster event and the district map moved from hand-drawn shapes to Quaternius's free CC0 3D packs:
+  - **Alley skyline:** one of 16 large *Ultimate Monsters* walks in, stops beside the main tower and punches it down (Walk and Punch animations), then walks off through the rubble.
+  - **District map:** a pack of *Cute Animated Monsters* (17 walkers, 4 flyers) overruns the streets, biting or headbutting buildings, which burn and later rebuild. The leader is the small version of the giant on the skyline, taken from the Cute pack when it has one or a close cousin (for example MushroomKing leads a Mushroom), and from the *Ultimate Monsters* blob and flying sets otherwise. A banner names the pack, for example "YETI PACK ATTACK".
+  - **Map buildings:** 15 buildings became models from the *Ultimate Textured Building Pack*, each with a day sprite and a night sprite whose windows glow in the building's neon colour. The under-construction lots stay hand-drawn.
+- Design issues found in screenshots and fixed: the textured buildings were taller than the old boxes and hid the middle road, so front-row buildings were swapped for low-rise models. The small monsters got lost in the busy streets, so they were enlarged and given a pulsing red ring and a faint see-through pass behind buildings. The Cute models use an unlit material and rendered dull, so they were re-rendered with a lit material.
+
 ### Process observations
 - Small, specific briefs worked well. Each could be shipped in one commit and judged on the live site.
 - User feedback caught what automated checks could not: sound quality, "feels slow", and "all genres sound alike".
@@ -97,7 +107,7 @@ The work followed a loop of **request → build → headless check → ship → 
 | Category | Tool | Use |
 |---|---|---|
 | Hosting | **GitHub Pages**, **Git/GitHub** | Static hosting from `main`; every change shipped as a commit |
-| AI pair-programmer | **Claude Code** (Claude Sonnet 5.5) | Implementation, debugging, profiling, writing tests |
+| AI pair-programmer | **Claude Code** (Claude Sonnet 5.5; Claude Opus 5.5 for the 24 Oct 3D work) | Implementation, debugging, profiling, writing tests, rendering the sprites |
 | Editor | **VS Code** + Prettier, EditorConfig, Black | Auto-indent and formatting (`.vscode/`, `.prettierrc`, `.editorconfig`) |
 | Languages | HTML, CSS, JavaScript (no frameworks), a little Python tooling | The whole site |
 | Browser APIs | **Canvas 2D**, **Web Audio API**, **Web Workers**, `localStorage`, cookies, `fetch`, `caretRangeFromPoint` | Rendering, music, scheduling, persistence, hover translation |
@@ -106,6 +116,8 @@ The work followed a loop of **request → build → headless check → ship → 
 | Music | **Spotify Web Playback SDK** + Web API (PKCE auth) | Optional Premium playback in the club |
 | Translation | Built-in dictionary + **MyMemory** free API fallback | Hover translation |
 | Fonts | Google Fonts (VT323, Share Tech Mono, Zen Kaku Gothic New) | Cyberpunk and manga typography |
+| 3D models | **Quaternius** packs (CC0): Ultimate Monsters, Cute Animated Monsters, Ultimate Textured Building Pack | Monsters for the skyline and the map, and the map's buildings |
+| Asset pipeline | **three.js** (GLTFLoader, OBJLoader) in headless **Chromium** driven by **Playwright** | Rendering the models into sprite sheets offline; three.js is not loaded by the site |
 
 Constraint kept throughout: no paid services.
 
@@ -164,6 +176,14 @@ Caveat: the numbers come from software rendering in a headless browser. The rank
 - Avoid paid services.
 - Hard refresh (Ctrl+Shift+R) after each push, because of caching.
 
+### 4.9 Pre-rendering 3D models into sprites (24 Oct)
+The site draws on a 2D canvas, so the 3D models are rendered ahead of time instead of loading a 3D engine in the browser:
+- A small local page loads each model with **three.js** and renders it in headless Chromium, which a Node script drives with Playwright.
+- **Animated monsters** (rigged glTF): each frame of the chosen clips (Walk/Punch, Walk/Bite or Fly/Headbutt) is rendered with an orthographic camera. The script finds the smallest box that holds every frame, crops to it, and packs the frames into one WebP sheet. It records the foot position in a cell so the canvas can stand the sprite on the ground.
+- **Views:** the skyline giants are rendered side-on in a three-quarter pose and mirrored when walking left. The map monsters are rendered in two isometric directions (+x and −y) that match the map's 2:1 projection; mirroring gives the other two.
+- **Buildings** (textured OBJ): the camera uses the map's own projection (30° pitch, 45° yaw, 39 px per tile), rendered at 4× and scaled down. Each model is fitted to its footprint on the map. The night version swaps in a darkened copy of the 4×4 palette texture and makes the glass cell emissive in the building's glow colour. The renderer records the anchor point and height, and the site uses that height for hover hit areas, signs and damage.
+- **On the page:** sheets load the first time they are needed (the next giant is preloaded). A damaged building sinks into a clip of its shortened box. Day and night sprites are cross-faded with the day/night toggle.
+
 ---
 
 ## 5. Known limits and open items
@@ -174,6 +194,8 @@ Caveat: the numbers come from software rendering in a headless browser. The rank
 - Still waiting on the user for school, program and year, extra projects, email and LinkedIn, and a photo.
 - The planned Cloudflare Workers + KV "playlist code" feature has not been built.
 - The CI test suite is small.
+- The sprite-rendering scripts were run from a scratch folder and are not in the repository yet, so changing a model means recreating them.
+- The sprites add about 4.1 MB; each sheet loads only when a monster or the map needs it.
 
 ---
 

@@ -104,21 +104,23 @@ footer{margin:72px 0 44px;color:var(--mut);font-size:14px}
   <section id="skills" class="rv">
     <h2>Skills</h2>
     <ul class="chips">
-      <li>JavaScript</li><li>HTML</li><li>CSS</li><li>Canvas 2D graphics</li><li>Web Audio API</li><li>Git and GitHub</li><li>Python</li><li>Linux</li>
+      <li>JavaScript</li><li>HTML</li><li>CSS</li><li>Canvas 2D graphics</li><li>Web Audio API</li><li>three.js and glTF</li><li>Playwright testing</li><li>Git and GitHub</li><li>Python</li><li>Linux</li>
     </ul>
-    <p class="note">JavaScript, HTML, CSS, Canvas and Web Audio are demonstrated in the project below. Python, Linux and course work to be confirmed.</p>
+    <p class="note">JavaScript, HTML, CSS, Canvas, Web Audio, three.js and Playwright are demonstrated in the project below. Python, Linux and course work to be confirmed.</p>
   </section>
 
   <section id="projects" class="rv">
     <h2>Projects</h2>
     <article class="card">
       <h3>Neo-Jowo OS (this portfolio, in its playful form)</h3>
-      <p class="meta">JavaScript, Canvas 2D, Web Audio API. No frameworks, no build step, no external assets. Hosted on GitHub Pages.</p>
+      <p class="meta">JavaScript, Canvas 2D, Web Audio API, with three.js for an offline asset pipeline. No frameworks or build step on the site itself. 3D models from Quaternius's free CC0 packs. Hosted on GitHub Pages.</p>
       <ul>
         <li>A custom flat-shaded low-poly 3D renderer on a 2D canvas: boxes with taper, jointed limbs, painter's-algorithm sorting, fog and lighting.</li>
-        <li>A generative house-music synthesiser using the Web Audio API: seeded tracks across four styles (club, soul, latin and afro house), with drums, bass and chord voices built from oscillators and filtered noise.</li>
-        <li>Agent simulations: alley inhabitants with small state machines (walking, arguing, shopping, fleeing), a nightclub crowd with a moshpit and a dance-battle mode, and an isometric district map.</li>
-        <li>A window manager, a persistent playlist stored locally, and a day and night mode.</li>
+        <li>A generative house-music synthesiser using the Web Audio API: seeded tracks across nine genres (house, soul house, Latin house, Afro house, city pop, grime, amapiano, gqom and Brazilian phonk), with drums, bass and chord voices built from oscillators, filtered noise and convolution reverb.</li>
+        <li>Agent simulations: alley inhabitants with small state machines (walking, arguing, shopping, fleeing), a nightclub crowd with a moshpit and a dance-battle mode, and an isometric district map. In the monster event, a giant monster knocks down the skyline tower while a pack of small monsters rampages across the map, setting buildings on fire before the city rebuilds.</li>
+        <li>A 3D asset pipeline: rigged, animated glTF and textured OBJ models from Quaternius's Ultimate Monsters, Cute Animated Monsters and Ultimate Textured Building packs, rendered with three.js in headless Chromium into sprite sheets (side-on and isometric views) and day and night building sprites that the canvas animates.</li>
+        <li>A window manager, a persistent playlist stored locally, a day and night mode, optional Spotify playback (OAuth PKCE and the Web Playback SDK) and an English, French and Spanish hover translator.</li>
+        <li>Playwright browser tests that run on every push through GitHub Actions.</li>
       </ul>
       <p style="margin:12px 0 0"><a href="https://github.com/Jowo66/jowo66.github.io">Source on GitHub</a> &middot; <a href="index.html">Open the live version</a></p>
     </article>

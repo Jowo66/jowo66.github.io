@@ -19,7 +19,7 @@ tick();setInterval(tick,1000);
 
 /* ---------- boot ---------- */
 (function(){
-  const lines=['<b>NEO-JOWO OS</b>','mounting /district ........ ok','loading neon ............. ok','tuning rain .............. ok','warming up the club ...... ok','calibrating the bass ..... ok','ようこそ · welcome · добро пожаловать · 환영합니다 · مرحبا'];
+  const lines=['<b>NEO-JOWO OS</b>','mounting /district ........ ok','loading neon ............. ok','tuning rain .............. ok','warming up the club ...... ok','calibrating the bass ..... ok','waking the monsters ...... ok','ようこそ · welcome · добро пожаловать · 환영합니다 · مرحبا'];
   const pre=$('#bootText');let i=0;
   const hide=()=>{$('#boot').classList.add('gone');openApp('about');if(innerWidth>760)openApp('map')};
   let done=false;const fin=()=>{if(done)return;done=true;hide()};
