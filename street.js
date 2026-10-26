@@ -186,10 +186,12 @@ function start(o){
   const cv=o.cv,c=cv.getContext('2d'),DAYST=o.DAYST,reduce=o.reduce;
   cv.classList.add('pix');document.documentElement.classList.add('pixmode');
   let W,H,S,ox=0,oy=0,mx=0,smx=0,A=null,alleyNo=1,shake=0,flash=0;
-  function size(){const fh=A?A.fitH:272;S=Math.max(1,Math.round(innerHeight/fh),Math.ceil(innerWidth/SW));W=cv.width=Math.ceil(innerWidth/S);H=cv.height=Math.ceil(innerHeight/S);c.imageSmoothingEnabled=false;oy=H-SH}
+  function size(){const fh=A?A.fitH:272;S=Math.max(1,Math.round(innerHeight/fh),Math.ceil(innerWidth/SW));W=cv.width=Math.ceil(innerWidth/S);H=cv.height=Math.ceil(innerHeight/S);c.imageSmoothingEnabled=false;oy=H-SH-pad()}
+  /* scenes whose walkway is at the very bottom lift their stage clear of the app dock */
+  const pad=()=>A&&A.padDock?Math.ceil(84/S):0;
   addEventListener('resize',size);
   addEventListener('pointermove',e=>{mx=e.clientX/innerWidth-.5});
-  ['street','street-n','street-off','props','props-n','town','animals','drones','cthulhu','expl-a','expl-b','sof-tiles','sof-back','sof-fore','sof-car','sof-hydrant','sof-barrel'].forEach(img);
+  ['street','street-n','street-off','props','props-n','town','animals','drones','cthulhu','expl-a','expl-b','sof-tiles','sof-back','sof-fore','sof-car','sof-hydrant','sof-barrel','v1-far','v1-back','v1-fore','roof-front','sew-back','sew-mid','sew-front','sew-water','fly-1','fly-2','fly-3'].forEach(img);
 
   let dayOn=false,dayK=0;
   try{if(localStorage.getItem('jowo.day')==='1'){dayOn=true;dayK=1}}catch(e){}
@@ -200,7 +202,9 @@ function start(o){
   const noBlack=n=>{if(nb)return nb;const im=img(n);if(!im.naturalWidth)return null;const k=document.createElement('canvas');k.width=im.naturalWidth;k.height=im.naturalHeight;
     const x=k.getContext('2d');x.drawImage(im,0,0);const d=x.getImageData(0,0,k.width,k.height),a=d.data;for(let i=0;i<a.length;i+=4)if(a[i]+a[i+1]+a[i+2]<12)a[i+3]=0;x.putImageData(d,0,0);return nb=k};
 
-  /* ---- the two kinds of alley ---- */
+  /* ---- the kinds of alley ----
+     every alley has a stage size, paths, idle spots and a tower: base is where it disappears behind the street, top keeps the
+     hologram on screen, hit is how far down the tower the monster aims, and side scenes (side) are walked left and right */
   const NEONP=[['#19e3ff','#ff2e88'],['#3dff9a','#ffb347'],['#7c5cff','#19e3ff'],['#ffb347','#ff3a3a'],['#ff2e88','#f5efe0'],['#ffd42a','#ff2e88']];
   function makeCross(hue){return{type:'cross',hue,fitH:272,SW:688,SH:272,HOR:166,VP:[246,166],depth:true,
     tall:y=>Math.max(0,50*(y-166)/59),
@@ -214,39 +218,78 @@ function start(o){
     tspots:[[470,216,-1,'busk'],[408,214,1,'sit'],[536,221,-1,'any'],[600,222,-1,'any']],
     pigeons:[480,560,220,227],crowY:()=>rnd(30,120),
     bot:()=>{const y=rnd(186,214),s=50*(y-166)/59/TREF;return{y,alt:rnd(70,150)-(s-.6)*40}},
-    tower:{x:246,top:()=>18,h:148,w:28,hitY:()=>72},monSide:1,sign:[300,147],panMax:()=>Math.min(60,Math.max(0,SW-W))/2}}
+    tower:{x:246,base:166,h:148,w:28,top:()=>Math.max(18,26-oy),hit:.36},monSide:1,sign:[300,147],panMax:()=>Math.min(60,Math.max(0,SW-W))/2}}
   function makeBack(hue){
     const BW=960,layout=backLayout(BW),doors=layout.filter(([k])=>WALL[k][3]!==undefined).map(([k,x])=>x+WALL[k][3]);
     const mid=doors.reduce((b,d)=>Math.abs(d-BW/2)<Math.abs(b-BW/2)?d:b,BW/2),tx=BW/2+rnd(60,140)*(Math.random()<.5?1:-1)*Math.min(1,(W||700)/600);  /* narrow screens keep the tower near the middle */
     const lamps=[];for(let x=rnd(40,120);x<BW;x+=rnd(220,300))lamps.push(x);
     const props=[];for(const[k,x]of layout){if(k[0]==='g'&&Math.random()<.6)props.push({n:'sof-barrel',x:x+WALL[k][2]+8,y:104,w:32});if(k==='b1'&&Math.random()<.35)props.push({n:'sof-hydrant',x:x+24,y:110,w:19})}
-    return{type:'back',hue,fitH:400,SW:BW,SH:240,HOR:100,VP:[BW/2,100],depth:false,tall:()=>35,layout,doors,lamps,props,
+    return{type:'back',side:true,hue,fitH:400,SW:BW,SH:240,HOR:100,VP:[BW/2,100],depth:false,tall:()=>35,layout,doors,lamps,props,
       bushes:[rnd(60,300),rnd(560,900)],
       paths:{S:{flat:true,inner:[[-30,104],[BW+30,104]],outer:[[-30,158],[BW+30,158]]}},
       spots:doors.filter(d=>Math.abs(d-BW/2)<260).slice(0,3).map(d=>[d+10,106,'f']),
       tspots:[[BW/2+rnd(-60,60),142,rndp([-1,1]),'busk'],[mid+26,106,-1,'sit'],[BW/2-150,130,1,'any'],[BW/2+170,120,-1,'any']],
       pigeons:[BW/2-120,BW/2+120,128,150],crowY:()=>rnd(10-oy,-8),
       bot:()=>({y:rnd(110,150),alt:rnd(18-oy,-14)}),
-      tower:{x:tx,top:()=>6-oy,h:240,w:30,hitY:()=>-oy*.55},monSide:tx>BW/2?-1:1,sign:[mid-14,40],panMax:()=>Math.min(240,Math.max(0,SW-W)/2)}}
+      tower:{x:tx,base:60,h:300,w:30,top:()=>26-oy,hit:.3},monSide:tx>BW/2?-1:1,sign:[mid-14,40],panMax:()=>Math.min(240,Math.max(0,SW-W)/2)}}
 
-  /* ---- traffic on the crossing: the red car and the taxi pull away up the road and come back; the far car idles ---- */
-  let CARS=[],SIDE=[],sideT=2;
+  /* Restaurant Row: Cyberpunk Street's first version, a smaller street seen down its middle; people cross in front of the shops */
+  function makeResto(hue){
+    return{type:'resto',side:true,hue,fitH:232,SW:352,SH:192,HOR:150,VP:[150,146],depth:false,msMax:1,
+      tall:y=>22+(y-152)*.35,
+      paths:{S:{flat:true,inner:[[-30,156],[382,156]],outer:[[-30,186],[382,186]]}},
+      spots:[[24,158,'f'],[262,159,'f'],[206,157,'f']],
+      tspots:[[214,162,-1,'busk'],[300,160,-1,'sit'],[110,172,1,'any'],[180,178,-1,'any']],
+      pigeons:[80,280,164,184],crowY:()=>rnd(4-oy,30),
+      bot:()=>({y:rnd(160,184),alt:rnd(20-oy,60)}),
+      tower:{x:150,base:140,h:140,w:22,top:()=>Math.max(14,26-oy),hit:.14},monSide:Math.random()<.5?1:-1,sign:[100,112],panMax:()=>Math.min(40,Math.max(0,SW-W))/2}}
+  /* Rooftops: a roof deck high over the city skyline, with flying traffic and the most sky for the monster */
+  function makeRoof(hue){
+    const BW=960,tx=BW/2+rnd(40,120)*(Math.random()<.5?1:-1)*Math.min(1,(W||700)/600),props=[];
+    for(let x=rnd(10,40);x<BW-30;x+=rnd(40,90))props.push({k:rndp(['ac','ac','vent','tank','mast','pole','pole','sign']),x:Math.round(x)});
+    return{type:'roof',side:true,padDock:true,hue,fitH:272,SW:BW,SH:240,HOR:180,VP:[BW/2,180],depth:false,tall:()=>35,props,
+      paths:{S:{flat:true,inner:[[-30,182],[BW+30,182]],outer:[[-30,214],[BW+30,214]]}},
+      spots:[[BW/2-90,186,'f'],[BW/2+120,188,'f']],
+      tspots:[[BW/2+40,198,-1,'busk'],[BW/2-150,182,1,'sit'],[BW/2+160,204,-1,'any'],[BW/2-40,210,1,'any']],
+      pigeons:[BW/2-140,BW/2+140,190,210],crowY:()=>rnd(20-oy,110),
+      bot:()=>({y:rnd(184,214),alt:rnd(40-oy,130)}),
+      tower:{x:tx,base:172,h:440,w:34,top:()=>26-oy,hit:.28},monSide:tx>BW/2?-1:1,sign:[BW/2-60,146],panMax:()=>Math.min(240,Math.max(0,SW-W)/2)}}
+  /* The Sewers: Ansimuz's tunnel under the street; no sky down here, so the monster comes up out of the water instead */
+  function makeSewer(){
+    const BW=928;
+    return{type:'sewer',side:true,dark:true,padDock:true,hue:0,fitH:250,SW:BW,SH:240,HOR:207,VP:[BW/2,207],depth:false,tall:()=>35,
+      paths:{S:{flat:true,inner:[[-30,197],[BW+30,197]],outer:[[-30,207],[BW+30,207]]}},
+      spots:[[300,199,'f'],[640,200,'f']],
+      tspots:[[560,204,-1,'busk'],[466,198,1,'sit'],[380,206,1,'any'],[620,202,-1,'any']],
+      pigeons:null,crowY:null,bot:null,petPool:['rat','rat2','rat','cat2'],
+      tower:null,sign:[536,118],panMax:()=>Math.min(240,Math.max(0,SW-W)/2)}}
+  const MAKE={cross:makeCross,back:makeBack,resto:makeResto,roof:makeRoof,sewer:makeSewer},ORDER=['cross','back','resto','roof','sewer'];
+
+  /* ---- traffic on the crossing: the far car idles; the taxi (seen from behind) drives off up the road and a new one pulls in
+     from behind us; the red car (seen from the front) drives on towards us and off the bottom, and a new one comes down the road ---- */
+  let CARS=[],SIDE=[],sideT=2,SKY=[],flyT=1;
+  /* Warped Vehicles over the rooftops: which way each one's art points */
+  const FLYART=[{n:'fly-1',face:-1},{n:'fly-2',face:1},{n:'fly-3',face:1}];
   const crossing=()=>chars.some(q=>q.path==='X');
   function updCars(dt){
+    if(A.type==='roof'){
+      flyT-=dt;if(flyT<=0){flyT=rnd(2,6);const r=Math.random()<.5?1:-1,far=Math.random()<.5;SKY.push({k:Math.floor(Math.random()*3),x:r>0?-ox-60:-ox+W+60,y:rnd(30-oy,far?60:140),v:r*rnd(40,90)*(far?.6:1)})}
+      for(const q of SKY)q.x+=q.v*dt;SKY=SKY.filter(q=>q.x+ox>-120&&q.x+ox<W+120);return}
     if(A.type==='back'){
       /* the back street's cars drive straight past, one lane each way */
       sideT-=dt;if(sideT<=0){sideT=rnd(4,11);const near=Math.random()<.5;SIDE.push({x:near?-ox-80:-ox+W+80,y:near?214:192,v:(near?1:-1)*rnd(55,85),hue:rndp([0,0,60,150,210,300])})}
       for(const q of SIDE)q.x+=q.v*dt;SIDE=SIDE.filter(q=>q.x+ox>-100&&q.x+ox<W+100);return}
     for(const car of CARS){
       if(car.st==='idle')continue;
-      car.t-=dt;
-      if(car.st==='rest'&&car.t<=0){car.st='go';car.k=.08}
-      else if(car.st==='go'){car.k=Math.min(1.3,car.k+dt*.45);car.s*=Math.exp(-dt*car.k);if(car.s<.05){car.st='gone';car.t=rnd(4,10)}}
-      else if(car.st==='gone'&&car.t<=0&&!crossing()){car.st='come';car.s=1.9}
-      else if(car.st==='come'){car.s=1+(car.s-1)*Math.exp(-dt*1.5);if(car.s-1<.01){car.s=1;car.st='rest';car.t=rnd(5,12)}}
+      car.t-=dt;const tw=car.dir==='toward';
+      /* the red car would drive over the crossing, so it waits until nobody is on it */
+      if(car.st==='rest'&&car.t<=0&&!(tw&&crossing())){car.st='go';car.k=.08}
+      else if(car.st==='go'){car.k=Math.min(1.3,car.k+dt*.45);if(tw){car.s*=Math.exp(dt*car.k);if(car.s>3){car.st='gone';car.t=rnd(4,10)}}else{car.s*=Math.exp(-dt*car.k);if(car.s<.05){car.st='gone';car.t=rnd(4,10)}}}
+      else if(car.st==='gone'&&car.t<=0&&!crossing()){car.st='come';car.s=tw?.05:1.9}
+      else if(car.st==='come'){if(tw){car.s+=(1-car.s)*dt*1.3;if(1-car.s<.01){car.s=1;car.st='rest';car.t=rnd(5,12)}}else{car.s=1+(car.s-1)*Math.exp(-dt*1.5);if(car.s-1<.01){car.s=1;car.st='rest';car.t=rnd(5,12)}}}
     }
   }
-  const carsAway=()=>A.type!=='cross'||CARS.every(q=>q.st==='idle'||q.st==='gone'||(q.st==='go'&&q.s<.6));
+  const carsAway=()=>A.type!=='cross'||CARS.every(q=>q.st==='idle'||q.st==='gone'||(q.dir==='toward'?q.st==='come'&&q.s<.5:q.st==='go'&&q.s<.6));
   function carBox(car){const s=car.s;return[VP[0]+(car.x-VP[0])*s,VP[1]+(car.y-VP[1])*s,car.w*s,car.h*s]}
 
   /* ---- people ---- */
@@ -267,7 +310,7 @@ function start(o){
   /* where on a path a drawn sprite reaches its smallest readable size */
   function dMin(ch){if(!A.depth)return 0;for(let d=0;d<ch.len;d+=2)if(tall(polyAt(ch.pts,d)[1])/TREF>=TMIN)return d;return ch.len}
   function pickPath(drawn){
-    if(A.type==='back')return'S';
+    if(A.side)return'S';
     /* the near end of the left sidewalk is usually off-screen, so most people take the right one */
     return carsAway()&&Math.random()<.35?'X':(Math.random()<(drawn?.1:.35)?'L':'R');
   }
@@ -279,7 +322,7 @@ function start(o){
     ch.toward=pk==='R'||pk==='L'?Math.random()<.62:Math.random()<.5;
     ch.sp=(name==='kidrun'?30:name==='oldlady'?10:name==='courier'?26:16)+rnd(-3,4);
     ch.d=initial?rnd(.05,.95)*ch.len:(ch.toward?0:ch.len);
-    if(!initial&&A.type==='back')ch.d=edgeD(ch);
+    if(!initial&&A.side)ch.d=edgeD(ch);
     if(A.depth&&pk!=='X'&&ch.toward&&!initial)ch.d=rnd(0,.15)*ch.len;
     chars.push(ch);return ch;
   }
@@ -293,9 +336,9 @@ function start(o){
     ch.sp=(TOWN[ch.town].type==='kidrun'?24:15)+rnd(-2,3);
     const lo=pk==='X'?0:dMin(ch);ch.toward=Math.random()<.5;
     ch.d=initial?rnd(lo,ch.len):(ch.toward?lo:ch.len);
-    if(A.type==='back'){
+    if(A.side){
       if(!initial)ch.d=edgeD(ch);
-      const dx=A.doors.filter(d=>d>40&&d<SW-40);
+      const dx=(A.doors||[]).filter(d=>d>40&&d<SW-40);
       if(!initial&&dx.length&&Math.random()<.4){ch.d=rndp(dx)+30;ch.fade=0}
       const ahead=dx.filter(d=>ch.toward?d+30>ch.d+60:d+30<ch.d-60);if(ahead.length&&Math.random()<.35)ch.exitD=rndp(ahead)+30;
     }
@@ -317,9 +360,9 @@ function start(o){
 
   function updChars(dt){
     const n=k=>chars.filter(q=>q.kind===k&&!q.idle).length;
-    spawnT-=dt;if(spawnT<=0&&n('code')<(A.type==='back'?7:9)){spawn(false);spawnT=rnd(1.5,4)}
+    spawnT-=dt;if(spawnT<=0&&n('code')<(A.side?7:9)){spawn(false);spawnT=rnd(1.5,4)}
     townT-=dt;if(townT<=0&&n('town')<4){spawnTown(false);townT=rnd(2.5,6)}
-    botT-=dt;if(botT<=0&&n('bot')<2){spawnBot();botT=rnd(8,20)}
+    botT-=dt;if(botT<=0&&n('bot')<2&&A.bot){spawnBot();botT=rnd(8,20)}
     for(const ch of chars){
       if(ch.kind==='bot'){ch.ph+=dt*8;ch.x+=ch.vx*dt;ch.alt+=Math.sin(ch.ph*.4)*dt*2;if((ch.vx<0&&ch.x+ox<-60)||(ch.vx>0&&ch.x+ox>W+60))ch.dead=true;continue}
       if(ch.kind==='town'&&ch.idle){ch.ph+=dt*6;ch.life-=dt;ch.spT-=dt;
@@ -340,7 +383,7 @@ function start(o){
         ch.alpha=a;if(ch.d>ch.len||ch.d<0)ch.dead=true}
       else if(ch.d>ch.len||ch.d<0||tall(ch.y)<4)ch.dead=true;
       /* walking off the visible part of the back street counts as leaving */
-      if(A.type==='back'&&((ch.toward&&ch.x+ox>W+60)||(!ch.toward&&ch.x+ox<-60)))ch.dead=true;
+      if(A.side&&((ch.toward&&ch.x+ox>W+60)||(!ch.toward&&ch.x+ox<-60)))ch.dead=true;
     }
     if(chars.filter(q=>q.idle&&q.kind==='code').length<2&&Math.random()<dt*.2){const free=A.spots.filter(s=>!chars.some(q=>q.spot===s));if(free.length)spawnIdle(rndp(free))}
     if(chars.filter(q=>q.idle&&q.kind==='town').length<3&&Math.random()<dt*.15){const free=A.tspots.filter(s=>!chars.some(q=>q.spot===s));if(free.length)spawnTownIdle(rndp(free))}
@@ -370,14 +413,14 @@ function start(o){
     const p={kind,a:ANIM[kind],ph:Math.random()*6,row:0,alpha:1,face:1};
     if(kind==='crow'){p.fly=true;p.y=A.crowY();p.vx=(Math.random()<.5?1:-1)*rnd(30,50);p.x=p.vx>0?-ox-20:-ox+W+20;p.face=Math.sign(p.vx)}
     else if(kind==='pigeon'){const q=A.pigeons;p.home=[rnd(q[0],q[1]),rnd(q[2],q[3])];p.x=p.home[0]+rnd(-10,10);p.y=p.home[1];p.row=1;p.t=rnd(1,3);p.life=rnd(40,80);p.face=Math.random()<.5?1:-1}
-    else{const pk=A.type==='back'?'S':Math.random()<.75?'R':'L';onPath(p,pk,kind.startsWith('rat')?rnd(0,.08):rnd(.5,.95));const lo=dMin(p);p.toward=Math.random()<.5;
-      p.d=initial?rnd(lo,p.len):(p.toward?lo:p.len);if(!initial&&A.type==='back')p.d=edgeD(p);p.sp=kind.startsWith('rat')?rnd(40,55):kind.startsWith('cat')?rnd(14,20):rnd(18,26);p.t=rnd(3,8)}
+    else{const pk=A.side?'S':Math.random()<.75?'R':'L';onPath(p,pk,kind.startsWith('rat')?rnd(0,.08):rnd(.5,.95));const lo=dMin(p);p.toward=Math.random()<.5;
+      p.d=initial?rnd(lo,p.len):(p.toward?lo:p.len);if(!initial&&A.side)p.d=edgeD(p);p.sp=kind.startsWith('rat')?rnd(40,55):kind.startsWith('cat')?rnd(14,20):rnd(18,26);p.t=rnd(3,8)}
     pets.push(p);
   }
   function updPets(dt){
-    const night=dayK<.5;petT-=dt;
+    const night=dayK<.5||A.dark;petT-=dt;
     if(petT<=0){petT=rnd(4,12);
-      const pool=['dog','dog2','cat','cat2','crow',night?'rat':'pigeon',night?'rat2':'pigeon'].filter(k=>pets.filter(p=>p.kind===k).length<(k==='pigeon'?4:1));
+      const pool=(A.petPool||['dog','dog2','cat','cat2','crow',night?'rat':'pigeon',night?'rat2':'pigeon']).filter(k=>pets.filter(p=>p.kind===k).length<(k==='pigeon'?4:1));
       if(pool.length)spawnPet(rndp(pool))}
     for(const p of pets){
       p.ph+=dt*(p.row===1?5:8);
@@ -392,7 +435,7 @@ function start(o){
       const at=polyAt(p.pts,clamp(p.d,0,p.len));p.x=at[0];p.y=at[1];if(!p.row)p.face=(at[2]>0)===p.toward?1:-1;
       const s=tall(p.y)/TREF;p.alpha=A.depth?clamp((s-TMIN)/.08,0,1):1;
       if(p.d>p.len||p.d<0||(A.depth&&!p.toward&&s<TMIN)||(p.kind.startsWith('rat')&&!night))p.dead=true;
-      if(A.type==='back'&&((p.toward&&p.x+ox>W+40)||(!p.toward&&p.x+ox<-40)))p.dead=true;
+      if(A.side&&((p.toward&&p.x+ox>W+40)||(!p.toward&&p.x+ox<-40)))p.dead=true;
     }
     pets=pets.filter(p=>{if(p.dead&&p.bubEl)p.bubEl.remove();return!p.dead});
     for(const p of pets)if(p.bubEl){p.bubL-=dt;if(p.bubL<=0){p.bubEl.remove();p.bubEl=null}}
@@ -452,7 +495,7 @@ function start(o){
 
   /* ---- rain: one-pixel streaks and splashes, at night ---- */
   let rain=[],spl=[];
-  function updRain(dt){for(const r of rain){r.y+=r.v*dt;r.x-=r.v*dt*.18;const gy=r.y>HOR+4&&Math.random()<dt*4;if(r.y>SH||gy){if(r.y>HOR)spl.push({x:r.x|0,y:r.y|0,t:.18});r.y=-oy-rnd(0,40);r.x=Math.random()*(SW+60)}}
+  function updRain(dt){for(const r of rain){r.y+=r.v*dt;if(!A.dark)r.x-=r.v*dt*.18;const gy=r.y>HOR+4&&Math.random()<dt*4;if(r.y>SH||gy){if(r.y>HOR)spl.push({x:r.x|0,y:r.y|0,t:.18});r.y=A.dark?rnd(20,60):-oy-rnd(0,40);r.x=Math.random()*(SW+60)}}
     spl.forEach(s=>s.t-=dt);for(let i=spl.length-1;i>=0;i--)if(spl[i].t<=0)spl.splice(i,1)}
 
   /* ---- the tower and the monster ----
@@ -464,34 +507,49 @@ function start(o){
   let fx=[],dust=[];
   const SCREAM=['RUN!','Monster!!','逃げて!','Беги!','괴물이다!','Not again…','¡Corre!','The tower!','怪獣だ!'];
   /* the monster is drawn at twice its pixel size where there is room for it, at 1:1 on narrow or short views */
-  const ms=()=>W<400||(A.type==='back'&&oy<90)?1:2;
+  const ms=()=>W<400||A.msMax===1||(A.type==='back'&&oy<90)?1:2;
+  const hitY=T=>{const t=T.top();return t+(T.base-t)*T.hit};
   function towerArt(){const T=A.tower,pl=A.pal;return TW.cv||(TW.cv={n:buildTower(T.h,T.w,alleyNo*97+13,pl[0],pl[1],false),d:buildTower(T.h,T.w,alleyNo*97+13,pl[0],pl[1],true)})}
   function boom(x,y,big){fx.push({im:big?'expl-b':'expl-a',fw:big?64:32,n:8,x,y,t:0})}
+  /* sewer water thrown up by the monster: falling cyan pixels */
+  function splash(x){dust.push({x,y:SH-30,vx:rnd(-20,20),vy:rnd(-60,-25),t:0,l:rnd(.6,1.1),wet:true})}
   function startMon(){
     if(MON.on||TW.state!=='up'||wipe)return false;
-    const T=A.tower,side=A.monSide,s=ms();MON.on=true;MON.phase='in';MON.t=0;MON.hits=0;MON.row=FLY;MON.ph=0;MON.side=side;MON.face=-side;
-    MON.hx=T.x+side*88*s;MON.hy=T.hitY()-8*s;MON.x0=MON.hx+side*(W*.6+110*s);MON.x=MON.x0;MON.y=MON.hy-30;
+    if(!A.tower){
+      /* down in the sewer it rises out of the water channel in front of the walkway */
+      MON.on=true;MON.mode='rise';MON.phase='rise';MON.t=0;MON.hits=0;MON.row=IDLE;MON.ph=0;MON.face=Math.random()<.5?1:-1;
+      MON.x=-ox+W/2+rnd(-60,60);MON.hy=SH-58;MON.y=SH+70;shake=3;return true}
+    MON.mode='tower';const T=A.tower,side=A.monSide,s=ms();MON.on=true;MON.phase='in';MON.t=0;MON.hits=0;MON.row=FLY;MON.ph=0;MON.side=side;MON.face=-side;
+    MON.hx=T.x+side*88*s;MON.hy=hitY(T)-8*s;MON.x0=MON.hx+side*(W*.6+110*s);MON.x=MON.x0;MON.y=MON.hy-30;
     if(dayK<.5)flash=1;return true;
   }
   function updMon(dt){
     MON.next-=dt;if(!MON.on&&MON.next<=0&&TW.state==='up'&&!wipe){startMon();MON.next=rnd(180,300)}
     TW.t+=dt;
     if(TW.state==='falling'){TW.fall=Math.min(1,TW.fall+dt/2.4);
-      if(Math.random()<dt*9){const T=A.tower,top=T.top()+TW.fall*T.h;boom(T.x+rnd(-T.w/2,T.w/2),rnd(top,T.top()+T.h*.9),Math.random()<.4)}
-      if(Math.random()<dt*30){const T=A.tower;dust.push({x:T.x+rnd(-T.w,T.w),y:T.top()+T.h*rnd(.55,.95),vx:rnd(-8,8),vy:rnd(-10,-3),t:0,l:rnd(1,2.2)})}
+      if(Math.random()<dt*9){const T=A.tower,top=T.top()+TW.fall*T.h;boom(T.x+rnd(-T.w/2,T.w/2),rnd(top,T.base-4),Math.random()<.4)}
+      if(Math.random()<dt*30){const T=A.tower;dust.push({x:T.x+rnd(-T.w,T.w),y:T.base-rnd(2,30),vx:rnd(-8,8),vy:rnd(-10,-3),t:0,l:rnd(1,2.2)})}
       if(TW.fall>=1){TW.state='down';TW.t=0}}
     else if(TW.state==='down'&&!MON.on&&TW.t>18){TW.state='rising';TW.t=0}
     else if(TW.state==='rising'){TW.fall=Math.max(0,TW.fall-dt/5);if(!TW.fall)TW.state='up'}
     fx.forEach(f=>f.t+=dt);fx=fx.filter(f=>f.t*14<f.n);
-    dust.forEach(d=>{d.t+=dt;d.x+=d.vx*dt;d.y+=d.vy*dt});dust=dust.filter(d=>d.t<d.l);
+    dust.forEach(d=>{d.t+=dt;d.x+=d.vx*dt;d.y+=d.vy*dt;if(d.wet)d.vy+=140*dt});dust=dust.filter(d=>d.t<d.l);
     shake=Math.max(0,shake-dt*12);flash=Math.max(0,flash-dt*2.5);
     if(!MON.on)return;
     MON.t+=dt;MON.ph+=dt*11;const s=ms();
+    if(MON.mode==='rise'){
+      if(MON.phase==='rise'){const k=Math.min(1,MON.t/2.2);MON.y=SH+70+(MON.hy-SH-70)*(1-Math.pow(1-k,3));if(Math.random()<dt*20)splash(MON.x+rnd(-40,40));if(k>=1){MON.phase='lash';MON.ph=0;MON.row=LASH;MON.hit=false}}
+      else if(MON.phase==='lash'){if(!MON.hit&&MON.ph>=4){MON.hit=true;MON.hits++;shake=6;for(let i=0;i<8;i++)splash(MON.x+MON.face*rnd(40,110));const vis=chars.filter(q=>tall(q.y)>=16);if(vis.length)say(rndp(vis),rndp(SCREAM),1.8)}
+        if(MON.ph>=CT.n[LASH]){MON.phase=MON.hits>=3?'roar':'rest';MON.t=0;MON.row=IDLE;MON.ph=0}}
+      else if(MON.phase==='rest'){if(MON.t>.5){MON.phase='lash';MON.row=LASH;MON.ph=0;MON.hit=false;MON.face=-MON.face}}
+      else if(MON.phase==='roar'){if(MON.t>1.8){MON.phase='sink';MON.t=0}}
+      else if(MON.phase==='sink'){const k=Math.min(1,MON.t/2);MON.y=MON.hy+(SH+70-MON.hy)*k*k;if(Math.random()<dt*12)splash(MON.x+rnd(-40,40));if(k>=1)MON.on=false}
+      return}
     if(MON.phase==='in'){const k=Math.min(1,MON.t/3.2),e=1-Math.pow(1-k,3);MON.x=MON.x0+(MON.hx-MON.x0)*e;MON.y=MON.hy-30*(1-e)+Math.sin(MON.t*3)*2;
       if(k>=1){MON.phase='atk';MON.row=BEAM;MON.ph=0;MON.hit=false}}
     else if(MON.phase==='atk'){
       const n=CT.n[MON.row];
-      if(!MON.hit&&MON.ph>=(MON.row===BEAM?3:4)){MON.hit=true;MON.hits++;shake=5;const T=A.tower;boom(T.x+rnd(-5,5),T.hitY()+rnd(-8,8),true);
+      if(!MON.hit&&MON.ph>=(MON.row===BEAM?3:4)){MON.hit=true;MON.hits++;shake=5;const T=A.tower;boom(T.x+rnd(-5,5),hitY(T)+rnd(-8,8),true);
         const vis=chars.filter(q=>q.kind!=='bot'&&tall(q.y)>=16);if(vis.length)say(rndp(vis),rndp(SCREAM),1.8);
         if(MON.hits>=4){TW.state='falling';TW.t=0;shake=9}}
       if(MON.ph>=n){if(MON.hits>=4){MON.phase='roar';MON.t=0;MON.row=IDLE;MON.ph=0}else{MON.phase='rest';MON.t=0;MON.row=IDLE;MON.ph=0}}}
@@ -506,22 +564,22 @@ function start(o){
   function useAlley(a){
     A=a;SW=a.SW;SH=a.SH;HOR=a.HOR;VP=a.VP;PATHS=a.paths;tall=a.tall;A.pal=rndp(NEONP);if(alleyNo===1)A.pal=NEONP[0];size();
     for(const q of chars)if(q.bubEl)q.bubEl.remove();for(const p of pets)if(p.bubEl)p.bubEl.remove();
-    chars=[];pets=[];fx=[];dust=[];flick=[];SIDE=[];closeTerm();
+    chars=[];pets=[];fx=[];dust=[];flick=[];SIDE=[];SKY=[];closeTerm();
     MON.on=false;TW.state='up';TW.fall=0;TW.cv=null;
     CARS=a.type==='cross'?[
-      {n:'red',x:267,y:183,w:76,h:56,base:43,s:1,st:'rest',t:rnd(3,8),k:0},
-      {n:'taxi',x:175,y:173,w:37,h:37,base:33,s:1,st:'rest',t:rnd(6,12),k:0},
+      {n:'red',dir:'toward',x:267,y:183,w:76,h:56,base:43,s:1,st:'rest',t:rnd(3,8),k:0},
+      {n:'taxi',dir:'away',x:175,y:173,w:37,h:37,base:33,s:1,st:'rest',t:rnd(6,12),k:0},
       {n:'far',x:238,y:165,w:29,h:25,base:22,s:1,st:'idle',t:0,k:0}]:[];
-    rain=Array.from({length:a.type==='back'?90:70},()=>({x:Math.random()*SW,y:rnd(-oy,SH),v:rnd(150,230)}));spl=[];
-    for(let i=0;i<(a.type==='back'?6:7);i++)spawn(true);
+    rain=Array.from({length:a.dark?14:a.side?90:70},()=>({x:Math.random()*SW,y:rnd(-oy,SH),v:a.dark?rnd(110,150):rnd(150,230)}));spl=[];
+    for(let i=0;i<(a.side?6:7);i++)spawn(true);
     for(let i=0;i<3;i++)spawnTown(true);
     a.spots.slice(0,2).forEach(spawnIdle);a.tspots.slice(0,2).forEach(spawnTownIdle);
-    for(let i=0;i<2;i++)spawnPet(rndp(['dog','cat','cat2','dog2']),true);
+    for(let i=0;i<2;i++)spawnPet(rndp(a.petPool||['dog','cat','cat2','dog2']),true);
     turnT=rnd(150,240);
   }
   function nextAlley(){
     alleyNo++;let hue;do{hue=rndp([0,40,95,150,200,255,310])}while(hue===lastHue);lastHue=hue;
-    useAlley(alleyNo%2?makeCross(hue):makeBack(hue));
+    useAlley(MAKE[ORDER[(alleyNo-1)%ORDER.length]](hue));
     const t=document.querySelector('.toast');if(t){t.textContent='ALLEY '+String(alleyNo).padStart(2,'0')+' · 路地 · '+['زقاق','골목','переулок','σοκάκι','गली'][alleyNo%5];t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
   }
   function turn(){if(wipe||MON.on)return;wipe={t:0,sw:false}}
@@ -536,8 +594,9 @@ function start(o){
     c.globalAlpha=1;
   }
   function drawTower(dk){
+    if(!A.tower)return;
     const T=A.tower,art=towerArt(),top=T.top(),x=Math.round(T.x+ox-art.n.width/2),dy=Math.round(TW.fall*T.h);
-    c.save();c.beginPath();c.rect(0,0,W,top+T.h+oy);c.clip();
+    c.save();c.beginPath();c.rect(0,0,W,T.base+oy);c.clip();
     if(dk<1)c.drawImage(art.n,x,top+oy+dy);if(dk>0){c.globalAlpha=dk;c.drawImage(art.d,x,top+oy+dy);c.globalAlpha=1}
     c.restore();
     if(TW.state==='up'){
@@ -552,7 +611,7 @@ function start(o){
       c.globalAlpha=1}
   }
   function drawMonster(){
-    for(const d of dust){c.fillStyle=d.t/d.l<.5?'#8a8098':'#5a5068';const k=1+Math.floor(d.t*2);c.fillRect(Math.round(d.x+ox),Math.round(d.y+oy),k,k)}
+    for(const d of dust){c.fillStyle=d.wet?(d.t/d.l<.5?'#7fd6ff':'#3a7ab0'):d.t/d.l<.5?'#8a8098':'#5a5068';const k=1+Math.floor(d.t*2);c.fillRect(Math.round(d.x+ox),Math.round(d.y+oy),k,k)}
     if(MON.on){const ct=img('cthulhu');if(ct.naturalWidth){const n=CT.n[MON.row],f=MON.phase==='atk'?Math.min(n-1,Math.floor(MON.ph)):Math.floor(MON.ph)%n;
       blit(ct,f*CT.fw,MON.row*CT.fh,CT.fw,CT.fh,96,56,MON.x+ox,MON.y+oy,ms(),MON.face)}}
     for(const f of fx){const im=img(f.im);if(im.naturalWidth)c.drawImage(im,Math.min(f.n-1,Math.floor(f.t*14))*f.fw,0,f.fw,f.fw,Math.round(f.x+ox-f.fw/2),Math.round(f.y+oy-f.fw/2),f.fw,f.fw)}
@@ -567,6 +626,29 @@ function start(o){
     if(A.hue)for(const cv2 of[wall]){const x2=cv2.getContext('2d'),d=x2.getImageData(0,0,cv2.width,cv2.height);hueShift(d.data,A.hue);x2.putImageData(d,0,0)}
     return A.art={wall,gr};
   }
+  /* the roof deck: a railing along the far edge, concrete slabs, and the alley's air conditioners, tanks, masts,
+     light strings and a neon sign standing on it */
+  function roofArt(){
+    if(A.deck)return A.deck;const cv2=document.createElement('canvas');cv2.width=SW;cv2.height=80;const x=cv2.getContext('2d'),pl=A.pal;
+    const R=(a,b,w,h,col)=>{x.fillStyle=col;x.fillRect(a,b,w,h)};
+    R(0,2,SW,1,'#5a5478');R(0,7,SW,1,'#3e3858');for(let i=0;i<SW;i+=16)R(i,2,1,12,'#4a4466');
+    R(0,14,SW,66,'#2a2340');R(0,14,SW,1,'#433b5e');
+    for(let i=0;i<SW;i+=32)R(i,15,1,59,'#211b33');R(0,30,SW,1,'#241e37');R(0,46,SW,1,'#211b33');R(0,62,SW,1,'#211b33');R(0,74,SW,6,'#1c1730');
+    for(let i=0;i<80;i++)R(Math.random()*SW|0,16+Math.random()*56|0,rnd(2,6)|0,1,'#32294a');
+    let prev=null;
+    for(const p of A.props){const b=16,X=p.x;
+      if(p.k==='ac'){R(X,b-13,20,13,'#3b3552');R(X,b-13,20,1,'#5a5478');R(X+12,b-10,6,6,'#221c33');R(X+14,b-8,2,2,'#4a4466');for(let i=0;i<4;i++)R(X+2,b-11+i*3,8,1,'#2a2440')}
+      else if(p.k==='vent'){R(X,b-16,4,16,'#4a4466');R(X-1,b-18,6,2,'#5a5478')}
+      else if(p.k==='tank'){R(X+2,b-6,2,6,'#3e3858');R(X+20,b-6,2,6,'#3e3858');R(X,b-34,24,28,'#4a3a32');R(X,b-34,24,2,'#6a5444');for(let i=0;i<3;i++)R(X,b-28+i*8,24,1,'#3a2c26');R(X,b-34,1,28,'#6a5444')}
+      else if(p.k==='mast'){R(X,b-44,1,44,'#5a5478');R(X-3,b-36,7,1,'#5a5478');R(X-2,b-28,5,1,'#5a5478');R(X,b-45,1,1,'#ff3a3a')}
+      else if(p.k==='pole'){R(X,b-30,1,30,'#4a4466');
+        if(prev!==null&&X-prev<110)for(let i=0;i<=X-prev;i+=2){const t=i/(X-prev),yy=b-30+Math.round(Math.sin(t*Math.PI)*8);R(prev+i,yy,1,1,'#2a2440');if(i%6===0)R(prev+i,yy+1,1,1,pl[(i/6)%2|0])}
+        prev=X}
+      else if(p.k==='sign'){R(X,b-6,1,6,'#3e3858');R(X+27,b-6,1,6,'#3e3858');R(X,b-24,28,18,'#140a22');
+        x.strokeStyle=pl[0];x.lineWidth=1;x.strokeRect(X+.5,b-23.5,27,17);R(X+8,b-19,12,1,pl[1]);R(X+6,b-15,16,1,pl[1]);R(X+10,b-11,8,1,pl[1])}
+    }
+    return A.deck=cv2;
+  }
   function drawSign(){
     const[sx,sy]=A.sign,x=Math.round(sx+ox),y=Math.round(sy+oy),on=Math.floor(performance.now()/600)%4!==0;
     c.fillStyle='#140a22';c.fillRect(x,y,29,11);c.fillStyle=on?'#ffb347':'#7a5020';c.fillRect(x,y,29,1);c.fillRect(x,y+10,29,1);c.fillRect(x,y,1,11);c.fillRect(x+28,y,1,11);
@@ -576,10 +658,10 @@ function start(o){
   }
   function frame(){
     smx+=(mx-smx)*.04;
-    const spare=Math.max(0,SW-W);ox=W>=SW?Math.round((W-SW)/2):Math.round(clamp(-spare/2-smx*A.panMax()*2,-spare,0));oy=H-SH;
+    const spare=Math.max(0,SW-W);ox=W>=SW?Math.round((W-SW)/2):Math.round(clamp(-spare/2-smx*A.panMax()*2,-spare,0));oy=H-SH-pad();
     const sk=shake>0?Math.round((Math.random()-.5)*shake):0;ox+=sk;
     const dk=dayK,n=1-dk;
-    c.fillStyle=dk>.5?'#e8c9a0':'#1a1126';c.fillRect(0,0,W,H);
+    c.fillStyle=A.dark?'#0c0a08':dk>.5?'#e8c9a0':'#1a1126';c.fillRect(0,0,W,H);
     const items=[];
     if(A.type==='cross'){
       /* sky and far city: night clouds and neon towers, or the dusk sky and orange city by day */
@@ -595,7 +677,7 @@ function start(o){
         const sx=Math.round(b[0])+ox,sy=Math.round(b[1])+oy,sw=Math.max(1,Math.round(b[2])),sh=Math.max(1,Math.round(b[3]));
         const a=img('car-'+car.n),an=img('car-'+car.n+'-n');if(dk>0&&a.naturalWidth)c.drawImage(a,sx,sy,sw,sh);if(n>0&&an.naturalWidth){c.globalAlpha=n;c.drawImage(an,sx,sy,sw,sh);c.globalAlpha=1}}})}
       items.push({y:223.5,draw:()=>{const p=pic('props'),pn=pic('props-n');if(dk>0&&p)c.drawImage(p,ox,oy);if(n>0&&pn){c.globalAlpha=n;c.drawImage(pn,ox,oy);c.globalAlpha=1}}});
-    }else{
+    }else if(A.type==='back'){
       /* the back street is a wider shot (fitH 400) so the tower and the monster have sky above the wall */
       tile(img('sky-back'),-oy,.25,n);tile(img('sky-city'),-150,.4,n);tile(noBlack('sof-back'),-80,.6,n,true);
       tile(img('sky-dusk'),-oy,.25,dk);tile(img('city-dusk'),-232,.45,dk);
@@ -606,7 +688,25 @@ function start(o){
       for(const x of A.bushes)items.push({y:300,draw:()=>{if(fore.naturalWidth)c.drawImage(fore,94,76,61,68,Math.round(x+ox-30),oy+SH-60,61,68)}});
       for(const p of A.props)items.push({y:p.y,draw:()=>{const im=img(p.n);if(im.naturalWidth)c.drawImage(im,Math.round(p.x+ox),Math.round(p.y+oy-im.naturalHeight))}});
       const car=img('sof-car');
-      for(const q of SIDE)items.push({y:q.y,draw:()=>{const im=car.naturalWidth?recolored(car,q.hue):null;if(im)blit(im,0,0,144,48,72,48,q.x+ox,q.y+oy,1,q.v>0?-1:1)}});
+      for(const q of SIDE)items.push({y:q.y,draw:()=>{const im=car.naturalWidth?recolored(car,q.hue):null;if(im)blit(im,0,0,144,48,72,48,q.x+ox,q.y+oy,1,q.v>0?1:-1)}});
+    }else if(A.type==='resto'){
+      /* Restaurant Row: the far city and the orange towers behind the street, or the dusk city by day */
+      tile(img('v1-far'),0,.2,n);tile(img('v1-back'),0,.45,n);
+      tile(img('sky-dusk'),-oy,.2,dk);tile(img('city-dusk'),-80,.45,dk);
+      drawTower(dk);drawMonster();
+      tile(pic('v1-fore'),0,1,1,true);
+    }else if(A.type==='roof'){
+      /* Rooftops: clouds and skyline, the tower, flying traffic, the nearer roofs and then our deck */
+      tile(img('sky-back'),4,.12,n);tile(img('sky-city'),4,.3,n);
+      tile(img('sky-dusk'),-oy,.12,dk);tile(img('city-dusk'),172-272,.3,dk);
+      drawTower(dk);drawMonster();
+      for(const q of SKY){const fa=FLYART[q.k],im=img(fa.n);if(im.naturalWidth)blit(im,0,0,im.naturalWidth,im.naturalHeight,im.naturalWidth/2,im.naturalHeight/2,q.x+ox,q.y+oy,1,Math.sign(q.v)*fa.face)}
+      tile(img('roof-front'),-8,.55,1,true);
+      c.drawImage(roofArt(),ox,oy+160);c.fillStyle='#1c1730';c.fillRect(0,oy+240,W,H);
+    }else{
+      /* the Sewers: the far tunnel, the chamber and its pipes; the monster and the water channel go in front of the walkway */
+      tile(img('sew-back'),0,.5,1,true);
+      const m=img('sew-mid'),f=img('sew-front');if(m.naturalWidth)c.drawImage(m,ox,oy);if(f.naturalWidth)c.drawImage(f,ox,oy);
     }
     const bubAt=(q,x,y)=>{if(q.bubEl){q.bubEl.style.left=(x*innerWidth/W)+'px';q.bubEl.style.top=((y-3)*innerHeight/H)+'px'}};
     const town=img('town'),drones=img('drones'),anim=img('animals');
@@ -628,9 +728,10 @@ function start(o){
       c.globalAlpha=p.alpha;blit(anim,(Math.floor(p.ph)%n)*a.fw,(a.r+p.row)*24,a.fw,a.foot,a.fw/2,a.foot,x,y,s,p.face);c.globalAlpha=1;
       p.bb=[x-a.fw/2*s,y-a.foot*s*.8,x+a.fw/2*s,y];bubAt(p,x,y-a.foot*s*.8)}})}
     items.sort((a,b)=>a.y-b.y).forEach(it=>it.draw());
+    if(A.type==='sewer'){drawMonster();const wt=img('sew-water');if(wt.naturalWidth){const f=Math.floor(performance.now()/160)%4;for(let x=((ox%64)+64)%64-64;x<W;x+=64)c.drawImage(wt,f*64,0,64,32,x,oy+208,64,32)}c.fillStyle='#0b1430';c.fillRect(0,oy+240,W,H)}
     drawSign();
     /* rain */
-    if(dk<.5){c.fillStyle='#5ba1b0';for(const r of rain){const x=Math.round(r.x)+ox,y=Math.round(r.y)+oy;c.fillRect(x,y,1,3);c.fillRect(x-1,y+3,1,1)}
+    if(dk<.5||A.dark){c.fillStyle='#5ba1b0';for(const r of rain){const x=Math.round(r.x)+ox,y=Math.round(r.y)+oy;c.fillRect(x,y,1,3);c.fillRect(x-1,y+3,1,1)}
       c.fillStyle='#7fb4ec';for(const s of spl){c.fillRect(s.x+ox-1,s.y+oy,1,1);c.fillRect(s.x+ox+1,s.y+oy,1,1)}}
     if(flash>0){c.fillStyle='rgba(220,235,255,'+(flash*.55)+')';c.fillRect(0,0,W,H)}
     /* turning into the next alley: the screen fills with dark blocks, then clears on the new street */
@@ -649,14 +750,14 @@ function start(o){
     setInterval(msync,250);msync()}
 
   useAlley(makeCross(0));
-  if(/[?&]debug/.test(location.search))g.__street={chars:()=>chars,pets:()=>pets,cars:()=>CARS,day:v=>{dayOn=v},say:(i,t)=>say(chars[i],t,3),mon:startMon,monState:()=>({on:MON.on,phase:MON.phase,hits:MON.hits,tower:TW.state}),turn,alley:()=>({no:alleyNo,type:A.type,hue:A.hue})};
+  if(/[?&]debug/.test(location.search))g.__street={chars:()=>chars,pets:()=>pets,cars:()=>CARS,day:v=>{dayOn=v},say:(i,t)=>say(chars[i],t,3),mon:startMon,monState:()=>({on:MON.on,phase:MON.phase,hits:MON.hits,tower:TW.state}),turn,alley:()=>({no:alleyNo,type:A.type,hue:A.hue}),go:k=>{alleyNo++;useAlley(MAKE[k](0))}};
   let last=0;
   function loop(t){
     const dt=Math.min((t-last)/1000||0,.05);last=t;
     try{dayK=clamp(dayK+(dayOn?1:-1)*dt/1.3,0,1);DAYST.on=dayOn;DAYST.k=dayK;
       if(wipe){wipe.t+=dt;if(!wipe.sw&&wipe.t>=.55){wipe.sw=true;nextAlley()}if(wipe.t>=1.1)wipe=null}
       if(!MON.on&&!pinned&&!wipe){turnT-=dt;if(turnT<=0)turn()}
-      updCars(dt);updChars(dt);updPets(dt);updFlick(dt);updMon(dt);if(dayK<.5)updRain(dt);frame();updTerm(dt)}catch(err){console.error('street frame error',err)}
+      updCars(dt);updChars(dt);updPets(dt);updFlick(dt);updMon(dt);if(dayK<.5||A.dark)updRain(dt);frame();updTerm(dt)}catch(err){console.error('street frame error',err)}
     requestAnimationFrame(loop);
   }
   if(reduce){const once=()=>{updChars(0);frame()};addEventListener('load',once);addEventListener('resize',once);setTimeout(once,300)}else requestAnimationFrame(loop);
