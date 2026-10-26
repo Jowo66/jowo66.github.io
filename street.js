@@ -267,14 +267,53 @@ function start(o){
 
   /* ---- traffic on the crossing: the far car idles; the taxi (seen from behind) drives off up the road and a new one pulls in
      from behind us; the red car (seen from the front) drives on towards us and off the bottom, and a new one comes down the road ---- */
-  let CARS=[],SIDE=[],sideT=2,SKY=[],flyT=1;
+  let CARS=[],SIDE=[],sideT=2,SKY=[],flyT=1,pickN=0,pickNext=6;
   /* Warped Vehicles over the rooftops: which way each one's art points */
   const FLYART=[{n:'fly-1',face:-1},{n:'fly-2',face:1},{n:'fly-3',face:1}];
+  /* each car gets the next colour scheme from a shuffled deck: the yellow bodywork becomes [hue, saturation, brightness]
+     and the blue glass and lamps become the accent hue, so no two cars in a row look alike */
+  const LIVERY=[[[0,.75,1],190],[[210,.6,.9],30],[[280,.55,.9],130],[[150,.55,.85],330],[[330,.7,1],60],[[30,.85,1],200],[[0,0,1.05],320],[[0,0,.55],165],
+    [[120,.5,.8],50],[[195,.7,.95],350],[[45,.15,1.05],265],[[260,.4,.65],180],[[0,.65,.6],210],[[90,.6,.85],285]];
+  let deck=[],lastLiv=-1;
+  function nextLivery(){if(!deck.length){deck=LIVERY.map((q,i)=>i).sort(()=>Math.random()-.5);if(deck[0]===lastLiv)deck.push(deck.shift())}return lastLiv=deck.shift()}
+  const PAINT=new Map();
+  function painted(k,li){
+    const key=k+'|'+li,im=img(FLYART[k].n);if(!im.naturalWidth)return null;if(PAINT.has(key))return PAINT.get(key);
+    const [[bh,bs,bl],ah]=LIVERY[li],cv=document.createElement('canvas');cv.width=im.naturalWidth;cv.height=im.naturalHeight;const x=cv.getContext('2d');x.drawImage(im,0,0);
+    const d=x.getImageData(0,0,cv.width,cv.height),a=d.data;
+    for(let i=0;i<a.length;i+=4){if(!a[i+3])continue;const r=a[i]/255,gg=a[i+1]/255,b=a[i+2]/255,mx=Math.max(r,gg,b),mn=Math.min(r,gg,b),dd=mx-mn;let l=(mx+mn)/2;
+      if(dd<.08)continue;const sat=dd/(1-Math.abs(2*l-1)),h=(mx===r?((gg-b)/dd+6)%6:mx===gg?(b-r)/dd+2:(r-gg)/dd+4)*60;let nh,ns;
+      if(h>=20&&h<=75&&sat>.3){nh=bh;ns=bs*Math.min(1,sat*1.1);l=clamp(l*bl,0,.95)}else if(h>=170&&h<=260&&sat>.25){nh=ah;ns=sat}else continue;
+      const C=(1-Math.abs(2*l-1))*ns,X=C*(1-Math.abs((nh/60)%2-1)),m=l-C/2,q=nh<60?[C,X,0]:nh<120?[X,C,0]:nh<180?[0,C,X]:nh<240?[0,X,C]:nh<300?[X,0,C]:[C,0,X];
+      a[i]=(q[0]+m)*255;a[i+1]=(q[1]+m)*255;a[i+2]=(q[2]+m)*255}
+    x.putImageData(d,0,0);PAINT.set(key,cv);return cv;
+  }
+  function spawnFly(){
+    pickN++;const r=Math.random()<.5?1:-1,far=Math.random()<.5,pick=pickN>=pickNext&&!SKY.some(q=>q.st!=='cruise');
+    const q={k:pick?Math.floor(Math.random()*2):Math.floor(Math.random()*3),li:nextLivery(),x:r>0?-ox-60:-ox+W+60,y:pick?rnd(40-oy,60):rnd(30-oy,far?60:140),v:r*rnd(40,90)*(far?.6:1),st:'cruise',t:0};
+    if(pick){pickN=0;pickNext=5+Math.floor(Math.random()*3);q.st='in';q.v=r*rnd(60,80);q.stopX=clamp(-ox+W/2+rnd(-90,90),60,SW-60);q.hoverY=166;q.want=1+Math.floor(Math.random()*3);q.boarded=0}
+    SKY.push(q);
+  }
+  /* the pickup: drift down to the roof, wait for the passengers to walk over and climb in, then lift off slowly */
+  function updFly(q,dt){
+    q.t+=dt;
+    if(q.st==='cruise'){q.x+=q.v*dt;if((q.v>0&&q.x+ox>W+120)||(q.v<0&&q.x+ox<-120))q.dead=true;return}
+    if(q.st==='in'){const dx=q.stopX-q.x;q.x+=Math.sign(dx)*Math.min(Math.abs(dx),Math.max(14,Math.abs(dx)*.9)*dt);q.y+=(q.hoverY-q.y)*Math.min(1,dt*1.1);
+      if(Math.abs(dx)<2&&Math.abs(q.y-q.hoverY)<2){q.st='wait';q.t=0;callRiders(q)}}
+    else if(q.st==='wait'){q.y=q.hoverY+Math.sin(q.t*2)*1.5;if(q.boarded>=q.want||q.t>16){q.st='leave';q.t=0;q.vx=0}}
+    else if(q.st==='leave'){q.vx=clamp(q.vx+Math.sign(q.v)*10*dt,-70,70);q.x+=q.vx*dt;q.y-=(6+q.t*5)*dt;if(q.x+ox<-140||q.x+ox>W+140||q.y<-oy-80)q.dead=true}
+  }
+  /* the nearest people on the deck walk over to the car (anyone missing walks on from the edge of the view) */
+  function callRiders(q){
+    const pool=chars.filter(c0=>(c0.kind==='code'||c0.kind==='town')&&!c0.idle&&!c0.board&&(c0.alpha===undefined||c0.alpha>.9)&&c0.x+ox>0&&c0.x+ox<W).sort((a,b)=>Math.abs(a.x-q.stopX)-Math.abs(b.x-q.stopX));
+    while(pool.length<q.want){const n=chars.length;if(Math.random()<.5)spawn(false);else spawnTown(false);if(chars.length>n)pool.push(chars[chars.length-1]);else break}
+    pool.slice(0,q.want).forEach(c0=>{c0.board=q;say(c0,rndp(['Taxi!','My ride!',"That's us!",'乗ります!','Такси!','¡Aquí!','Wait for me!']),1.5)});
+  }
   const crossing=()=>chars.some(q=>q.path==='X');
   function updCars(dt){
     if(A.type==='roof'){
-      flyT-=dt;if(flyT<=0){flyT=rnd(2,6);const r=Math.random()<.5?1:-1,far=Math.random()<.5;SKY.push({k:Math.floor(Math.random()*3),x:r>0?-ox-60:-ox+W+60,y:rnd(30-oy,far?60:140),v:r*rnd(40,90)*(far?.6:1)})}
-      for(const q of SKY)q.x+=q.v*dt;SKY=SKY.filter(q=>q.x+ox>-120&&q.x+ox<W+120);return}
+      flyT-=dt;if(flyT<=0){flyT=rnd(2,6);spawnFly()}
+      for(const q of SKY)updFly(q,dt);SKY=SKY.filter(q=>!q.dead);return}
     if(A.type==='back'){
       /* the back street's cars drive straight past, one lane each way */
       sideT-=dt;if(sideT<=0){sideT=rnd(4,11);const near=Math.random()<.5;SIDE.push({x:near?-ox-80:-ox+W+80,y:near?214:192,v:(near?1:-1)*rnd(55,85),hue:rndp([0,0,60,150,210,300])})}
@@ -372,6 +411,8 @@ function start(o){
       ch.ph+=dt*(ch.idle?0:ch.kind==='town'?ch.sp/2.4:ch.sp/7);
       if(ch.idle){ch.life-=dt;if(ch.life<=0)ch.dead=true;continue}
       const k=Math.max(.15,tall(ch.y||200)/50);
+      /* someone heading for a flying car walks to it, stops and climbs in */
+      if(ch.board){const q=ch.board,dx=q.stopX-ch.x;if(q.st==='leave'||q.dead){ch.board=null}else if(Math.abs(dx)<3){ch.boardA=(ch.boardA===undefined?1:ch.boardA)-dt*2.5;ch.alpha=Math.max(0,ch.boardA);if(ch.boardA<=0){ch.dead=true;q.boarded++}continue}else ch.toward=dx>0}
       ch.d+=(ch.toward?1:-1)*ch.sp*dt*k;
       const at=polyAt(ch.pts,clamp(ch.d,0,ch.len));ch.x=at[0];ch.y=at[1];
       ch.dir=PATHS[ch.path].flat?((at[2]>0)===ch.toward?'r':'l'):(ch.toward?'f':'b');
@@ -383,7 +424,7 @@ function start(o){
         ch.alpha=a;if(ch.d>ch.len||ch.d<0)ch.dead=true}
       else if(ch.d>ch.len||ch.d<0||tall(ch.y)<4)ch.dead=true;
       /* walking off the visible part of the back street counts as leaving */
-      if(A.side&&((ch.toward&&ch.x+ox>W+60)||(!ch.toward&&ch.x+ox<-60)))ch.dead=true;
+      if(A.side&&!ch.board&&((ch.toward&&ch.x+ox>W+60)||(!ch.toward&&ch.x+ox<-60)))ch.dead=true;
     }
     if(chars.filter(q=>q.idle&&q.kind==='code').length<2&&Math.random()<dt*.2){const free=A.spots.filter(s=>!chars.some(q=>q.spot===s));if(free.length)spawnIdle(rndp(free))}
     if(chars.filter(q=>q.idle&&q.kind==='town').length<3&&Math.random()<dt*.15){const free=A.tspots.filter(s=>!chars.some(q=>q.spot===s));if(free.length)spawnTownIdle(rndp(free))}
@@ -498,64 +539,101 @@ function start(o){
   function updRain(dt){for(const r of rain){r.y+=r.v*dt;if(!A.dark)r.x-=r.v*dt*.18;const gy=r.y>HOR+4&&Math.random()<dt*4;if(r.y>SH||gy){if(r.y>HOR)spl.push({x:r.x|0,y:r.y|0,t:.18});r.y=A.dark?rnd(20,60):-oy-rnd(0,40);r.x=Math.random()*(SW+60)}}
     spl.forEach(s=>s.t-=dt);for(let i=spl.length-1;i>=0;i--)if(spl[i].t<=0)spl.splice(i,1)}
 
-  /* ---- the tower and the monster ----
-     Cthulhu (cthulhu.png, 192x112 frames, facing right) flies in, hovers beside the tower and strikes it four times with
-     its beam and its tentacles; the fourth blow brings the tower down, it roars and flies off, and the tower is rebuilt later */
-  const CT={fw:192,fh:112,n:[15,12,6,7,9,5,11]},IDLE=0,FLY=2,BEAM=3,LASH=4;
-  const MON={on:false,phase:'',t:0,x:0,y:0,face:1,row:FLY,ph:0,hits:0,next:rnd(120,220)};
+  /* ---- the tower and the monsters ----
+     a giant comes in, stops beside the tower and hits it four times; the fourth blow brings it down, the giant roars and
+     leaves, and the tower is rebuilt later. Each giant has its own sheet: idle, move and attack rows ([row, frames, frame
+     that lands]), its body centre in the frame (ax, ay), how far from the tower it stands (dist, in its own pixels), its size
+     (sc) and how its attack reaches the tower: in the sprite itself, a shot that flies across (shot, arc for a lob, muz is
+     where it leaves from), or a lightning bolt (bolt). fx is the Free Pixel Effects impact left on the tower. All face right. */
+  const MDEF={
+    cthulhu:{im:'cthulhu',fw:192,fh:112,ax:96,ay:56,idle:[0,15],move:[2,6],atk:[[3,7,3],[4,9,4]],dist:88,sc:2,dy:-8,fx:'felspell',hue:95,name:'CTHULHU'},
+    obelisk:{im:'mon-obelisk',fw:100,fh:200,ax:51,ay:115,idle:[0,13],move:[0,13],atk:[[0,13,6]],dist:150,sc:1,dy:30,shot:'#c08cff',muz:[0,-60],fx:'midnight',name:'THE OBELISK'},
+    reaper:{im:'mon-reaper',fw:48,fh:48,ax:26,ay:26,idle:[0,5],move:[1,8],atk:[[2,10,5]],dist:22,sc:3,fx:'vortex',name:'THE REAPER'},
+    boxer:{im:'mon-boxer',fw:137,fh:44,ax:16,ay:28,idle:[0,4],move:[1,6],atk:[[2,13,7],[3,10,4]],dist:84,sc:3,fx:'phantom',name:'SPIRIT BOXER'},
+    small:{im:'mon-small',fw:82,fh:39,ax:10,ay:24,idle:[0,6],move:[1,6],atk:[[2,13,3]],dist:60,sc:3,dy:4,shot:'#d8a050',arc:1,muz:[6,-12],fx:'fire',name:'SEED SPITTER'},
+    ball:{im:'mon-ball',fw:126,fh:39,ax:30,ay:20,idle:[0,5],move:[1,8],atk:[[2,8,2]],dist:62,sc:3,fx:'sunburn',name:'BALL & CHAIN BOT'},
+    zap:{im:'mon-zap',fw:58,fh:41,ax:16,ay:25,idle:[0,6],move:[1,6],atk:[[2,10,3]],dist:34,sc:3,fx:'nebula',name:'DROID ZAPPER'},
+    storm:{im:'mon-storm',fw:119,fh:124,ax:53,ay:105,idle:[0,9],move:[1,10],atk:[[2,21,12]],dist:60,sc:3,dy:18,bolt:'#9ff0ff',muz:[0,-14],fx:'freezing',name:'STORMHEAD'},
+    shield:{im:'mon-shield',fw:90,fh:31,ax:31,ay:16,idle:[0,6],move:[1,6],atk:[[2,14,6]],dist:36,sc:3,fx:'freezing',name:'SHIELD DROID'},
+    wheel:{im:'mon-wheel',fw:117,fh:26,ax:22,ay:14,idle:[0,8],move:[1,8],atk:[[2,4,1]],dist:70,sc:3,dy:-15,shot:'#ff8ad8',muz:[22,-2],fx:'magic8',name:'BOT WHEEL'}
+  };
+  const MKEYS=Object.keys(MDEF);
+  const MON={on:false,kind:'cthulhu',phase:'',t:0,x:0,y:0,face:1,row:MDEF.cthulhu.move,ph:0,hits:0,next:rnd(120,220)};
   const TW={state:'up',fall:0,t:0,cv:null};
-  let fx=[],dust=[];
+  let fx=[],dust=[],shots=[],bolts=[],lastMon='';
   const SCREAM=['RUN!','Monster!!','逃げて!','Беги!','괴물이다!','Not again…','¡Corre!','The tower!','怪獣だ!'];
-  /* the monster is drawn at twice its pixel size where there is room for it, at 1:1 on narrow or short views */
+  /* giants are drawn at full size where there is room for them, half size (still whole pixels) on narrow or short views */
   const ms=()=>W<400||A.msMax===1||(A.type==='back'&&oy<90)?1:2;
+  const msOf=D=>ms()===2?D.sc:Math.max(1,Math.round(D.sc/2));
   const hitY=T=>{const t=T.top();return t+(T.base-t)*T.hit};
   function towerArt(){const T=A.tower,pl=A.pal;return TW.cv||(TW.cv={n:buildTower(T.h,T.w,alleyNo*97+13,pl[0],pl[1],false),d:buildTower(T.h,T.w,alleyNo*97+13,pl[0],pl[1],true)})}
-  function boom(x,y,big){fx.push({im:big?'expl-b':'expl-a',fw:big?64:32,n:8,x,y,t:0})}
+  /* explosions: the pack's orange ones (recoloured when the giant asks for a hue), or a Free Pixel Effects impact */
+  function boom(x,y,big,hue){fx.push({im:big?'expl-b':'expl-a',fw:big?64:32,n:8,fps:14,x,y,t:0,hue})}
+  function impact(x,y,name){fx.push({im:'fx-'+name,fw:50,fps:30,x,y,t:0})}
   /* sewer water thrown up by the monster: falling cyan pixels */
   function splash(x){dust.push({x,y:SH-30,vx:rnd(-20,20),vy:rnd(-60,-25),t:0,l:rnd(.6,1.1),wet:true})}
-  function startMon(){
+  function shout(){const vis=chars.filter(q=>q.kind!=='bot'&&tall(q.y)>=16);if(vis.length)say(rndp(vis),rndp(SCREAM),1.8)}
+  function startMon(kind){
     if(MON.on||TW.state!=='up'||wipe)return false;
     if(!A.tower){
-      /* down in the sewer it rises out of the water channel in front of the walkway */
-      MON.on=true;MON.mode='rise';MON.phase='rise';MON.t=0;MON.hits=0;MON.row=IDLE;MON.ph=0;MON.face=Math.random()<.5?1:-1;
+      /* down in the sewer Cthulhu rises out of the water channel in front of the walkway */
+      const D=MDEF.cthulhu;MON.on=true;MON.kind='cthulhu';MON.mode='rise';MON.phase='rise';MON.t=0;MON.hits=0;MON.row=D.idle;MON.ph=0;MON.face=Math.random()<.5?1:-1;MON.s=2;
       MON.x=-ox+W/2+rnd(-60,60);MON.hy=SH-58;MON.y=SH+70;shake=3;return true}
-    MON.mode='tower';const T=A.tower,side=A.monSide,s=ms();MON.on=true;MON.phase='in';MON.t=0;MON.hits=0;MON.row=FLY;MON.ph=0;MON.side=side;MON.face=-side;
-    MON.hx=T.x+side*88*s;MON.hy=hitY(T)-8*s;MON.x0=MON.hx+side*(W*.6+110*s);MON.x=MON.x0;MON.y=MON.hy-30;
-    if(dayK<.5)flash=1;return true;
+    const k=kind&&MDEF[kind]?kind:rndp(MKEYS.filter(q=>q!==lastMon));lastMon=k;
+    const D=MDEF[k],T=A.tower,side=A.monSide,s=msOf(D);
+    Object.assign(MON,{on:true,kind:k,mode:'tower',phase:'in',t:0,hits:0,shots:0,ai:0,row:D.move,ph:0,side,face:-side,s});
+    MON.hx=T.x+side*D.dist*s;MON.hy=hitY(T)+(D.dy||0)*s;MON.x0=MON.hx+side*(W*.6+60*s);MON.x=MON.x0;MON.y=MON.hy-30;
+    if(dayK<.5)flash=1;
+    const tt=document.querySelector('.toast');if(tt){tt.textContent='⚠ '+D.name+' ⚠';tt.classList.add('show');setTimeout(()=>tt.classList.remove('show'),2200)}
+    return true;
+  }
+  /* a blow lands on the tower: the giant's impact effect, shaking, screams; the fourth one brings it down */
+  function land(D,x,y){
+    MON.hits++;shake=5;impact(x,y,D.fx);boom(x+rnd(-4,4),y+rnd(-4,4),Math.random()<.5,D.hue);shout();
+    if(MON.hits>=4&&TW.state==='up'){TW.hue=D.hue;TW.state='falling';TW.t=0;shake=9}
+  }
+  function strike(D){
+    const T=A.tower,tx=T.x+rnd(-5,5),ty=hitY(T)+rnd(-8,8),mx=MON.x+(D.muz?D.muz[0]*MON.face:0)*MON.s,my=MON.y+(D.muz?D.muz[1]:0)*MON.s;
+    MON.shots++;
+    if(D.shot)shots.push({x:mx,y:my,x0:mx,y0:my,tx,ty,t:0,dur:Math.max(.4,Math.hypot(tx-mx,ty-my)/220),col:D.shot,arc:D.arc?40:0,D});
+    else if(D.bolt){const pts=[];for(let i=0;i<=8;i++){const u=i/8;pts.push([mx+(tx-mx)*u+(i&&i<8?rnd(-6,6):0),my+(ty-my)*u+(i&&i<8?rnd(-6,6):0)])}bolts.push({pts,t:.3,col:D.bolt});land(D,tx,ty)}
+    else land(D,tx,ty);
   }
   function updMon(dt){
     MON.next-=dt;if(!MON.on&&MON.next<=0&&TW.state==='up'&&!wipe){startMon();MON.next=rnd(180,300)}
     TW.t+=dt;
     if(TW.state==='falling'){TW.fall=Math.min(1,TW.fall+dt/2.4);
-      if(Math.random()<dt*9){const T=A.tower,top=T.top()+TW.fall*T.h;boom(T.x+rnd(-T.w/2,T.w/2),rnd(top,T.base-4),Math.random()<.4)}
+      if(Math.random()<dt*9){const T=A.tower,top=T.top()+TW.fall*T.h;boom(T.x+rnd(-T.w/2,T.w/2),rnd(top,T.base-4),Math.random()<.4,TW.hue)}
       if(Math.random()<dt*30){const T=A.tower;dust.push({x:T.x+rnd(-T.w,T.w),y:T.base-rnd(2,30),vx:rnd(-8,8),vy:rnd(-10,-3),t:0,l:rnd(1,2.2)})}
       if(TW.fall>=1){TW.state='down';TW.t=0}}
     else if(TW.state==='down'&&!MON.on&&TW.t>18){TW.state='rising';TW.t=0}
     else if(TW.state==='rising'){TW.fall=Math.max(0,TW.fall-dt/5);if(!TW.fall)TW.state='up'}
-    fx.forEach(f=>f.t+=dt);fx=fx.filter(f=>f.t*14<f.n);
+    fx.forEach(f=>f.t+=dt);fx=fx.filter(f=>{const im=img(f.im),n=f.n||(im.naturalWidth?im.naturalWidth/f.fw:30);return f.t*f.fps<n});
     dust.forEach(d=>{d.t+=dt;d.x+=d.vx*dt;d.y+=d.vy*dt;if(d.wet)d.vy+=140*dt});dust=dust.filter(d=>d.t<d.l);
+    /* shots fly (lobs arc over), and land when they arrive; bolts fade */
+    for(const q of shots){q.t+=dt;const u=Math.min(1,q.t/q.dur);q.x=q.x0+(q.tx-q.x0)*u;q.y=q.y0+(q.ty-q.y0)*u-Math.sin(u*Math.PI)*q.arc;if(u>=1){q.done=true;land(q.D,q.tx,q.ty)}}
+    shots=shots.filter(q=>!q.done);bolts.forEach(b=>b.t-=dt);bolts=bolts.filter(b=>b.t>0);
     shake=Math.max(0,shake-dt*12);flash=Math.max(0,flash-dt*2.5);
     if(!MON.on)return;
-    MON.t+=dt;MON.ph+=dt*11;const s=ms();
+    const D=MDEF[MON.kind];MON.t+=dt;MON.ph+=dt*11;const s=MON.s;
     if(MON.mode==='rise'){
+      const LASH=D.atk[1];
       if(MON.phase==='rise'){const k=Math.min(1,MON.t/2.2);MON.y=SH+70+(MON.hy-SH-70)*(1-Math.pow(1-k,3));if(Math.random()<dt*20)splash(MON.x+rnd(-40,40));if(k>=1){MON.phase='lash';MON.ph=0;MON.row=LASH;MON.hit=false}}
-      else if(MON.phase==='lash'){if(!MON.hit&&MON.ph>=4){MON.hit=true;MON.hits++;shake=6;for(let i=0;i<8;i++)splash(MON.x+MON.face*rnd(40,110));const vis=chars.filter(q=>tall(q.y)>=16);if(vis.length)say(rndp(vis),rndp(SCREAM),1.8)}
-        if(MON.ph>=CT.n[LASH]){MON.phase=MON.hits>=3?'roar':'rest';MON.t=0;MON.row=IDLE;MON.ph=0}}
+      else if(MON.phase==='lash'){if(!MON.hit&&MON.ph>=LASH[2]){MON.hit=true;MON.hits++;shake=6;for(let i=0;i<8;i++)splash(MON.x+MON.face*rnd(40,110));shout()}
+        if(MON.ph>=LASH[1]){MON.phase=MON.hits>=3?'roar':'rest';MON.t=0;MON.row=D.idle;MON.ph=0}}
       else if(MON.phase==='rest'){if(MON.t>.5){MON.phase='lash';MON.row=LASH;MON.ph=0;MON.hit=false;MON.face=-MON.face}}
       else if(MON.phase==='roar'){if(MON.t>1.8){MON.phase='sink';MON.t=0}}
       else if(MON.phase==='sink'){const k=Math.min(1,MON.t/2);MON.y=MON.hy+(SH+70-MON.hy)*k*k;if(Math.random()<dt*12)splash(MON.x+rnd(-40,40));if(k>=1)MON.on=false}
       return}
     if(MON.phase==='in'){const k=Math.min(1,MON.t/3.2),e=1-Math.pow(1-k,3);MON.x=MON.x0+(MON.hx-MON.x0)*e;MON.y=MON.hy-30*(1-e)+Math.sin(MON.t*3)*2;
-      if(k>=1){MON.phase='atk';MON.row=BEAM;MON.ph=0;MON.hit=false}}
+      if(k>=1){MON.phase='atk';MON.row=D.atk[0];MON.ph=0;MON.hit=false}}
     else if(MON.phase==='atk'){
-      const n=CT.n[MON.row];
-      if(!MON.hit&&MON.ph>=(MON.row===BEAM?3:4)){MON.hit=true;MON.hits++;shake=5;const T=A.tower;boom(T.x+rnd(-5,5),hitY(T)+rnd(-8,8),true);
-        const vis=chars.filter(q=>q.kind!=='bot'&&tall(q.y)>=16);if(vis.length)say(rndp(vis),rndp(SCREAM),1.8);
-        if(MON.hits>=4){TW.state='falling';TW.t=0;shake=9}}
-      if(MON.ph>=n){if(MON.hits>=4){MON.phase='roar';MON.t=0;MON.row=IDLE;MON.ph=0}else{MON.phase='rest';MON.t=0;MON.row=IDLE;MON.ph=0}}}
-    else if(MON.phase==='rest'){if(MON.t>.45){MON.phase='atk';MON.row=MON.hits%2?LASH:BEAM;MON.ph=0;MON.hit=false}}
-    else if(MON.phase==='roar'){MON.y=MON.hy+Math.sin(MON.t*3)*2;if(MON.t>2.6){MON.phase='out';MON.t=0;MON.row=FLY;MON.face=MON.side}}
-    else if(MON.phase==='out'){const k=Math.min(1,MON.t/3);MON.x=MON.hx+MON.side*(W*.7+120*s)*k*k;MON.y=MON.hy-40*k;if(k>=1){MON.on=false;TW.t=0}}
+      if(!MON.hit&&MON.ph>=MON.row[2]){MON.hit=true;strike(D)}
+      if(MON.ph>=MON.row[1]){MON.phase=MON.shots>=4?'wait':'rest';MON.t=0;MON.row=D.idle;MON.ph=0}}
+    else if(MON.phase==='rest'){if(MON.t>.45){MON.ai++;MON.phase='atk';MON.row=D.atk[MON.ai%D.atk.length];MON.ph=0;MON.hit=false}}
+    else if(MON.phase==='wait'){if(!shots.length&&MON.t>.3){MON.phase='roar';MON.t=0}}
+    else if(MON.phase==='roar'){MON.y=MON.hy+Math.sin(MON.t*3)*2;if(MON.t>2.6){MON.phase='out';MON.t=0;MON.row=D.move;MON.face=MON.side}}
+    else if(MON.phase==='out'){const k=Math.min(1,MON.t/3);MON.x=MON.hx+MON.side*(W*.7+60*s)*k*k;MON.y=MON.hy-40*k;if(k>=1){MON.on=false;TW.t=0}}
     if(MON.phase!=='in'&&MON.phase!=='out'&&MON.phase!=='roar')MON.y=MON.hy+Math.sin(MON.t*2.4)*1.5;
   }
 
@@ -565,7 +643,7 @@ function start(o){
     A=a;SW=a.SW;SH=a.SH;HOR=a.HOR;VP=a.VP;PATHS=a.paths;tall=a.tall;A.pal=rndp(NEONP);if(alleyNo===1)A.pal=NEONP[0];size();
     for(const q of chars)if(q.bubEl)q.bubEl.remove();for(const p of pets)if(p.bubEl)p.bubEl.remove();
     chars=[];pets=[];fx=[];dust=[];flick=[];SIDE=[];SKY=[];closeTerm();
-    MON.on=false;TW.state='up';TW.fall=0;TW.cv=null;
+    MON.on=false;TW.state='up';TW.fall=0;TW.cv=null;shots=[];bolts=[];pickN=0;pickNext=5+Math.floor(Math.random()*3);
     CARS=a.type==='cross'?[
       {n:'red',dir:'toward',x:267,y:183,w:76,h:56,base:43,s:1,st:'rest',t:rnd(3,8),k:0},
       {n:'taxi',dir:'away',x:175,y:173,w:37,h:37,base:33,s:1,st:'rest',t:rnd(6,12),k:0},
@@ -612,9 +690,16 @@ function start(o){
   }
   function drawMonster(){
     for(const d of dust){c.fillStyle=d.wet?(d.t/d.l<.5?'#7fd6ff':'#3a7ab0'):d.t/d.l<.5?'#8a8098':'#5a5068';const k=1+Math.floor(d.t*2);c.fillRect(Math.round(d.x+ox),Math.round(d.y+oy),k,k)}
-    if(MON.on){const ct=img('cthulhu');if(ct.naturalWidth){const n=CT.n[MON.row],f=MON.phase==='atk'?Math.min(n-1,Math.floor(MON.ph)):Math.floor(MON.ph)%n;
-      blit(ct,f*CT.fw,MON.row*CT.fh,CT.fw,CT.fh,96,56,MON.x+ox,MON.y+oy,ms(),MON.face)}}
-    for(const f of fx){const im=img(f.im);if(im.naturalWidth)c.drawImage(im,Math.min(f.n-1,Math.floor(f.t*14))*f.fw,0,f.fw,f.fw,Math.round(f.x+ox-f.fw/2),Math.round(f.y+oy-f.fw/2),f.fw,f.fw)}
+    if(MON.on){const D=MDEF[MON.kind],im=img(D.im);if(im.naturalWidth){const r=MON.row,f=MON.phase==='atk'||MON.phase==='lash'?Math.min(r[1]-1,Math.floor(MON.ph)):Math.floor(MON.ph)%r[1];
+      blit(im,f*D.fw,r[0]*D.fh,D.fw,D.fh,D.ax,D.ay,MON.x+ox,MON.y+oy,MON.s,MON.face)}}
+    /* bolts: a jagged line with a white core; shots: a glowing ball with a short tail */
+    for(const b of bolts){c.globalAlpha=Math.min(1,b.t*5);for(let i=1;i<b.pts.length;i++){const a=b.pts[i-1],q=b.pts[i],n=Math.ceil(Math.max(Math.abs(q[0]-a[0]),Math.abs(q[1]-a[1])))||1;
+      for(let k=0;k<=n;k++){const x=Math.round(a[0]+(q[0]-a[0])*k/n+ox),y=Math.round(a[1]+(q[1]-a[1])*k/n+oy);c.fillStyle=b.col;c.fillRect(x-1,y,3,1);c.fillStyle='#fff';c.fillRect(x,y,1,1)}}c.globalAlpha=1}
+    for(const q of shots){const dx=q.tx-q.x0,dy=q.ty-q.y0,l=Math.hypot(dx,dy)||1;
+      for(let k=4;k>=1;k--){c.globalAlpha=.18*(5-k);c.fillStyle=q.col;c.fillRect(Math.round(q.x-dx/l*k*3+ox)-1,Math.round(q.y-dy/l*k*3+oy)-1,3,3)}
+      c.globalAlpha=1;c.fillStyle=q.col;c.fillRect(Math.round(q.x+ox)-2,Math.round(q.y+oy)-2,5,5);c.fillStyle='#fff';c.fillRect(Math.round(q.x+ox)-1,Math.round(q.y+oy)-1,2,2)}
+    for(const f of fx){let im=img(f.im);if(!im.naturalWidth)continue;if(f.hue)im=recolored(im,f.hue);const n=f.n||(im.width/f.fw);
+      c.drawImage(im,Math.min(n-1,Math.floor(f.t*f.fps))*f.fw,0,f.fw,f.fw,Math.round(f.x+ox-f.fw/2),Math.round(f.y+oy-f.fw/2),f.fw,f.fw)}
   }
   /* the back street's wall and pavement, composed once the tiles have loaded */
   function backArt(){
@@ -625,6 +710,13 @@ function start(o){
     for(let x=0;x<SW;){if(Math.random()<.15){q.drawImage(ts,0,224,32,144,x,0,32,144);x+=32}else{q.drawImage(ts,48,224,112,144,x,0,112,144);x+=112}}
     if(A.hue)for(const cv2 of[wall]){const x2=cv2.getContext('2d'),d=x2.getImageData(0,0,cv2.width,cv2.height);hueShift(d.data,A.hue);x2.putImageData(d,0,0)}
     return A.art={wall,gr};
+  }
+  /* a flying car in its colours, with a flickering engine glow at the back */
+  function drawFly(q){
+    const fa=FLYART[q.k],im=painted(q.k,q.li);if(!im)return;const w=im.width,h=im.height,f=Math.sign(q.v)*fa.face,x=q.x+ox,y=q.y+oy;
+    blit(im,0,0,w,h,w/2,h/2,x,y,1,f);
+    const back=Math.round(x-Math.sign(q.st==='leave'?q.vx||q.v:q.v)*(w/2-4)),acc=LIVERY[q.li][1],n=2+Math.floor(Math.random()*4);
+    c.fillStyle='hsl('+acc+',100%,70%)';c.globalAlpha=.85;c.fillRect(back-(q.v>0?n:0),Math.round(y),n,2);c.fillStyle='#fff';c.fillRect(back-(q.v>0?1:-1),Math.round(y),1,1);c.globalAlpha=1;
   }
   /* the roof deck: a railing along the far edge, concrete slabs, and the alley's air conditioners, tanks, masts,
      light strings and a neon sign standing on it */
@@ -700,9 +792,10 @@ function start(o){
       tile(img('sky-back'),4,.12,n);tile(img('sky-city'),4,.3,n);
       tile(img('sky-dusk'),-oy,.12,dk);tile(img('city-dusk'),172-272,.3,dk);
       drawTower(dk);drawMonster();
-      for(const q of SKY){const fa=FLYART[q.k],im=img(fa.n);if(im.naturalWidth)blit(im,0,0,im.naturalWidth,im.naturalHeight,im.naturalWidth/2,im.naturalHeight/2,q.x+ox,q.y+oy,1,Math.sign(q.v)*fa.face)}
+      for(const q of SKY)if(q.st==='cruise')drawFly(q);
       tile(img('roof-front'),-8,.55,1,true);
       c.drawImage(roofArt(),ox,oy+160);c.fillStyle='#1c1730';c.fillRect(0,oy+240,W,H);
+      for(const q of SKY)if(q.st!=='cruise')items.push({y:181,draw:()=>drawFly(q)});
     }else{
       /* the Sewers: the far tunnel, the chamber and its pipes; the monster and the water channel go in front of the walkway */
       tile(img('sew-back'),0,.5,1,true);
@@ -720,7 +813,7 @@ function start(o){
         c.globalAlpha=ch.alpha;blit(town,(Math.floor(ch.ph)%n)*TFR,(ch.town*3+ch.row)*TFR,TFR,TFR,t.ax||TAX,TFR,x,y,s,ch.face);c.globalAlpha=1;
         const top=t.sit?24:t.type==='kidrun'?27:36;ch.bb=ch.alpha>.5?[x-10*s,y-top*s,x+10*s,y]:null;bubAt(ch,x,y-(top+1)*s)}});continue}
       const sp=sprite(ch);items.push({y:ch.y,draw:()=>{
-      const x=Math.round(ch.x)+ox-sp.ax,y=Math.round(ch.y)+oy-sp.ay;c.drawImage(sp.cv,x,y);
+      const x=Math.round(ch.x)+ox-sp.ax,y=Math.round(ch.y)+oy-sp.ay;c.globalAlpha=ch.alpha===undefined?1:ch.alpha;c.drawImage(sp.cv,x,y);c.globalAlpha=1;
       const hh=Math.round(tall(ch.y)*ch.hk);ch.bb=[x+sp.ax-hh*.3,y+sp.ay-hh-2,x+sp.ax+hh*.3,y+sp.ay];
       bubAt(ch,x+sp.ax,y+sp.ay-hh-(ch.look.umb?hh*.35:0))}})}
     for(const p of pets){if(!anim.naturalWidth)break;items.push({y:p.fly?-999:p.y,draw:()=>{
@@ -744,13 +837,13 @@ function start(o){
   if(dbtn){const sync=()=>{dbtn.textContent=dayOn?'☾ NIGHT':'☀ DAY';dbtn.setAttribute('aria-pressed',dayOn?'true':'false');document.documentElement.classList.toggle('day',dayOn)};
     dbtn.addEventListener('click',()=>{dayOn=!dayOn;try{localStorage.setItem('jowo.day',dayOn?'1':'0')}catch(e){}sync();o.setBeach(dayOn);if(reduce){dayK=dayOn?1:0;frame()}});sync()}
   const mbtn=document.getElementById('mon');let cdEnd=0;
-  if(mbtn){mbtn.title='Send Cthulhu after the tower (30 second cooldown)';
+  if(mbtn){mbtn.title='Send a giant after the tower (30 second cooldown)';
     const msync=()=>{const left=Math.ceil((cdEnd-performance.now())/1000);mbtn.disabled=reduce||left>0||MON.on;mbtn.textContent=MON.on?'☄ INCOMING…':left>0?'☄ WAIT '+left+'s':'☄ MONSTER'};
     mbtn.addEventListener('click',()=>{if(MON.on||performance.now()<cdEnd)return;if(startMon())cdEnd=performance.now()+30000;msync()});
     setInterval(msync,250);msync()}
 
   useAlley(makeCross(0));
-  if(/[?&]debug/.test(location.search))g.__street={chars:()=>chars,pets:()=>pets,cars:()=>CARS,day:v=>{dayOn=v},say:(i,t)=>say(chars[i],t,3),mon:startMon,monState:()=>({on:MON.on,phase:MON.phase,hits:MON.hits,tower:TW.state}),turn,alley:()=>({no:alleyNo,type:A.type,hue:A.hue}),go:k=>{alleyNo++;useAlley(MAKE[k](0))}};
+  if(/[?&]debug/.test(location.search))g.__street={chars:()=>chars,pets:()=>pets,cars:()=>CARS,day:v=>{dayOn=v},say:(i,t)=>say(chars[i],t,3),mon:k=>startMon(k),monState:()=>({on:MON.on,phase:MON.phase,hits:MON.hits,tower:TW.state}),turn,alley:()=>({no:alleyNo,type:A.type,hue:A.hue}),go:k=>{alleyNo++;useAlley(MAKE[k](0))},pickup:()=>{pickN=pickNext;spawnFly();return SKY.map(q=>q.st)},sky:()=>SKY.map(q=>({st:q.st,li:q.li,k:q.k,b:q.boarded,w:q.want}))};
   let last=0;
   function loop(t){
     const dt=Math.min((t-last)/1000||0,.05);last=t;
