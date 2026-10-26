@@ -762,5 +762,6 @@ function start(o){
   }
   if(reduce){const once=()=>{updChars(0);frame()};addEventListener('load',once);addEventListener('resize',once);setTimeout(once,300)}else requestAnimationFrame(loop);
 }
-g.PixelStreet={start};
+/* the club page (club.js) borrows the people drawing and sprite tables */
+g.PixelStreet={start,lib:{look,render,TOWN,TFR,TAX,TREF,WLIST,FEMOK,NEONS,recolored,hueShift}};
 })(window);

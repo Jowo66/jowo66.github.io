@@ -7,7 +7,9 @@
 //   copied as they are: cthulhu.png (Pixel Monsters, CC0), expl-a/expl-b.png (Ansimuz Explosion Pack 1, CC0),
 //   sof-*.png (Ansimuz Streets of Fight stage tiles and props, CC0) for the back street scene,
 //   v1-*.png (Cyberpunk Street version 1) for Restaurant Row, roof-front.png (its city skyline) for the rooftops,
-//   sew-*.png (Ansimuz Sewers pack, CC0) for the sewers; fly-1..3.png are Warped Vehicles (CC0) made smaller
+//   sew-*.png (Ansimuz Sewers pack, CC0) for the sewers; fly-1..3.png are Warped Vehicles (CC0) made smaller;
+//   brawl.png (Streets of Fight fighters, halved), rcc.png, apt.png, cpap1/2.png (RCC Streets and Apartment demo tiles,
+//   CyberPunk Asset Pack, CC0 per the user) for the pixel nightclub
 // Frames are square and laid out left to right as in the source strips; street.js holds the frame counts.
 const fs = require('fs');
 const path = require('path');
@@ -19,12 +21,15 @@ const ANIMALS = ['1 Dog', '2 Dog 2', '3 Cat', '4 Cat 2', '5 Rat', '6 Rat 2', '7 
 const DRONES = ['1/Walk_scan', '3/Forward', '5_2/Walk', '6/Walk'].map(d => CP(`Drones Pack/1 Drones/${d}.png`));
 /* Ansimuz Warped Vehicles (CC0) flying over the rooftops, halved (the third one twice) to sit in the distance */
 const FLYERS = ['vehicle 1/vehicle-1.png', 'vehicle 2/vehicle-2.png', 'vehicle 3/vehicle-3-static.png'].map(f => path.join(src, 'Vehicles/Warped Vehicles/Assets', f));
+/* Streets of Fight's Brawler Girl and Enemy Punk (Ansimuz, CC0) for the club's moshpit, full size (they fight at the front of the pit): one row per animation */
+const BRAWL = ['Brawler Girl/idle', 'Brawler Girl/walk', 'Brawler Girl/punch', 'Brawler Girl/kick', 'Brawler Girl/jab', 'Brawler Girl/hurt', 'Brawler Girl/jump_kick',
+  'Enemy Punk/idle', 'Enemy Punk/walk', 'Enemy Punk/punch', 'Enemy Punk/hurt'].map(f => path.join(src, 'Streets of Fight/Assets/Spritesheets', f + '.png'));
 /* Ansimuz Sewers pack (CC0): the four frames of the front water side by side */
 const WATER = [1, 2, 3, 4].map(i => path.join(src, `Sewers Pack/Assets/Environment Layers/Front-water/front-water${i}.png`));
 (async () => {
   const b = await chromium.launch(); const p = await b.newPage();
   const rd = f => fs.existsSync(f) ? 'data:image/png;base64,' + fs.readFileSync(f).toString('base64') : null;
-  const res = await p.evaluate(async ({ town, animals, drones, flyers, water }) => {
+  const res = await p.evaluate(async ({ town, animals, drones, flyers, water, brawl }) => {
     const load = async u => { if (!u) return null; const im = new Image(); im.src = u; await im.decode(); return im };
     const png = cv => cv.toDataURL();
     /* rows of strips into one sheet, each row band as tall as its frames */
@@ -60,9 +65,10 @@ const WATER = [1, 2, 3, 4].map(i => path.join(src, `Sewers Pack/Assets/Environme
       animals: png(await sheet(animals.flat(), 48, true)),
       drones: png(await sheet(drones, 48)),
       'fly-1': png(await one(flyers[0], 1)), 'fly-2': png(await one(flyers[1], 1)), 'fly-3': png(await one(flyers[2], 2)),
-      'sew-water': png(await strip(water))
+      'sew-water': png(await strip(water)),
+      brawl: png(await sheet(brawl, 64))
     };
-  }, { town: TOWN.map(r => r.map(rd)), animals: ANIMALS.map(r => r.map(rd)), drones: DRONES.map(rd), flyers: FLYERS.map(rd), water: WATER.map(rd) });
+  }, { town: TOWN.map(r => r.map(rd)), animals: ANIMALS.map(r => r.map(rd)), drones: DRONES.map(rd), flyers: FLYERS.map(rd), water: WATER.map(rd), brawl: BRAWL.map(rd) });
   for (const [n, d] of Object.entries(res)) fs.writeFileSync(path.join(out, n + '.png'), Buffer.from(d.split(',')[1], 'base64'));
   await b.close();
   const fd = path.join(__dirname, '../../assets/fonts'), NJ = path.join(src, 'Fonts/Not Jam Font Pack');
@@ -85,7 +91,11 @@ const WATER = [1, 2, 3, 4].map(i => path.join(src, `Sewers Pack/Assets/Environme
     'roof-front.png': 'Parallax Backgrounds/Cyberpunk Street/Assets/city skyline/Layers/front.png',
     'sew-back.png': 'Sewers Pack/Assets/Environment Layers/back.png',
     'sew-mid.png': 'Sewers Pack/Assets/Environment Layers/middle.png',
-    'sew-front.png': 'Sewers Pack/Assets/Environment Layers/front.png'
+    'sew-front.png': 'Sewers Pack/Assets/Environment Layers/front.png',
+    'rcc.png': 'Tilesets/RCC Streets Tiles Demo/16x16/streetstilesetDEMO.png',
+    'apt.png': 'Apartment Tiles Demo/png/apartmentA5demo.png',
+    'cpap1.png': 'CyberPunk Asset Pack/asset page 1.png',
+    'cpap2.png': 'CyberPunk Asset Pack/page 2.png'
   };
   for (const [n, f] of Object.entries(COPY)) fs.copyFileSync(path.join(src, f), path.join(out, n));
   console.log('wrote town.png, animals.png, drones.png, two fonts and ' + Object.keys(COPY).length + ' copied sheets');

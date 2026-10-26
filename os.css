@@ -87,6 +87,8 @@ html.pixmode .ctm{font-family:'NJ Mono',var(--mono);font-size:13px;-webkit-font-
 .links a:hover{transform:translate(-2px,-2px);border-color:var(--pink)}
 .links a small{display:block;color:#9a8fb0}
 .mapwrap{position:relative}
+.mapmode{position:absolute;top:8px;right:8px;font:inherit;font-size:12px;letter-spacing:.06em;padding:3px 8px;background:rgba(10,6,18,.85);color:var(--cyan);border:1px solid var(--cyan);cursor:pointer}
+.mapmode:hover,.mapmode:focus-visible{background:var(--cyan);color:#05161c}
 #map{width:min(560px,86vw);aspect-ratio:360/260;image-rendering:pixelated;display:block;border:3px solid var(--ink);background:#0b0716;cursor:crosshair}
 .cap{margin-top:8px;min-height:2.6em;font-size:14px;color:var(--amber)}
 

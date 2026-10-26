@@ -863,7 +863,7 @@ const apps={
   skills:{jp:'技',t:'SKILLS',t2:'навыки · 技能 · कौशल',w:420},
   map:{jp:'地',t:'DISTRICT MAP',t2:'خريطة · 지도 · Карта',w:null,init:initMap,x:.4,y:80,w:600},
   contact:{jp:'連',t:'CONTACT',t2:'связь · 連絡 · اتصال',w:380},
-  club:{jp:'踊',get t(){return BEACH.on?'PLAYA SOFIA':'CASA SOFIA'},t2:'نادي · 클럽 · клуб',frame:'nightclub.html?embed&v=20261007zq',cls:'app-win',ar:1.5}
+  club:{jp:'踊',get t(){return BEACH.on?'PLAYA SOFIA':'CASA SOFIA'},t2:'نادي · 클럽 · клуб',frame:/[?&]pixel/.test(location.search)?'nightclub.html?embed&pixel&v=20261026a':'nightclub.html?embed&v=20261007zq',cls:'app-win',ar:1.5}
 };
 const open={};let zTop=100,n=0;
 function openApp(id){
@@ -925,6 +925,112 @@ function initMap(win){
   ];
   /* buildings from the textured building pack: the sprite's height becomes the building's height for picking, damage and signs */
   B.forEach((b,i)=>{const sp=SPRITES.bld[i];if(sp){b.spr=sp;b.h=sp.h;b.img=sprImg('assets/district/b'+String(i).padStart(2,'0')+'.png')}});
+  /* ---------- ?pixel: buildings drawn as pixel art instead of the textured sprites ----------
+     each building is rasterised once into a canvas laid out like the sprites (day on the left, night on the right),
+     with slanted window rows on both faces, a neon rim round the roof at night and some rooftop gear */
+  const PIXMAP=/[?&]pixel/.test(location.search);
+  function rastPoly(x,pts,col){const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);x.fillStyle=col;
+    for(let py=Math.floor(Math.min(...ys));py<=Math.ceil(Math.max(...ys));py++)for(let px=Math.floor(Math.min(...xs));px<=Math.ceil(Math.max(...xs));px++)if(inPoly([px+.5,py+.5],pts))x.fillRect(px,py,1,1)}
+  function pxLine(x,a,b,col){x.fillStyle=col;const n=Math.ceil(Math.max(Math.abs(b[0]-a[0]),Math.abs(b[1]-a[1])))||1;for(let k=0;k<=n;k++)x.fillRect(Math.round(a[0]+(b[0]-a[0])*k/n),Math.round(a[1]+(b[1]-a[1])*k/n),1,1)}
+  function isoArt(b,i){
+    const h=b.h,cw=Math.ceil((b.w+b.dd)*TW/2)+4,ch=Math.ceil(h+(b.w+b.dd)*TH/2)+16,ax=Math.ceil(b.dd*TW/2)+2,ay=h+12;
+    const cv2=document.createElement('canvas');cv2.width=cw*2;cv2.height=ch;const x=cv2.getContext('2d');
+    const P=(u,v,z)=>[ax+(u-v)*TW/2,ay+(u+v)*TH/2-z];
+    let seed=i*977+13;const r=()=>(seed=(seed*16807)%2147483647)/2147483647;
+    const glow=b.glow||'#19e3ff',base=[1,3,5].map(k=>parseInt(b.col.slice(k,k+2),16)),props=[],lit=[],rgb=a=>`rgb(${a[0]|0},${a[1]|0},${a[2]|0})`;
+    for(let k=0;k<Math.max(1,Math.round(b.w*b.dd*1.5));k++){const q=r();props.push({u:.15+r()*Math.max(.1,b.w-.4),v:.15+r()*Math.max(.1,b.dd-.4),k:q<.55?'ac':q<.8?'ant':'tank'})}
+    for(let k=0;k<400;k++)lit.push(r());
+    [1,0].forEach(day=>{
+      x.save();x.translate(day?0:cw,0);
+      const sh=k=>rgb(base.map(q=>clamp(q*k*(day?1.7:1),0,255)));
+      const L=[P(0,b.dd,h),P(b.w,b.dd,h),P(b.w,b.dd,0),P(0,b.dd,0)],Rt=[P(b.w,0,h),P(b.w,b.dd,h),P(b.w,b.dd,0),P(b.w,0,0)],T=[P(0,0,h),P(b.w,0,h),P(b.w,b.dd,h),P(0,b.dd,h)];
+      rastPoly(x,L,sh(.78));rastPoly(x,Rt,sh(.52));rastPoly(x,T,sh(1.1));
+      for(let z=4;z<h-3;z++){const zr=z%6;if(zr<2||zr>4)continue;const fl=Math.floor(z/6);
+        for(let s=1;s<Math.floor(b.w*TW/2)-1;s++){if(s%4!==1&&s%4!==2)continue;const p=P((s+.5)/(TW/2),b.dd,z),id=(fl*37+(s>>2))%400;
+          x.fillStyle=day?'#a9cce4':lit[id]<.45?(lit[id]<.12?glow:'#ffcf7a'):'#120c1e';x.fillRect(Math.round(p[0]),Math.round(p[1]),1,1)}
+        for(let s=1;s<Math.floor(b.dd*TW/2)-1;s++){if(s%4!==1&&s%4!==2)continue;const p=P(b.w,(s+.5)/(TW/2),z),id=(fl*53+(s>>2)+200)%400;
+          x.fillStyle=day?'#8fb3cc':lit[id]<.4?'#e8a860':'#0e0918';x.fillRect(Math.round(p[0]),Math.round(p[1]),1,1)}}
+      pxLine(x,P(0,b.dd,0),P(0,b.dd,h),'#07040d');pxLine(x,P(b.w,b.dd,0),P(b.w,b.dd,h),day?'#cfd4e6':'#2a2440');pxLine(x,P(b.w,0,0),P(b.w,0,h),'#07040d');
+      [[0,1],[1,2],[2,3],[3,0]].forEach(([a,c2])=>pxLine(x,T[a],T[c2],day?'#e8e6f0':glow));
+      props.forEach(q=>{const p=P(q.u,q.v,h),px=Math.round(p[0]),py=Math.round(p[1]);
+        if(q.k==='ac'){x.fillStyle=day?'#9a98a8':'#3b3552';x.fillRect(px-2,py-3,4,3);x.fillStyle=day?'#c8c6d4':'#5a5478';x.fillRect(px-2,py-3,4,1)}
+        else if(q.k==='ant'){x.fillStyle=day?'#6a6878':'#5a5478';x.fillRect(px,py-8,1,8);x.fillStyle='#ff3a3a';x.fillRect(px,py-9,1,1)}
+        else{x.fillStyle=day?'#8a6a50':'#4a3a32';x.fillRect(px-3,py-7,6,5);x.fillStyle=day?'#a88866':'#6a5444';x.fillRect(px-3,py-7,6,1);x.fillStyle='#2a201c';x.fillRect(px-2,py-2,1,2);x.fillRect(px+1,py-2,1,2)}});
+      x.restore();
+    });
+    cv2.naturalWidth=cv2.width;return{img:cv2,spr:{cw,ch,ax,ay,h}};
+  }
+  if(PIXMAP)B.forEach((b,i)=>{if(b.lot)return;if(b.deco)b.h=Math.round(b.h*1.6);const a=isoArt(b,i);b.spr=a.spr;b.img=a.img});
+
+  /* ---------- skyline view: the same district seen from the street, every building side by side ---------- */
+  let MODE='iso';try{MODE=localStorage.getItem('jowo.mapmode')==='sky'?'sky':'iso'}catch(e){}
+  const mbt=win.querySelector('.mapmode');
+  const syncMode=()=>{if(mbt)mbt.textContent=MODE==='sky'?'▦ ISO MAP':'▤ SKYLINE'};syncMode();
+  if(mbt)mbt.onclick=()=>{MODE=MODE==='sky'?'iso':'sky';try{localStorage.setItem('jowo.mapmode',MODE)}catch(e){}hover=null;syncMode();draw()};
+  const SKY={y:224};let skyLay=null;
+  function skyLayout(){
+    const list=B.slice().sort((a,b)=>(a.gx+a.gy*.9)-(b.gx+b.gy*.9));
+    const ws=list.map(b=>clamp(Math.round((b.w+b.dd)*10),14,38)),tot=ws.reduce((s,w)=>s+w+3,0),k=Math.min(1,352/tot);
+    if(!sCars.length)for(let i=0;i<5;i++)sCars.push({x:Math.random()*360,v:(i%2?1:-1)*(18+Math.random()*16),lane:i%2,c:CCOL[i%CCOL.length]});
+    let x=Math.round((360-tot*k)/2);skyLay=list.map((b,i)=>{const w=Math.max(10,Math.round(ws[i]*k)),r={b,x,w,h:b.lot?Math.round(12+b.h*.6):clamp(Math.round(b.h*1.7),26,150),seed:i*131+7};x+=w+Math.max(1,Math.round(3*k));return r});
+  }
+  const SKYN=['#0b0716','#120a24','#1a0f30','#24143c','#2e1846'],SKYD=['#7fb4ec','#9cc4ee','#bcd2ee','#e2d6d0','#f2c9a0'];
+  const sCars=[];
+  const R=(x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),w,h)};
+  function facade(r,dk){
+    const b=r.b,dmg=b.dmg||0,h=Math.round(r.h*(1-dmg*.6)),x0=r.x,w=r.w,y0=SKY.y-h,lt=1+dk*.7,col=hx(b.col),hv=hover===b;
+    const C=k=>rg(col.map(q=>clamp(q*k*lt,0,255)));
+    r.rect=[x0-1,y0-10,x0+w+1,SKY.y];
+    if(b.club&&BEACH.p>.5){
+      /* Playa Sofia: sand, a palm, an umbrella and a couple of dancers where the club stood */
+      R(x0-4,SKY.y-4,w+8,4,'#e9d094');const px=x0+w*.3;R(px,SKY.y-30,2,26,'#7a5230');for(let k=0;k<5;k++){const a=-2.6+k*.55;for(let q=1;q<10;q++)R(px+Math.cos(a)*q,SKY.y-30+Math.sin(a)*q*.6+q*.15,2,1,k%2?'#2f9e44':'#43b95a')}
+      const ux=x0+w*.75;R(ux,SKY.y-16,1,12,'#d8d0c0');for(let k=-6;k<=6;k++)R(ux+k,SKY.y-17+Math.abs(k)*.4,1,2,k%3?'#ff2e88':'#fff');
+      for(let k=0;k<3;k++){const dx=x0+4+k*6,hop=Math.abs(Math.sin(t*5+k))*2;R(dx,SKY.y-5-hop,2,3,NEONC[k]);R(dx,SKY.y-7-hop,2,2,'#f0c9a5')}
+      return}
+    if(b.lot){
+      /* an empty lot: scaffolding, hazard tape and a crane */
+      for(let yy=y0;yy<SKY.y;yy+=5)R(x0,yy,w,1,'#6a5a3a');for(let xx=x0;xx<=x0+w;xx+=5)R(xx,y0,1,h,'#8a7a4a');
+      for(let xx=x0;xx<x0+w;xx+=2)R(xx,SKY.y-3,2,2,(xx/2)%2?'#ffcf2a':'#15101a');
+      R(x0+w*.4,y0-16,1,16,'#ffb347');R(x0+w*.4-6,y0-16,w*.8,1,'#ffb347');R(x0+w*.4+w*.3,y0-15,1,4+Math.round(Math.sin(t*2+r.x)*2),'#ffb347');
+      if(Math.floor(t*2)%2)R(x0+w-3,y0-2,2,2,'#ffcf2a');
+    }else{
+      R(x0,y0,w,h,C(.8));R(x0,y0,1,h,C(1.1));R(x0+w-1,y0,1,h,C(.55));R(x0,y0,w,1,dk>.5?'#e8e6f0':b.glow||'#19e3ff');
+      let s=r.seed;const rr=()=>(s=(s*16807)%2147483647)/2147483647;
+      for(let yy=y0+4;yy<SKY.y-9;yy+=5)for(let xx=x0+2;xx<x0+w-2;xx+=3){const q=rr();R(xx,yy,1,2,dk>.5?'#a9cce4':q<.45?(q<.1?b.glow||'#19e3ff':'#ffcf7a'):'#120c1e')}
+      R(x0+Math.floor(w/2)-2,SKY.y-7,4,7,b.club?'rgb('+doorCol().map(v=>v|0).join(',')+')':'#0a0612');
+      R(x0+Math.round(w*.7),y0-6,1,6,'#5a5478');if(Math.floor(t*1.5+r.x)%3)R(x0+Math.round(w*.7),y0-7,1,1,'#ff3a3a');
+      if(b.sign){c.globalAlpha=1-dk*.5;c.fillStyle=(Math.floor(t*1.5)%7)?b.glow:'#333';c.font='bold 9px "Zen Kaku Gothic New",sans-serif';c.textAlign='center';c.fillText(b.sign,x0+w/2,y0-9);c.globalAlpha=1}
+      if(b.club){/* the queue at the door and the bouncer */
+        for(let k=0;k<6;k++){const qx=x0+w+3+k*4,bob=Math.sin(t*3+k)*.5;R(qx,SKY.y-4,2,3,NEONC[k%NEONC.length]);R(qx,SKY.y-6+bob,2,2,'#f0c9a5')}
+        R(x0+w/2+3,SKY.y-7,3,7,'#0c0c12');R(x0+w/2+3,SKY.y-9,2,2,'#e8e8f0')}
+    }
+    if(b.burn>.02){for(let k=0;k<3;k++)flame(x0+w*(.25+k*.25),y0,(3+b.burn*3),k+r.x)}
+    if(hv){const p=4+Math.sin(t*6);c.strokeStyle='#19e3ff';c.lineWidth=1;c.strokeRect(x0-p+.5,y0-10-p+.5,w+p*2,h+10+p*2)}
+  }
+  const NEONC=['#ff2e88','#19e3ff','#ffb347','#7c5cff','#3dff9a','#e8e8f0'];
+  function drawSkyline(dk){
+    if(!skyLay)skyLayout();
+    /* sky in flat bands, stars at night, then the far city */
+    const bands=dk>.5?SKYD:SKYN;for(let i=0;i<5;i++)R(0,i*36,360,36,bands[i]);R(0,180,360,80,bands[4]);
+    if(dk<.5){for(let i=0;i<40;i++){const sx=(i*73)%360,sy=(i*37)%120;if((Math.floor(t*2)+i)%9)R(sx,sy,1,1,'#e8e0ff')}R(300,30,10,10,'#e8e0c8');R(302,30,8,2,bands[0])}
+    else{R(48,40,12,12,'#fff2c0')}
+    const far=sprImg(dk>.5?'assets/pixel/city-dusk.png':'assets/pixel/sky-city.png');
+    if(far.naturalWidth){c.globalAlpha=.75;const fh=far.naturalHeight;for(let x=0;x<360;x+=far.naturalWidth)c.drawImage(far,x,SKY.y-fh+(dk>.5?40:10));c.globalAlpha=1}
+    skyLay.forEach(r=>facade(r,dk));
+    /* the street: pavement, road with lane marks, traffic and people */
+    R(0,SKY.y,360,5,rg(mx([52,44,76],[178,180,194],dk)));R(0,SKY.y+5,360,31,rg(mx([24,19,42],[88,92,112],dk)));
+    for(let x=0;x<360;x+=14)R(x,SKY.y+20,7,1,rg(mx([255,179,71],[240,226,150],dk)));
+    sCars.forEach(k=>{k.x+=k.v*.016;if(k.x>380)k.x=-20;if(k.x<-20)k.x=380;const y=SKY.y+(k.lane?24:12);
+      R(k.x-5,y-3,10,3,k.c);R(k.x-3,y-5,6,2,k.c);R(k.x+(k.v>0?0:-3),y-5,3,1,'#d8f4ff');R(k.x-4,y,2,1,'#000');R(k.x+2,y,2,1,'#000');
+      if(dk<.6){R(k.x+(k.v>0?5:-6),y-2,1,1,'#fff6c8');R(k.x+(k.v>0?-6:5),y-2,1,1,'#ff3a3a')}});
+    PEDS.forEach(q=>{const x=(q.p/N)*360,y=SKY.y+2,bob=Math.sin(t*7+q.p*9)*.5;R(x,y-4,2,3,q.col);R(x,y-6+bob,2,2,'#f0c9a5')});
+    if(mm.on)mm.pack.forEach(q=>{const sp=SPRITES[q.cat][q.n];if(!sp||!q.img.naturalWidth)return;const x=((q.gx+q.gy)/(2*N))*360,fly=mm.kind==='fly',y=fly?SKY.y-90+Math.sin(t*2.5+q.lag*40)*3:SKY.y+2,sc=(q.lead?30:22)/(sp.fy-sp.top),fi=Math.floor(t*10+q.lag*60)%sp.n[0];
+      c.save();c.translate(x,y);c.scale((q.dx<0?-1:1)*sc,sc);c.drawImage(q.img,fi*sp.cw,0,sp.cw,sp.ch,-sp.fx,-sp.fy,sp.cw,sp.ch);c.restore()});
+    drawFx();drawDebris(dk);
+    if(hover){const r=skyLay.find(q=>q.b===hover);if(r){const p=[r.x+r.w/2,SKY.y-r.h-22];c.font='8px "Share Tech Mono",monospace';c.textAlign='center';c.fillStyle='#000';c.fillRect(p[0]-hover.n.length*2.4-3,p[1]-7,hover.n.length*4.8+6,10);c.fillStyle='#ffb347';c.fillText(hover.n,p[0],p[1])}}
+    if(mm.on){c.fillStyle='rgba(255,30,40,'+(.07+.06*Math.sin(t*9))+')';c.fillRect(0,0,360,260);
+      if(Math.floor(t*3)%2){c.font='bold 9px "Share Tech Mono",monospace';c.textAlign='center';const tx='⚠ MONSTER ATTACK ⚠';c.fillStyle='rgba(0,0,0,.7)';c.fillRect(180-tx.length*2.9,6,tx.length*5.8,13);c.fillStyle='#ff3a2a';c.fillText(tx,180,16)}}
+  }
   /* night sprite underneath, day sprite faded over it; a damaged building sinks into a clip of its shortened box */
   function drawBld(b,s,H0,lift,hv,dk){
     const sp=b.spr,o=iso(b.gx,b.gy,0),sink=H0-b.h,x=o[0]-sp.ax,y=o[1]-sp.ay+lift+sink,A=c.globalAlpha;
@@ -1262,6 +1368,7 @@ function initMap(win){
     updOuts();updFx();updCars();updDebris();updMon();const dk=DAYST.k;
     BEACH.p=clamp(BEACH.p+(BEACH.on?1:-1)*.016/2.8,0,1);
     B[0].n=BEACH.p>.5?'Playa Sofia':'Casa Sofia';B[0].d=BEACH.p>.5?'OPEN: sun, sand, water features and the same dancers.':'OPEN: a hologram DJ, a pulsing floor and a very friendly moshpit.';
+    if(MODE==='sky'){if(cv.style.transform&&!mm.on)cv.style.transform='';drawSkyline(dk);return}
     c.fillStyle=rg(mx([11,7,22],[132,160,196],dk));c.fillRect(0,0,360,260);
     {const gk=Math.round(dk*30);if(gk!==gKey){gKey=gk;const main=c;c=gcv.getContext('2d');c.clearRect(0,0,360,260);ground(gk/30);c=main}c.drawImage(gcv,0,0)}
     if(BEACH.p>.01){drawBeach(dk,BEACH.p);drawBeachProps(dk,BEACH.p)}
@@ -1381,6 +1488,7 @@ function initMap(win){
   }
   function pick(e){
     const r=cv.getBoundingClientRect(),p=[(e.clientX-r.left)*360/r.width,(e.clientY-r.top)*260/r.height];
+    if(MODE==='sky'){const q=(skyLay||[]).find(q=>q.rect&&!q.b.deco&&p[0]>=q.rect[0]&&p[0]<=q.rect[2]&&p[1]>=q.rect[1]&&p[1]<=q.rect[3]);return q?q.b:null}
     const order=B.slice().sort((a,b)=>(b.gx+b.gy+b.w+b.dd)-(a.gx+a.gy+a.w+a.dd));
     return order.find(b=>!b.deco&&b._s&&(inPoly(p,b._s.top)||inPoly(p,b._s.left)||inPoly(p,b._s.right)))||null;
   }
