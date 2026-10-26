@@ -11,6 +11,12 @@ html,body{margin:0;height:100%;overflow:hidden;background:var(--ink);color:var(-
 a{color:var(--cyan)}
 #alley{position:fixed;inset:0;width:100%;height:100%;display:block}
 #alley.pix{image-rendering:pixelated}
+/* while a giant attacks the pixel street, the decorations over the canvas step aside so nothing hides it */
+html.monattack .sys,html.monattack .hero,html.monattack .sfx,html.monattack .vig{opacity:0!important;transition:opacity .4s}
+.sys,.hero,.sfx,.vig{transition:opacity .6s}
+/* open windows turn almost see-through for the attack; hovering one brings it straight back so it stays usable */
+html.monattack .win:not(:hover):not(:focus-within){opacity:.1}
+.win{transition:opacity .45s}
 /* Not Jam pixel fonts (CC0) for the pixel street; other scripts fall back to VT323 and Share Tech Mono */
 @font-face{font-family:'NJ UI';src:url('assets/fonts/notjam-ui-condensed-16.ttf') format('truetype');font-display:swap}
 @font-face{font-family:'NJ Mono';src:url('assets/fonts/notjam-mono-clean-13.ttf') format('truetype');font-display:swap}

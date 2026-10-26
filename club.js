@@ -40,7 +40,7 @@ function start(o){
     const r=Math.random(),pool=L.TOWN.map((q,i)=>i).filter(i=>!L.TOWN[i].sit&&!crowd.some(d=>d.kind==='town'&&d.town===i));
     /* about a third of the crowd are townspeople, a quarter Duelyst's party-goers (duelyst.js), the rest drawn in code */
     const du=DUC.filter(u=>!crowd.some(d=>d.du===u));
-    const p=r<.25&&du.length?{kind:'duel',du:rndp(du)}:r<.55&&pool.length?townPerson(rndp(pool)):codePerson(rndp(L.WLIST.filter(n=>n!=='umbrella')));
+    const p=r<.25&&du.length?{kind:'duel',du:rndp(du),pal:L.duScheme?L.duScheme():0}:r<.55&&pool.length?townPerson(rndp(pool)):codePerson(rndp(L.WLIST.filter(n=>n!=='umbrella')));
     return Object.assign(p,{floor:f,x,y,hx:x,tx:x,face:Math.random()<.5?1:-1,ph:Math.random()*4,alpha:from?0:1,state:from?'enter':'dance',jump:0,vy:0});
   }
   function fighters(f,x,y){return[{kind:'brawl',who:'g',floor:f,x:x-22,y,hx:x-22,tx:x-22,face:1,ph:0,alpha:1,state:'dance',anim:'idle',at:0,jump:0,vy:0,pit:1},
@@ -249,9 +249,9 @@ function start(o){
       if(im.naturalWidth)blit(im,fi*96,set[0]*64,96,64,45,63,x,y,d.who==='g'?face:-face);top=y-46}
     else if(d.kind==='duel'){
       /* a Duelyst party-goer: idle loop on the beat, the run row when moving, and its attack row as a flourish on a drop */
-      const D=DU[d.du],im=img('du-'+d.du),bx=D.box,bh=bx[3]-bx[1],sc=36/bh,r=d.flour>0?D.atk:still?D.idle:D.run,
+      const D=DU[d.du],im=(L.duPainted&&L.duPainted(d.du,d.pal))||img('du-'+d.du),bx=D.box,bh=bx[3]-bx[1],sc=36/bh,r=d.flour>0?D.atk:still?D.idle:D.run,
         fi=d.flour>0?Math.min(r[1]-1,Math.floor((1-d.flour/1.2)*r[1])):Math.floor(still?b*2:d.ph*8)%r[1];
-      if(im.naturalWidth)blit(im,fi*D.fw,r[0]*D.fh,D.fw,D.fh,(bx[0]+bx[2])/2,bx[3],x,y,face,sc);top=y-bh*sc}
+      if(im.naturalWidth||im.width)blit(im,fi*D.fw,r[0]*D.fh,D.fw,D.fh,(bx[0]+bx[2])/2,bx[3],x,y,face,sc);top=y-bh*sc}
     else if(d.kind==='town'){const t0=L.TOWN[d.town],row=still?(t0.n[2]&&Math.floor(b/8)%3===2?2:1):0,n=t0.n[row]||t0.n[1],im=img('town');
       if(im.naturalWidth)blit(im,(Math.floor(still?b*2:d.ph*8)%n)*L.TFR,(d.town*3+row)*L.TFR,L.TFR,L.TFR,t0.ax||L.TAX,L.TFR,x,y,face);top=y-36}
     else{const H=Math.round(38*(d.hk||1)),sp=codeSprite(d,H,dir,fr);c.drawImage(sp.cv,Math.round(x)-sp.ax,Math.round(y)-sp.ay);top=y-H}

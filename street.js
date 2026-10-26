@@ -150,6 +150,28 @@ function recolored(im,deg){
     const d=x.getImageData(0,0,cv.width,cv.height);hueShift(d.data,deg);x.putImageData(d,0,0);k.set(deg,cv)}
   return cv;
 }
+/* ---- Duelyst characters get a colour scheme each: [hue turn, saturation, brightness] for their strongly coloured
+   pixels (clothes, hair, armour, effects); skin tones, greys, steel and dark outlines keep their own colours.
+   Schemes come off a shuffled deck so two in a row never match; scheme 0 is the original art. ---- */
+const DUPAL=[[0,1,1],[180,1,1],[120,1,1],[240,1,1],[60,1.1,1],[300,1,1],[30,.8,1.06],[200,1.2,.95],[150,.9,1],[90,1,1.05],[270,1.15,1],[330,1.1,1],[0,.35,1.08],[210,.6,.9]];
+let dudeck=[],dulast=-1;
+function duScheme(){if(!dudeck.length){dudeck=DUPAL.map((q,i)=>i).sort(()=>Math.random()-.5);if(dudeck[0]===dulast)dudeck.push(dudeck.shift())}return dulast=dudeck.shift()}
+const DUCV=new Map();
+function duPainted(u,li){
+  const im=IMG['du-'+u]||img('du-'+u);if(!im.naturalWidth)return null;if(!li)return im;
+  const k=u+'|'+li;if(DUCV.has(k))return DUCV.get(k);
+  const [dh,ss,ls]=DUPAL[li],cv=document.createElement('canvas');cv.width=im.naturalWidth;cv.height=im.naturalHeight;const x=cv.getContext('2d');x.drawImage(im,0,0);
+  const d=x.getImageData(0,0,cv.width,cv.height),a=d.data;
+  for(let i=0;i<a.length;i+=4){if(!a[i+3])continue;
+    const r=a[i]/255,g2=a[i+1]/255,b=a[i+2]/255,mx=Math.max(r,g2,b),mn=Math.min(r,g2,b),dd=mx-mn,l=(mx+mn)/2;
+    if(dd<.12||l<.1)continue;const sat=dd/(1-Math.abs(2*l-1));if(sat<.3)continue;
+    let h=(mx===r?((g2-b)/dd+6)%6:mx===g2?(b-r)/dd+2:(r-g2)/dd+4)*60;
+    if(h>=8&&h<=42&&sat<.75&&l>.3&&l<.85)continue;   /* skin */
+    h=(h+dh)%360;const ns=Math.min(1,sat*ss),nl=Math.min(.95,l*ls);
+    const C=(1-Math.abs(2*nl-1))*ns,X=C*(1-Math.abs((h/60)%2-1)),m=nl-C/2,q=h<60?[C,X,0]:h<120?[X,C,0]:h<180?[0,C,X]:h<240?[0,X,C]:h<300?[X,0,C]:[C,0,X];
+    a[i]=(q[0]+m)*255;a[i+1]=(q[1]+m)*255;a[i+2]=(q[2]+m)*255}
+  x.putImageData(d,0,0);DUCV.set(k,cv);return cv;
+}
 /* a 3x5 pixel font, just enough for the alley sign */
 const GLY={A:'010101111101101',L:'100100100100111',E:'111100110100111',Y:'101101010010010','>':'100110111110100'};
 
@@ -370,7 +392,7 @@ function start(o){
   function makeTown(i){const t=TOWN[i],ch=makeChar(t.type,t.fem);ch.kind='town';ch.town=i;ch.row=0;ch.face=1;ch.alpha=1;return ch}
   /* Duelyst's people (duelyst.js) walk the same routes as the townspeople; they are kind 'town' with du set to their unit */
   const DU=g.DUELYST||{},DUST=Object.keys(DU).filter(u=>DU[u].cat==='street');DUST.forEach(u=>img('du-'+u));
-  function makeDuel(u){const ch=makeChar(rndp(['walker','walker','detective','netrunner','samurai','dealer','courier','sage','preacher']));ch.kind='town';ch.du=u;ch.town=null;ch.row=0;ch.face=1;ch.alpha=1;return ch}
+  function makeDuel(u){const ch=makeChar(rndp(['walker','walker','detective','netrunner','samurai','dealer','courier','sage','preacher']));ch.kind='town';ch.du=u;ch.pal=duScheme();ch.town=null;ch.row=0;ch.face=1;ch.alpha=1;return ch}
   function spawnTown(initial){
     const walkers=TOWN.map((t,i)=>i).filter(i=>TOWN[i].n[0]&&!chars.some(q=>q.kind==='town'&&q.town===i));
     const duels=DUST.filter(u=>!chars.some(q=>q.du===u));
@@ -552,7 +574,7 @@ function start(o){
      (sc) and how its attack reaches the tower: in the sprite itself, a shot that flies across (shot, arc for a lob, muz is
      where it leaves from), or a lightning bolt (bolt). fx is the Free Pixel Effects impact left on the tower. All face right. */
   const MDEF={
-    cthulhu:{im:'cthulhu',fw:192,fh:112,ax:96,ay:56,idle:[0,15],move:[2,6],atk:[[3,7,3],[4,9,4]],dist:88,sc:2,dy:-8,fx:'felspell',hue:95,name:'CTHULHU'},
+    cthulhu:{im:'cthulhu',fw:192,fh:112,ax:96,ay:56,bb:[40,4,152,108],idle:[0,15],move:[2,6],atk:[[3,7,3],[4,9,4]],dist:88,sc:2,dy:-8,fx:'felspell',hue:95,name:'CTHULHU'},
     obelisk:{im:'mon-obelisk',fw:100,fh:200,ax:51,ay:115,idle:[0,13],move:[0,13],atk:[[0,13,6]],dist:150,sc:1,dy:30,shot:'#c08cff',muz:[0,-60],fx:'midnight',name:'THE OBELISK'},
     reaper:{im:'mon-reaper',fw:48,fh:48,ax:26,ay:26,idle:[0,5],move:[1,8],atk:[[2,10,5]],dist:22,sc:3,fx:'vortex',name:'THE REAPER'},
     boxer:{im:'mon-boxer',fw:137,fh:44,ax:16,ay:28,idle:[0,4],move:[1,6],atk:[[2,13,7],[3,10,4]],dist:84,sc:3,fx:'phantom',name:'SPIRIT BOXER'},
@@ -569,7 +591,7 @@ function start(o){
     nightfiend:'NIGHTFIEND',dagona:'DAGONA',razorcraggolem:'RAZORCRAG GOLEM',greatwhitenorth:'GREAT WHITE NORTH',sapphireseer:'SAPPHIRE SEER',kolossus:'KOLOSSUS'};
   const fxByHue=h=>h<30?'vortex':h<70?'sunburn':h<150?'felspell':h<200?'freezing':h<260?'nebula':h<320?'midnight':'magic8';
   for(const u of Object.keys(DU))if(DU[u].cat==='giant'){const D=DU[u],bx=D.box,n=D.atk[1];
-    MDEF[u]={im:'du-'+u,fw:D.fw,fh:D.fh,ax:(bx[0]+bx[2])/2,ay:(bx[1]+bx[3])/2,idle:D.idle,move:D.run,atk:[[D.atk[0],n,Math.max(1,Math.floor(n*.55))]],
+    MDEF[u]={im:'du-'+u,bb:bx,fw:D.fw,fh:D.fh,ax:(bx[0]+bx[2])/2,ay:(bx[1]+bx[3])/2,idle:D.idle,move:D.run,atk:[[D.atk[0],n,Math.max(1,Math.floor(n*.55))]],
       dist:(bx[2]-bx[0])/2+34,sc:2,dy:Math.round((bx[3]-bx[1])*.35),shot:D.col,muz:[(bx[2]-bx[0])*.35,-(bx[3]-bx[1])*.15],fx:fxByHue(D.hue),name:DUNAME[u.replace(/^[a-z0-9]+_/,'')]||u.replace(/^[a-z0-9]+_/,'').toUpperCase()}}
   const MKEYS=Object.keys(MDEF);
   const MON={nextKind:rndp(MKEYS),on:false,kind:'cthulhu',phase:'',t:0,x:0,y:0,face:1,row:MDEF.cthulhu.move,ph:0,hits:0,next:rnd(120,220)};
@@ -596,13 +618,28 @@ function start(o){
     const k=kind&&MDEF[kind]?kind:MON.nextKind&&MON.nextKind!==lastMon?MON.nextKind:rndp(MKEYS.filter(q=>q!==lastMon));lastMon=k;
     /* choose the next giant now and start loading its sheet, so it is ready when it comes */
     MON.nextKind=rndp(MKEYS.filter(q=>q!==k));img(MDEF[MON.nextKind].im);
-    const D=MDEF[k],T=A.tower,side=A.monSide,s=msOf(D);
+    const D=MDEF[k],T=A.tower,s=msOf(D),hy=hitY(T)+(D.dy||0)*s;
+    /* try both sides of the tower (and, for giants that shoot, further off) and take the spot that is least covered */
+    const blocked=covers(),ranged=D.shot||D.bolt;let best=null;
+    for(const side of[A.monSide,-A.monSide])for(const m of ranged?[1,1.6,2.3]:[1,1.3]){
+      const p=fitMon(D,s,-side,T.x+side*D.dist*s*m,hy),r=monRect(D,s,-side,p[0],p[1]),o=blocked.reduce((a,q)=>a+Math.max(0,Math.min(r[2],q[2])-Math.max(r[0],q[0]))*Math.max(0,Math.min(r[3],q[3])-Math.max(r[1],q[1])),0);
+      if(!best||o<best.o-1)best={o,side,x:p[0],y:p[1]}}
+    const side=best.side;
     Object.assign(MON,{on:true,kind:k,mode:'tower',phase:'in',t:0,hits:0,shots:0,ai:0,row:D.move,ph:0,side,face:-side,s});
-    MON.hx=T.x+side*D.dist*s;MON.hy=hitY(T)+(D.dy||0)*s;MON.x0=MON.hx+side*(W*.6+60*s);MON.x=MON.x0;MON.y=MON.hy-30;
+    MON.hx=best.x;MON.hy=best.y;MON.x0=MON.hx+side*(W*.6+60*s);MON.x=MON.x0;MON.y=MON.hy-30;
     if(dayK<.5)flash=1;
     const tt=document.querySelector('.toast');if(tt){tt.textContent='⚠ '+D.name+' ⚠';tt.classList.add('show');setTimeout(()=>tt.classList.remove('show'),2200)}
     return true;
   }
+  /* the giant's body on screen, in stage coordinates: its frame box (Duelyst units know their own), mirrored when it faces left */
+  function monRect(D,s,face,x,y){const b=D.bb||[D.fw*.12,D.fh*.08,D.fw*.88,D.fh*.95],l=(face>0?D.ax-b[0]:b[2]-D.ax)*s,r=(face>0?b[2]-D.ax:D.ax-b[0])*s;return[x-l,y-(D.ay-b[1])*s,x+r,y+(b[3]-D.ay)*s]}
+  /* what covers the canvas, in stage coordinates: the HUD bar, the dock and any open window */
+  function covers(){const k=W/innerWidth,rs=[[-ox,-oy,-ox+W,-oy+42*k],[-ox,-oy+H-90*k,-ox+W,-oy+H]];
+    /* open windows fade out of the way during an attack (os.css), but a spot clear of them is still preferred */
+    document.querySelectorAll('.win:not(.closing)').forEach(el=>{const q=el.getBoundingClientRect();if(q.width)rs.push([q.left*k-ox,q.top*k-oy,q.right*k-ox,q.bottom*k-oy,1])});return rs}
+  /* move a spot just enough that the whole body is inside the view, below the HUD and above the dock */
+  function fitMon(D,s,face,x,y){const r=monRect(D,s,face,x,y),k=W/innerWidth,x0=-ox+3,x1=-ox+W-3,y0=-oy+44*k,y1=-oy+H-92*k;
+    if(r[0]<x0)x+=x0-r[0];else if(r[2]>x1)x-=r[2]-x1;if(r[1]<y0)y+=y0-r[1];else if(r[3]>y1)y-=Math.min(r[3]-y1,r[1]-y0);return[x,y]}
   /* a blow lands on the tower: the giant's impact effect, shaking, screams; the fourth one brings it down */
   function land(D,x,y){
     MON.hits++;shake=5;impact(x,y,D.fx);boom(x+rnd(-4,4),y+rnd(-4,4),Math.random()<.5,D.hue);shout();
@@ -650,6 +687,7 @@ function start(o){
     else if(MON.phase==='wait'){if(!shots.length&&MON.t>.3){MON.phase='roar';MON.t=0}}
     else if(MON.phase==='roar'){MON.y=MON.hy+Math.sin(MON.t*3)*2;if(MON.t>2.6){MON.phase='out';MON.t=0;MON.row=D.move;MON.face=MON.side}}
     else if(MON.phase==='out'){const k=Math.min(1,MON.t/3);MON.x=MON.hx+MON.side*(W*.7+60*s)*k*k;MON.y=MON.hy-40*k;if(k>=1){MON.on=false;TW.t=0}}
+    if(MON.phase!=='in'&&MON.phase!=='out'){const f=fitMon(D,s,MON.face,MON.hx,MON.hy);MON.hx+=(f[0]-MON.hx)*Math.min(1,dt*6);MON.hy+=(f[1]-MON.hy)*Math.min(1,dt*6);MON.x=MON.hx}
     if(MON.phase!=='in'&&MON.phase!=='out'&&MON.phase!=='roar')MON.y=MON.hy+Math.sin(MON.t*2.4)*1.5;
   }
 
@@ -776,7 +814,7 @@ function start(o){
       /* sky and far city: night clouds and neon towers, or the dusk sky and orange city by day */
       tile(img('sky-back'),0,.25,n);tile(img('sky-city'),HOR+4-192,.45,n);
       tile(img('sky-dusk'),0,.25,dk);tile(img('city-dusk'),0,.45,dk);
-      drawTower(dk);drawMonster();
+      drawTower(dk);
       /* the street itself, its night palette fading in over the day one */
       const st=pic('street'),stn=pic('street-n');
       if(st&&stn){if(dk>0)c.drawImage(st,ox,oy);if(n>0){c.globalAlpha=n;c.drawImage(stn,ox,oy)}c.globalAlpha=1}
@@ -790,7 +828,7 @@ function start(o){
       /* the back street is a wider shot (fitH 400) so the tower and the monster have sky above the wall */
       tile(img('sky-back'),-oy,.25,n);tile(img('sky-city'),-150,.4,n);tile(noBlack('sof-back'),-80,.6,n,true);
       tile(img('sky-dusk'),-oy,.25,dk);tile(img('city-dusk'),-150,.45,dk);
-      drawTower(dk);drawMonster();
+      drawTower(dk);
       const art=backArt();if(art){c.drawImage(art.wall,ox,oy);c.drawImage(art.gr,ox,oy+96)}
       const fore=img('sof-fore');
       for(const x of A.lamps)items.push({y:164,draw:()=>{if(fore.naturalWidth)c.drawImage(fore,16,0,42,144,Math.round(x+ox-34),oy+164-144,42,144)}});
@@ -802,13 +840,13 @@ function start(o){
       /* Restaurant Row: the far city and the orange towers behind the street, or the dusk city by day */
       tile(img('v1-far'),0,.2,n);tile(img('v1-back'),0,.45,n);
       tile(img('sky-dusk'),-oy,.2,dk);tile(img('city-dusk'),-12,.45,dk);
-      drawTower(dk);drawMonster();
+      drawTower(dk);
       tile(pic('v1-fore'),0,1,1,true);
     }else if(A.type==='roof'){
       /* Rooftops: clouds and skyline, the tower, flying traffic, the nearer roofs and then our deck */
       tile(img('sky-back'),4,.12,n);tile(img('sky-city'),4,.3,n);
       tile(img('sky-dusk'),-oy,.12,dk);tile(img('city-dusk'),0,.3,dk);
-      drawTower(dk);drawMonster();
+      drawTower(dk);
       for(const q of SKY)if(q.st==='cruise')drawFly(q);
       tile(img('roof-front'),-8,.55,1,true);
       c.drawImage(roofArt(),ox,oy+160);c.fillStyle='#1c1730';c.fillRect(0,oy+240,W,H);
@@ -825,7 +863,7 @@ function start(o){
         const s=Math.max(1,Math.round(tall(ch.y)))/TREF,b=DRN[ch.bot],x=ch.x+ox,y=ch.alt+oy;
         blit(drones,(Math.floor(ch.ph)%b.n)*TFR,ch.bot*TFR,TFR,TFR,24,24,x,y,s,ch.face*b.face);
         ch.bb=[x-18*s,y-14*s,x+18*s,y+16*s];bubAt(ch,x,y-14*s)}});continue}
-      if(ch.du){const D=DU[ch.du],im=img('du-'+ch.du);if(!im.naturalWidth)continue;items.push({y:ch.y,draw:()=>{
+      if(ch.du){const D=DU[ch.du],im=duPainted(ch.du,ch.pal);if(!im)continue;items.push({y:ch.y,draw:()=>{
         /* a Duelyst unit at the height of a person standing there: its idle body box sets the scale and the feet */
         const bx=D.box,bh=bx[3]-bx[1],s=Math.max(1,tall(ch.y))*1.05/bh,x=ch.x+ox,y=ch.y+oy,r=ch.board&&ch.boardA!==undefined?D.idle:D.run;
         c.globalAlpha=ch.alpha;blit(im,(Math.floor(ch.ph)%r[1])*D.fw,r[0]*D.fh,D.fw,D.fh,(bx[0]+bx[2])/2,bx[3],x,y,s,ch.face);c.globalAlpha=1;
@@ -843,8 +881,10 @@ function start(o){
       c.globalAlpha=p.alpha;blit(anim,(Math.floor(p.ph)%n)*a.fw,(a.r+p.row)*24,a.fw,a.foot,a.fw/2,a.foot,x,y,s,p.face);c.globalAlpha=1;
       p.bb=[x-a.fw/2*s,y-a.foot*s*.8,x+a.fw/2*s,y];bubAt(p,x,y-a.foot*s*.8)}})}
     items.sort((a,b)=>a.y-b.y).forEach(it=>it.draw());
-    if(A.type==='sewer'){drawMonster();const wt=img('sew-water');if(wt.naturalWidth){const f=Math.floor(performance.now()/160)%4;for(let x=((ox%64)+64)%64-64;x<W;x+=64)c.drawImage(wt,f*64,0,64,32,x,oy+208,64,32)}c.fillStyle='#0b1430';c.fillRect(0,oy+240,W,H)}
+    if(A.type==='sewer'){const wt=img('sew-water');if(wt.naturalWidth){const f=Math.floor(performance.now()/160)%4;for(let x=((ox%64)+64)%64-64;x<W;x+=64)c.drawImage(wt,f*64,0,64,32,x,oy+208,64,32)}c.fillStyle='#0b1430';c.fillRect(0,oy+240,W,H)}
     drawSign();
+    /* the monster, its shots and impacts go over everything else, so nothing in the scene can hide an attack */
+    drawMonster();
     /* rain */
     if(dk<.5||A.dark){c.fillStyle='#5ba1b0';for(const r of rain){const x=Math.round(r.x)+ox,y=Math.round(r.y)+oy;c.fillRect(x,y,1,3);c.fillRect(x-1,y+3,1,1)}
       c.fillStyle='#7fb4ec';for(const s of spl){c.fillRect(s.x+ox-1,s.y+oy,1,1);c.fillRect(s.x+ox+1,s.y+oy,1,1)}}
@@ -865,18 +905,18 @@ function start(o){
     setInterval(msync,250);msync()}
 
   useAlley(makeCross(0));
-  if(/[?&]debug/.test(location.search))g.__street={chars:()=>chars,pets:()=>pets,cars:()=>CARS,day:v=>{dayOn=v},say:(i,t)=>say(chars[i],t,3),mon:k=>startMon(k),monState:()=>({on:MON.on,phase:MON.phase,hits:MON.hits,tower:TW.state}),turn,alley:()=>({no:alleyNo,type:A.type,hue:A.hue}),go:k=>{alleyNo++;useAlley(MAKE[k](0))},pickup:()=>{pickN=pickNext;spawnFly();return SKY.map(q=>q.st)},sky:()=>SKY.map(q=>({st:q.st,li:q.li,k:q.k,b:q.boarded,w:q.want}))};
+  if(/[?&]debug/.test(location.search))g.__street={chars:()=>chars,pets:()=>pets,cars:()=>CARS,day:v=>{dayOn=v},say:(i,t)=>say(chars[i],t,3),mon:k=>startMon(k),monState:()=>({on:MON.on,phase:MON.phase,hits:MON.hits,tower:TW.state}),monBox:()=>{if(!MON.on||MON.mode!=='tower')return null;const D=MDEF[MON.kind],r=monRect(D,MON.s,MON.face,MON.x,MON.y);return{screen:[(r[0]+ox)*innerWidth/W,(r[1]+oy)*innerHeight/H,(r[2]+ox)*innerWidth/W,(r[3]+oy)*innerHeight/H],covers:covers().map(q=>[(q[0]+ox)*innerWidth/W,(q[1]+oy)*innerHeight/H,(q[2]+ox)*innerWidth/W,(q[3]+oy)*innerHeight/H].concat(q.slice(4)))}},turn,alley:()=>({no:alleyNo,type:A.type,hue:A.hue}),go:k=>{alleyNo++;useAlley(MAKE[k](0))},pickup:()=>{pickN=pickNext;spawnFly();return SKY.map(q=>q.st)},sky:()=>SKY.map(q=>({st:q.st,li:q.li,k:q.k,b:q.boarded,w:q.want}))};
   let last=0;
   function loop(t){
     const dt=Math.min((t-last)/1000||0,.05);last=t;
     try{dayK=clamp(dayK+(dayOn?1:-1)*dt/1.3,0,1);DAYST.on=dayOn;DAYST.k=dayK;
       if(wipe){wipe.t+=dt;if(!wipe.sw&&wipe.t>=.55){wipe.sw=true;nextAlley()}if(wipe.t>=1.1)wipe=null}
       if(!MON.on&&!pinned&&!wipe){turnT-=dt;if(turnT<=0)turn()}
-      updCars(dt);updChars(dt);updPets(dt);updFlick(dt);updMon(dt);if(dayK<.5||A.dark)updRain(dt);frame();updTerm(dt)}catch(err){console.error('street frame error',err)}
+      updCars(dt);updChars(dt);updPets(dt);updFlick(dt);updMon(dt);document.documentElement.classList.toggle('monattack',MON.on);if(dayK<.5||A.dark)updRain(dt);frame();updTerm(dt)}catch(err){console.error('street frame error',err)}
     requestAnimationFrame(loop);
   }
   if(reduce){const once=()=>{updChars(0);frame()};addEventListener('load',once);addEventListener('resize',once);setTimeout(once,300)}else requestAnimationFrame(loop);
 }
 /* the club page (club.js) borrows the people drawing and sprite tables */
-g.PixelStreet={start,lib:{look,render,TOWN,TFR,TAX,TREF,WLIST,FEMOK,NEONS,recolored,hueShift}};
+g.PixelStreet={start,lib:{look,render,TOWN,TFR,TAX,TREF,WLIST,FEMOK,NEONS,recolored,hueShift,duScheme,duPainted}};
 })(window);
