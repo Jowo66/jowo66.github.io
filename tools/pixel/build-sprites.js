@@ -4,6 +4,8 @@
 //   animals.png  Street Animals at half size (the pack draws them as big as the people): rows walk / idle per animal
 //   drones.png   Drones Pack: one row per drone, its flying loop
 //   fonts        Not Jam Mono Clean 13 and UI Condensed 16 (CC0) copied to assets/fonts/
+//   copied as they are: cthulhu.png (Pixel Monsters, CC0), expl-a/expl-b.png (Ansimuz Explosion Pack 1, CC0),
+//   sof-*.png (Ansimuz Streets of Fight stage tiles and props, CC0) for the back street scene
 // Frames are square and laid out left to right as in the source strips; street.js holds the frame counts.
 const fs = require('fs');
 const path = require('path');
@@ -55,5 +57,17 @@ const DRONES = ['1/Walk_scan', '3/Forward', '5_2/Walk', '6/Walk'].map(d => CP(`D
   fs.mkdirSync(fd, { recursive: true });
   fs.copyFileSync(path.join(NJ, 'NotJamMonoClean13/Not Jam Mono Clean 13.ttf'), path.join(fd, 'notjam-mono-clean-13.ttf'));
   fs.copyFileSync(path.join(NJ, 'NotJamUICondensed16/Not Jam UI Condensed 16.ttf'), path.join(fd, 'notjam-ui-condensed-16.ttf'));
-  console.log('wrote town.png, animals.png, drones.png and two fonts');
+  const COPY = {
+    'cthulhu.png': 'Pixel Monsters/Cthulhu/animations/cthulu_192x112_SpriteSheet.png',
+    'expl-a.png': 'Effects & FX/Explosion Pack 1/Explosions pack/explosion-1-a/spritesheet.png',
+    'expl-b.png': 'Effects & FX/Explosion Pack 1/Explosions pack/explosion-1-b/spritesheet.png',
+    'sof-tiles.png': 'Streets of Fight/Assets/Stage Layers/tileset.png',
+    'sof-back.png': 'Streets of Fight/Assets/Stage Layers/back.png',
+    'sof-fore.png': 'Streets of Fight/Assets/Stage Layers/fore.png',
+    'sof-car.png': 'Streets of Fight/Assets/Stage Layers/props/car.png',
+    'sof-hydrant.png': 'Streets of Fight/Assets/Stage Layers/props/hydrant.png',
+    'sof-barrel.png': 'Streets of Fight/Assets/Stage Layers/props/barrel.png'
+  };
+  for (const [n, f] of Object.entries(COPY)) fs.copyFileSync(path.join(src, f), path.join(out, n));
+  console.log('wrote town.png, animals.png, drones.png, two fonts and ' + Object.keys(COPY).length + ' copied sheets');
 })();
