@@ -374,10 +374,10 @@ function start(o){
   function spawnTown(initial){
     const walkers=TOWN.map((t,i)=>i).filter(i=>TOWN[i].n[0]&&!chars.some(q=>q.kind==='town'&&q.town===i));
     const duels=DUST.filter(u=>!chars.some(q=>q.du===u));
-    const useDu=duels.length&&(Math.random()<.6||!walkers.length);if(!useDu&&!walkers.length)return;
+    const useDu=duels.length&&(Math.random()<.7||!walkers.length);if(!useDu&&!walkers.length)return;
     const ch=useDu?makeDuel(rndp(duels)):makeTown(rndp(walkers)),pk=pickPath(true);
     onPath(ch,pk,pk==='X'?rnd(.2,.8):rnd(.3,.95));
-    ch.sp=(!ch.du&&TOWN[ch.town].type==='kidrun'?24:15)+rnd(-2,3);
+    ch.sp=(ch.du?18:TOWN[ch.town].type==='kidrun'?24:15)+rnd(-2,3);
     const lo=pk==='X'?0:dMin(ch);ch.toward=Math.random()<.5;
     ch.d=initial?rnd(lo,ch.len):(ch.toward?lo:ch.len);
     if(A.side){
@@ -405,7 +405,7 @@ function start(o){
   function updChars(dt){
     const n=k=>chars.filter(q=>q.kind===k&&!q.idle).length;
     spawnT-=dt;if(spawnT<=0&&n('code')<(A.side?7:9)){spawn(false);spawnT=rnd(1.5,4)}
-    townT-=dt;if(townT<=0&&n('town')<6){spawnTown(false);townT=rnd(2,5)}
+    townT-=dt;if(townT<=0&&n('town')<8){spawnTown(false);townT=rnd(1.2,3.5)}
     botT-=dt;if(botT<=0&&n('bot')<2&&A.bot){spawnBot();botT=rnd(8,20)}
     for(const ch of chars){
       if(ch.kind==='bot'){ch.ph+=dt*8;ch.x+=ch.vx*dt;ch.alt+=Math.sin(ch.ph*.4)*dt*2;if((ch.vx<0&&ch.x+ox<-60)||(ch.vx>0&&ch.x+ox>W+60))ch.dead=true;continue}
@@ -413,7 +413,8 @@ function start(o){
         /* now and then an idle townsperson does their special move once (smokes, waves, flexes) */
         const t=TOWN[ch.town];if(ch.row===1&&ch.spT<=0&&t.n[2]){ch.row=2;ch.ph=0}else if(ch.row===2&&ch.ph>=t.n[2]){ch.row=1;ch.ph=0;ch.spT=rnd(4,10)}
         if(ch.life<=0)ch.dead=true;continue}
-      ch.ph+=dt*(ch.idle?0:ch.kind==='town'?ch.sp/2.4:ch.sp/7);
+      /* Duelyst run cycles are drawn for a quick step, so they play about twice as fast as the townspeople's walk */
+      ch.ph+=dt*(ch.idle?0:ch.du?ch.sp/1.25:ch.kind==='town'?ch.sp/2.4:ch.sp/7);
       if(ch.idle){ch.life-=dt;if(ch.life<=0)ch.dead=true;continue}
       const k=Math.max(.15,tall(ch.y||200)/50);
       /* someone heading for a flying car walks to it, stops and climbs in */
@@ -665,7 +666,7 @@ function start(o){
       {n:'far',x:238,y:165,w:29,h:25,base:22,s:1,st:'idle',t:0,k:0}]:[];
     rain=Array.from({length:a.dark?14:a.side?90:70},()=>({x:Math.random()*SW,y:rnd(-oy,SH),v:a.dark?rnd(110,150):rnd(150,230)}));spl=[];
     for(let i=0;i<(a.side?6:7);i++)spawn(true);
-    for(let i=0;i<3;i++)spawnTown(true);
+    for(let i=0;i<5;i++)spawnTown(true);
     a.spots.slice(0,2).forEach(spawnIdle);a.tspots.slice(0,2).forEach(spawnTownIdle);
     for(let i=0;i<2;i++)spawnPet(rndp(a.petPool||['dog','cat','cat2','dog2']),true);
     turnT=rnd(150,240);
@@ -678,6 +679,7 @@ function start(o){
   function turn(){if(wipe||MON.on)return;wipe={t:0,sw:false}}
 
   /* ---- drawing ---- */
+  /* city-dusk.png draws its buildings in rows 8-150 over a solid orange base, so each scene puts row ~150 on its skyline */
   /* a layer repeated across the view with parallax; sky layers stretch their top row up to the top of the screen */
   function tile(im,y,par,alpha,flat){
     if(!im)return;const w=im.naturalWidth||im.width;if(!w||alpha<=0)return;c.globalAlpha=alpha;
@@ -787,7 +789,7 @@ function start(o){
     }else if(A.type==='back'){
       /* the back street is a wider shot (fitH 400) so the tower and the monster have sky above the wall */
       tile(img('sky-back'),-oy,.25,n);tile(img('sky-city'),-150,.4,n);tile(noBlack('sof-back'),-80,.6,n,true);
-      tile(img('sky-dusk'),-oy,.25,dk);tile(img('city-dusk'),-232,.45,dk);
+      tile(img('sky-dusk'),-oy,.25,dk);tile(img('city-dusk'),-150,.45,dk);
       drawTower(dk);drawMonster();
       const art=backArt();if(art){c.drawImage(art.wall,ox,oy);c.drawImage(art.gr,ox,oy+96)}
       const fore=img('sof-fore');
@@ -799,13 +801,13 @@ function start(o){
     }else if(A.type==='resto'){
       /* Restaurant Row: the far city and the orange towers behind the street, or the dusk city by day */
       tile(img('v1-far'),0,.2,n);tile(img('v1-back'),0,.45,n);
-      tile(img('sky-dusk'),-oy,.2,dk);tile(img('city-dusk'),-80,.45,dk);
+      tile(img('sky-dusk'),-oy,.2,dk);tile(img('city-dusk'),-12,.45,dk);
       drawTower(dk);drawMonster();
       tile(pic('v1-fore'),0,1,1,true);
     }else if(A.type==='roof'){
       /* Rooftops: clouds and skyline, the tower, flying traffic, the nearer roofs and then our deck */
       tile(img('sky-back'),4,.12,n);tile(img('sky-city'),4,.3,n);
-      tile(img('sky-dusk'),-oy,.12,dk);tile(img('city-dusk'),172-272,.3,dk);
+      tile(img('sky-dusk'),-oy,.12,dk);tile(img('city-dusk'),0,.3,dk);
       drawTower(dk);drawMonster();
       for(const q of SKY)if(q.st==='cruise')drawFly(q);
       tile(img('roof-front'),-8,.55,1,true);

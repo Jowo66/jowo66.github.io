@@ -16,7 +16,10 @@ const UNITS = {
   giant: ['boss_chaosknight', 'boss_borealjuggernaut', 'boss_cindera', 'boss_skyfalltyrant', 'f5_flumposaur', 'neutral_moltengolem', 'f4_nightfiend',
     'neutral_dagona', 'neutral_razorcraggolem', 'f6_greatwhitenorth', 'neutral_sapphireseer', 'f5_kolossus'],
   street: ['neutral_ladylocke', 'neutral_tethermancer', 'neutral_moonlitsorcerer', 'neutral_quartermastergauj', 'neutral_dex', 'neutral_sai', 'neutral_koi',
-    'neutral_mercpirate', 'neutral_voidhunter', 'neutral_rook', 'f2_mage4winds', 'f2_kibeholder', 'f6_sister', 'f3_dreamshaper', 'f1_sunbreaker', 'neutral_mogwai'],
+    'neutral_mercpirate', 'neutral_voidhunter', 'neutral_rook', 'f2_mage4winds', 'f2_kibeholder', 'f6_sister', 'f3_dreamshaper', 'f1_sunbreaker', 'neutral_mogwai',
+    'neutral_dilotas', 'neutral_exun', 'neutral_hsuku', 'neutral_kin', 'neutral_darknemesis', 'neutral_daywatcher', 'neutral_sunsteeldefender', 'neutral_tribalmelee1',
+    'neutral_tribalmelee2', 'neutral_tribalranged2', 'neutral_wartalon', 'neutral_windrunner', 'neutral_zyx', 'neutral_spiritscribe', 'f1_silverguardsquire', 'f2_ranged',
+    'f2_melee', 'f3_dunecaster', 'f4_shadowdancer', 'neutral_shadowcaster', 'neutral_gauntletmaster', 'neutral_inquisitorkron'],
   club: ['boss_harmony', 'boss_dissonance', 'boss_candypanda', 'neutral_celebrant', 'neutral_partyelf', 'neutral_gambler', 'f2_panddo', 'f1_sunstonemaiden']
 };
 const ROWS = [['idle', 8], ['run', 8], ['attack', 12]];   /* animation and the most frames kept */
