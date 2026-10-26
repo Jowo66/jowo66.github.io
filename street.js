@@ -368,11 +368,16 @@ function start(o){
   /* drawn townspeople keep to where they read well: on the crossing they fade into the dark going up the road;
      on the back street they come and go by the doors as well as the ends of the street */
   function makeTown(i){const t=TOWN[i],ch=makeChar(t.type,t.fem);ch.kind='town';ch.town=i;ch.row=0;ch.face=1;ch.alpha=1;return ch}
+  /* Duelyst's people (duelyst.js) walk the same routes as the townspeople; they are kind 'town' with du set to their unit */
+  const DU=g.DUELYST||{},DUST=Object.keys(DU).filter(u=>DU[u].cat==='street');DUST.forEach(u=>img('du-'+u));
+  function makeDuel(u){const ch=makeChar(rndp(['walker','walker','detective','netrunner','samurai','dealer','courier','sage','preacher']));ch.kind='town';ch.du=u;ch.town=null;ch.row=0;ch.face=1;ch.alpha=1;return ch}
   function spawnTown(initial){
-    const walkers=TOWN.map((t,i)=>i).filter(i=>TOWN[i].n[0]&&!chars.some(q=>q.kind==='town'&&q.town===i));if(!walkers.length)return;
-    const ch=makeTown(rndp(walkers)),pk=pickPath(true);
+    const walkers=TOWN.map((t,i)=>i).filter(i=>TOWN[i].n[0]&&!chars.some(q=>q.kind==='town'&&q.town===i));
+    const duels=DUST.filter(u=>!chars.some(q=>q.du===u));
+    const useDu=duels.length&&(Math.random()<.6||!walkers.length);if(!useDu&&!walkers.length)return;
+    const ch=useDu?makeDuel(rndp(duels)):makeTown(rndp(walkers)),pk=pickPath(true);
     onPath(ch,pk,pk==='X'?rnd(.2,.8):rnd(.3,.95));
-    ch.sp=(TOWN[ch.town].type==='kidrun'?24:15)+rnd(-2,3);
+    ch.sp=(!ch.du&&TOWN[ch.town].type==='kidrun'?24:15)+rnd(-2,3);
     const lo=pk==='X'?0:dMin(ch);ch.toward=Math.random()<.5;
     ch.d=initial?rnd(lo,ch.len):(ch.toward?lo:ch.len);
     if(A.side){
@@ -400,7 +405,7 @@ function start(o){
   function updChars(dt){
     const n=k=>chars.filter(q=>q.kind===k&&!q.idle).length;
     spawnT-=dt;if(spawnT<=0&&n('code')<(A.side?7:9)){spawn(false);spawnT=rnd(1.5,4)}
-    townT-=dt;if(townT<=0&&n('town')<4){spawnTown(false);townT=rnd(2.5,6)}
+    townT-=dt;if(townT<=0&&n('town')<6){spawnTown(false);townT=rnd(2,5)}
     botT-=dt;if(botT<=0&&n('bot')<2&&A.bot){spawnBot();botT=rnd(8,20)}
     for(const ch of chars){
       if(ch.kind==='bot'){ch.ph+=dt*8;ch.x+=ch.vx*dt;ch.alt+=Math.sin(ch.ph*.4)*dt*2;if((ch.vx<0&&ch.x+ox<-60)||(ch.vx>0&&ch.x+ox>W+60))ch.dead=true;continue}
@@ -557,8 +562,16 @@ function start(o){
     shield:{im:'mon-shield',fw:90,fh:31,ax:31,ay:16,idle:[0,6],move:[1,6],atk:[[2,14,6]],dist:36,sc:3,fx:'freezing',name:'SHIELD DROID'},
     wheel:{im:'mon-wheel',fw:117,fh:26,ax:22,ay:14,idle:[0,8],move:[1,8],atk:[[2,4,1]],dist:70,sc:3,dy:-15,shot:'#ff8ad8',muz:[22,-2],fx:'magic8',name:'BOT WHEEL'}
   };
+  /* Duelyst giants: drawn at twice size, standing off from the tower and firing a bolt of their main colour at it;
+     the impact effect is picked by that colour */
+  const DUNAME={chaosknight:'CHAOS KNIGHT',borealjuggernaut:'BOREAL JUGGERNAUT',cindera:'CINDERA',skyfalltyrant:'SKYFALL TYRANT',flumposaur:'FLUMPOSAUR',moltengolem:'MOLTEN GOLEM',
+    nightfiend:'NIGHTFIEND',dagona:'DAGONA',razorcraggolem:'RAZORCRAG GOLEM',greatwhitenorth:'GREAT WHITE NORTH',sapphireseer:'SAPPHIRE SEER',kolossus:'KOLOSSUS'};
+  const fxByHue=h=>h<30?'vortex':h<70?'sunburn':h<150?'felspell':h<200?'freezing':h<260?'nebula':h<320?'midnight':'magic8';
+  for(const u of Object.keys(DU))if(DU[u].cat==='giant'){const D=DU[u],bx=D.box,n=D.atk[1];
+    MDEF[u]={im:'du-'+u,fw:D.fw,fh:D.fh,ax:(bx[0]+bx[2])/2,ay:(bx[1]+bx[3])/2,idle:D.idle,move:D.run,atk:[[D.atk[0],n,Math.max(1,Math.floor(n*.55))]],
+      dist:(bx[2]-bx[0])/2+34,sc:2,dy:Math.round((bx[3]-bx[1])*.35),shot:D.col,muz:[(bx[2]-bx[0])*.35,-(bx[3]-bx[1])*.15],fx:fxByHue(D.hue),name:DUNAME[u.replace(/^[a-z0-9]+_/,'')]||u.replace(/^[a-z0-9]+_/,'').toUpperCase()}}
   const MKEYS=Object.keys(MDEF);
-  const MON={on:false,kind:'cthulhu',phase:'',t:0,x:0,y:0,face:1,row:MDEF.cthulhu.move,ph:0,hits:0,next:rnd(120,220)};
+  const MON={nextKind:rndp(MKEYS),on:false,kind:'cthulhu',phase:'',t:0,x:0,y:0,face:1,row:MDEF.cthulhu.move,ph:0,hits:0,next:rnd(120,220)};
   const TW={state:'up',fall:0,t:0,cv:null};
   let fx=[],dust=[],shots=[],bolts=[],lastMon='';
   const SCREAM=['RUN!','Monster!!','逃げて!','Беги!','괴물이다!','Not again…','¡Corre!','The tower!','怪獣だ!'];
@@ -579,7 +592,9 @@ function start(o){
       /* down in the sewer Cthulhu rises out of the water channel in front of the walkway */
       const D=MDEF.cthulhu;MON.on=true;MON.kind='cthulhu';MON.mode='rise';MON.phase='rise';MON.t=0;MON.hits=0;MON.row=D.idle;MON.ph=0;MON.face=Math.random()<.5?1:-1;MON.s=2;
       MON.x=-ox+W/2+rnd(-60,60);MON.hy=SH-58;MON.y=SH+70;shake=3;return true}
-    const k=kind&&MDEF[kind]?kind:rndp(MKEYS.filter(q=>q!==lastMon));lastMon=k;
+    const k=kind&&MDEF[kind]?kind:MON.nextKind&&MON.nextKind!==lastMon?MON.nextKind:rndp(MKEYS.filter(q=>q!==lastMon));lastMon=k;
+    /* choose the next giant now and start loading its sheet, so it is ready when it comes */
+    MON.nextKind=rndp(MKEYS.filter(q=>q!==k));img(MDEF[MON.nextKind].im);
     const D=MDEF[k],T=A.tower,side=A.monSide,s=msOf(D);
     Object.assign(MON,{on:true,kind:k,mode:'tower',phase:'in',t:0,hits:0,shots:0,ai:0,row:D.move,ph:0,side,face:-side,s});
     MON.hx=T.x+side*D.dist*s;MON.hy=hitY(T)+(D.dy||0)*s;MON.x0=MON.hx+side*(W*.6+60*s);MON.x=MON.x0;MON.y=MON.hy-30;
@@ -808,6 +823,11 @@ function start(o){
         const s=Math.max(1,Math.round(tall(ch.y)))/TREF,b=DRN[ch.bot],x=ch.x+ox,y=ch.alt+oy;
         blit(drones,(Math.floor(ch.ph)%b.n)*TFR,ch.bot*TFR,TFR,TFR,24,24,x,y,s,ch.face*b.face);
         ch.bb=[x-18*s,y-14*s,x+18*s,y+16*s];bubAt(ch,x,y-14*s)}});continue}
+      if(ch.du){const D=DU[ch.du],im=img('du-'+ch.du);if(!im.naturalWidth)continue;items.push({y:ch.y,draw:()=>{
+        /* a Duelyst unit at the height of a person standing there: its idle body box sets the scale and the feet */
+        const bx=D.box,bh=bx[3]-bx[1],s=Math.max(1,tall(ch.y))*1.05/bh,x=ch.x+ox,y=ch.y+oy,r=ch.board&&ch.boardA!==undefined?D.idle:D.run;
+        c.globalAlpha=ch.alpha;blit(im,(Math.floor(ch.ph)%r[1])*D.fw,r[0]*D.fh,D.fw,D.fh,(bx[0]+bx[2])/2,bx[3],x,y,s,ch.face);c.globalAlpha=1;
+        const hw=(bx[2]-bx[0])/2*s;ch.bb=ch.alpha>.5?[x-hw,y-bh*s,x+hw,y]:null;bubAt(ch,x,y-bh*s-1)}});continue}
       if(ch.kind==='town'){if(!town.naturalWidth)continue;items.push({y:ch.y,draw:()=>{
         const t=TOWN[ch.town],s=Math.max(1,Math.round(tall(ch.y)))/TREF,x=ch.x+ox,y=ch.y+oy,n=t.n[ch.row]||1;
         c.globalAlpha=ch.alpha;blit(town,(Math.floor(ch.ph)%n)*TFR,(ch.town*3+ch.row)*TFR,TFR,TFR,t.ax||TAX,TFR,x,y,s,ch.face);c.globalAlpha=1;

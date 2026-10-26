@@ -33,11 +33,14 @@ function start(o){
   let V=null,crowd=[],staff=[],bubbles=[],t=0,flash=0,lastDrop=-1,cab=[],laser=[];
 
   /* ---- people ---- */
+  const DU=g.DUELYST||{},DUC=Object.keys(DU).filter(u=>DU[u].cat==='club'&&!/harmony|dissonance/.test(u));DUC.concat(['boss_harmony','boss_dissonance']).forEach(u=>DU[u]&&img('du-'+u));
   function codePerson(name,opt){const fem=L.FEMOK.has(name)&&Math.random()<.5;return Object.assign({kind:'code',name,fem,look:L.look(name,fem),sw:rnd(.85,1.2),hk:rnd(.9,1.12),cache:new Map()},opt||{})}
   function townPerson(i){return{kind:'town',town:i}}
   function newDancer(f,x,y,from){
     const r=Math.random(),pool=L.TOWN.map((q,i)=>i).filter(i=>!L.TOWN[i].sit&&!crowd.some(d=>d.kind==='town'&&d.town===i));
-    const p=r<.35&&pool.length?townPerson(rndp(pool)):codePerson(rndp(L.WLIST.filter(n=>n!=='umbrella')));
+    /* about a third of the crowd are townspeople, a quarter Duelyst's party-goers (duelyst.js), the rest drawn in code */
+    const du=DUC.filter(u=>!crowd.some(d=>d.du===u));
+    const p=r<.25&&du.length?{kind:'duel',du:rndp(du)}:r<.55&&pool.length?townPerson(rndp(pool)):codePerson(rndp(L.WLIST.filter(n=>n!=='umbrella')));
     return Object.assign(p,{floor:f,x,y,hx:x,tx:x,face:Math.random()<.5?1:-1,ph:Math.random()*4,alpha:from?0:1,state:from?'enter':'dance',jump:0,vy:0});
   }
   function fighters(f,x,y){return[{kind:'brawl',who:'g',floor:f,x:x-22,y,hx:x-22,tx:x-22,face:1,ph:0,alpha:1,state:'dance',anim:'idle',at:0,jump:0,vy:0,pit:1},
@@ -105,8 +108,12 @@ function start(o){
       R(d.x-30,d.y+4,60,6,'#141018');R(d.x-24,d.y+5,10,4,'#2a2440');R(d.x+14,d.y+5,10,4,'#2a2440');R(d.x-2,d.y+5,4,3,NEON[Math.floor(b)%6]);return}
     if(d.table){/* arcade: a DJ table built from the street's AC box */
       const rc=img('rcc');c.drawImage(sp.cv,d.x-sp.ax,d.y+2-sp.ay-bob);if(rc.naturalWidth)c.drawImage(rc,34,162,30,24,d.x-30,d.y-6,60,48);R(d.x-30,d.y-8,60,3,NEON[Math.floor(b/2)%6]);return}
-    /* the hologram DJ behind a desk with two decks */
-    const sc=d.small?.8:1;c.globalAlpha=.85+.15*Math.sin(t*20);c.drawImage(sp.cv,d.x-sp.ax,d.y+2-sp.ay-bob);c.globalAlpha=1;
+    /* the DJ behind a desk with two decks: Duelyst's Harmony in the main room and Dissonance on the cross-section's floor,
+       their idle loop timed to the beat and their attack row on every fourth bar; the hologram elsewhere */
+    const sc=d.small?.8:1,du=V.id==='main'?'boss_harmony':V.id==='tower'?'boss_dissonance':null,DD=du&&DU[du],dim=DD&&img('du-'+du);
+    if(DD&&dim.naturalWidth){const bx=DD.box,big=Math.floor(b/4)%4===3,r=big?DD.atk:DD.idle,fi=big?Math.floor((b%4)/4*r[1]):Math.floor(b*2)%r[1],k=(d.small?40:50)/(bx[3]-bx[1]);
+      blit(dim,fi*DD.fw,r[0]*DD.fh,DD.fw,DD.fh,(bx[0]+bx[2])/2,bx[3],d.x,d.y+4-bob,1,k)}
+    else{c.globalAlpha=.85+.15*Math.sin(t*20);c.drawImage(sp.cv,d.x-sp.ax,d.y+2-sp.ay-bob);c.globalAlpha=1}
     const w=Math.round(90*sc),h=Math.round(18*sc),x0=d.x-w/2;R(x0,d.y,w,h,'#140a22');R(x0,d.y,w,1,'#ff2e88');
     for(const dx of[-28,28]){const cx=d.x+dx*sc,cy=d.y+5,a=t*6*(dx<0?1:-1);R(cx-7,cy-2,14,6,'#2a2440');R(cx+Math.cos(a)*5,cy+Math.sin(a)*1.5,1,1,'#f3ead8')}
     for(let k=0;k<6;k++)R(d.x-8+k*3,d.y+10,2,2,k<=kk*6?NEON[k%6]:'#2a2440');
@@ -240,6 +247,11 @@ function start(o){
     y-=Math.round(bob);c.globalAlpha=d.alpha==null?1:d.alpha;let top;
     if(d.kind==='brawl'){const set=BR[d.who][d.anim]||BR[d.who].idle,n=set[1],fi=d.anim==='idle'?Math.floor(b*2)%n:Math.min(n-1,Math.floor(d.af)),im=img('brawl');
       if(im.naturalWidth)blit(im,fi*96,set[0]*64,96,64,45,63,x,y,d.who==='g'?face:-face);top=y-46}
+    else if(d.kind==='duel'){
+      /* a Duelyst party-goer: idle loop on the beat, the run row when moving, and its attack row as a flourish on a drop */
+      const D=DU[d.du],im=img('du-'+d.du),bx=D.box,bh=bx[3]-bx[1],sc=36/bh,r=d.flour>0?D.atk:still?D.idle:D.run,
+        fi=d.flour>0?Math.min(r[1]-1,Math.floor((1-d.flour/1.2)*r[1])):Math.floor(still?b*2:d.ph*8)%r[1];
+      if(im.naturalWidth)blit(im,fi*D.fw,r[0]*D.fh,D.fw,D.fh,(bx[0]+bx[2])/2,bx[3],x,y,face,sc);top=y-bh*sc}
     else if(d.kind==='town'){const t0=L.TOWN[d.town],row=still?(t0.n[2]&&Math.floor(b/8)%3===2?2:1):0,n=t0.n[row]||t0.n[1],im=img('town');
       if(im.naturalWidth)blit(im,(Math.floor(still?b*2:d.ph*8)%n)*L.TFR,(d.town*3+row)*L.TFR,L.TFR,L.TFR,t0.ax||L.TAX,L.TFR,x,y,face);top=y-36}
     else{const H=Math.round(38*(d.hk||1)),sp=codeSprite(d,H,dir,fr);c.drawImage(sp.cv,Math.round(x)-sp.ax,Math.round(y)-sp.ay);top=y-H}
@@ -257,10 +269,10 @@ function start(o){
   function frame(dt){
     const s=S(),b=s.beat,kk=s.kick;t+=dt;
     /* a drop every 16 beats: a flash and the hologram changes colour */
-    const dr=Math.floor(b/16);if(dr!==lastDrop){if(lastDrop>=0){flash=1;holo=rndp(NEON.filter(q=>q!==holo));crowd.forEach(d=>{if(d.jump===0&&!V.floors[d.floor].chill&&Math.random()<.7)d.vy=-rnd(60,110)})}lastDrop=dr}
+    const dr=Math.floor(b/16);if(dr!==lastDrop){if(lastDrop>=0){flash=1;holo=rndp(NEON.filter(q=>q!==holo));crowd.forEach(d=>{if(d.kind==='duel')d.flour=1.2;else if(d.jump===0&&!V.floors[d.floor].chill&&Math.random()<.7)d.vy=-rnd(60,110)})}lastDrop=dr}
     flash=Math.max(0,flash-dt*2.2);
     updCrowd(dt,b,kk);
-    cab.forEach(q=>q.flash=Math.max(0,q.flash-dt));
+    cab.forEach(q=>q.flash=Math.max(0,q.flash-dt));crowd.forEach(d=>{if(d.flour>0)d.flour-=dt});
     c.imageSmoothingEnabled=false;drawRoom(b,kk);
     crowd.concat(staff).sort((a,b2)=>a.y-b2.y).forEach(d=>{if(d.role){const sp=codeSprite(d,Math.round(38*(d.hk||1)),d.moving?(d.face>0?'r':'l'):'f',d.moving?Math.floor(d.ph*8)%4:0);c.drawImage(sp.cv,Math.round(d.x)-sp.ax,Math.round(d.y)-sp.ay);d.bb=[d.x-10,d.y-44,d.x+10,d.y];d.top=[d.x,d.y-44]}else drawPerson(d,b,kk)});
     drawFront(b);
