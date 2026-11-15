@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://jowo66.github.io/sitemap.xml

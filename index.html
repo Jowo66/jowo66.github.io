@@ -2,103 +2,251 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ejovwo Obahor | Neo-Jowo OS</title>
-<meta name="description" content="Portfolio of Ejovwo Obahor, computer science student in Toronto, presented as a neon-alley operating system.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Zen+Kaku+Gothic+New:wght@900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="os.css?v=20261026c">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ejovwo Obahor | Computer science student, Toronto</title>
+<meta name="description" content="Ejovwo Obahor is a computer science student in Toronto who builds interactive software for the browser: graphics, audio and simulations.">
+<link rel="canonical" href="https://jowo66.github.io/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#1c1330">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Ejovwo Obahor | Computer science student, Toronto">
+<meta property="og:description" content="Interactive software for the browser: graphics, audio and simulations.">
+<meta property="og:url" content="https://jowo66.github.io/">
+<meta property="og:image" content="https://jowo66.github.io/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="assets/fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:"Bricolage Grotesque";src:url("assets/fonts/bricolage-grotesque.woff2") format("woff2");font-weight:200 800;font-display:swap}
+@font-face{font-family:"Barlow Condensed";src:url("assets/fonts/barlow-condensed-600.woff2") format("woff2");font-weight:600;font-display:swap}
+:root{
+  --ground:#ebe8f1;--ink:#1c1330;--soft:#52486b;--rule:#c9c3d8;
+  --red:#c5301a;--red-ink:#b32a16;--on-red:#fff6f2;--night:#150f24;
+  --text:"Bricolage Grotesque",system-ui,sans-serif;--strip:"Barlow Condensed","Bricolage Grotesque",sans-serif;
+  --out:cubic-bezier(.16,1,.3,1);--edge:clamp(20px,5vw,72px);
+}
+@media (prefers-color-scheme:dark){:root{--ground:#150f24;--ink:#ebe8f1;--soft:#b3abc9;--rule:#3a3052;--red-ink:#ff7256}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scrollbar-color:var(--red) var(--ground)}
+body{margin:0;background:var(--ground);color:var(--ink);font:400 1.0625rem/1.6 var(--text);font-optical-sizing:auto;-webkit-font-smoothing:antialiased}
+::selection{background:var(--red);color:var(--on-red)}
+a{color:inherit;text-decoration-color:var(--red-ink);text-decoration-thickness:2px;text-underline-offset:.22em}
+a:hover{color:var(--red-ink)}
+:focus-visible{outline:3px solid var(--red-ink);outline-offset:3px}
+img{display:block;max-width:100%;height:auto}
+h1,h2,p,dl,dd,figure{margin:0}
+.skip{position:absolute;left:var(--edge);top:-60px;z-index:20;background:var(--red);color:var(--on-red);padding:10px 16px;font-weight:600;text-decoration:none}
+.skip:focus{top:10px}
+
+/* top bar, set on the still */
+.top{position:absolute;inset:0 0 auto 0;z-index:5;display:flex;align-items:center;gap:clamp(12px,2.4vw,30px);padding:18px var(--edge);color:#fff;font-weight:500}
+.top .me{font-weight:700;text-decoration:none;margin-right:auto;letter-spacing:-.01em}
+.top a{color:#fff;text-decoration:none;padding:6px 0}
+.top nav{display:flex;gap:clamp(12px,2.4vw,30px)}
+.top nav a:hover,.top .me:hover{color:#fff;text-decoration:underline;text-decoration-color:#fff}
+.top .fun{font:600 1rem/1 var(--strip);letter-spacing:.08em;background:var(--red);color:var(--on-red);padding:10px 14px}
+.top .fun:hover{background:#fff;color:var(--night);text-decoration:none}
+
+/* the hero still */
+.still{position:relative;height:min(66vh,720px);min-height:340px;background:var(--night);overflow:hidden}
+.still::before{content:"";position:absolute;inset:0 0 auto 0;height:130px;z-index:2;background:linear-gradient(#150f24cc,#150f2400);pointer-events:none}
+.still img,.still iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.still img{object-fit:cover;object-position:50% 42%}
+.still .acts{position:absolute;right:var(--edge);bottom:22px;z-index:3;display:flex;gap:10px}
+.btn{display:inline-block;font:600 1.0625rem/1 var(--strip);letter-spacing:.08em;text-transform:uppercase;text-decoration:none;padding:15px 20px;border:2px solid var(--red);background:var(--red);color:var(--on-red);cursor:pointer;transition:background .2s var(--out),color .2s var(--out)}
+.btn:hover{background:var(--on-red);color:var(--red)}
+.btn.q{background:#150f24d9;border-color:#fff;color:#fff}
+.btn.q:hover{background:#fff;color:var(--night)}
+@media (prefers-reduced-motion:no-preference){
+  .still{animation:open 1.1s var(--out) both}
+  @keyframes open{from{clip-path:inset(46% 0 46% 0)}to{clip-path:inset(0)}}
+}
+
+/* caption strips */
+.strip{font:600 .9375rem/1.3 var(--strip);letter-spacing:.07em;text-transform:uppercase;color:var(--soft);border-top:3px solid var(--red);padding-top:10px;margin-top:0}
+.strip b{color:var(--ink);font-weight:600}
+
+.wrap{padding-inline:var(--edge);max-width:1500px;margin-inline:auto}
+.card1{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:clamp(24px,5vw,80px);align-items:end;padding-top:clamp(22px,3vw,40px)}
+h1{font-weight:800;font-size:clamp(3.1rem,10.5vw,6rem);line-height:.88;letter-spacing:-.035em;text-wrap:balance}
+.lead{font-size:clamp(1.15rem,1.7vw,1.4rem);line-height:1.4;max-width:34ch}
+.lead + p{margin-top:16px;color:var(--soft)}
+
+main section{margin-top:clamp(72px,10vw,140px)}
+h2{font-weight:800;font-size:clamp(2.1rem,5vw,3.6rem);line-height:.95;letter-spacing:-.03em;text-wrap:balance}
+.body{max-width:62ch}
+.body p + p{margin-top:.9em}
+.links{display:flex;flex-wrap:wrap;gap:8px 26px;margin-top:22px;font-weight:600}
+.built{color:var(--soft);margin-top:14px;font-size:1rem}
+
+.neo{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(28px,5vw,80px);align-items:start}
+.neo h2{margin-bottom:22px}
+.facts{margin-top:26px;border-top:1px solid var(--rule)}
+.facts div{display:grid;grid-template-columns:11.5ch 1fr;gap:18px;padding:13px 0;border-bottom:1px solid var(--rule)}
+.facts dt{font:600 1rem/1.5 var(--strip);letter-spacing:.07em;text-transform:uppercase}
+.facts dd{color:var(--soft)}
+
+.wide .txt{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(20px,5vw,80px);padding-top:26px}
+.pair{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,4fr);gap:clamp(28px,5vw,80px);align-items:start}
+.pair h2{font-size:clamp(1.9rem,3.6vw,2.7rem);margin:22px 0 14px}
+.pair .tall img{aspect-ratio:4/5;object-fit:cover;object-position:top;width:100%;border:1px solid var(--rule)}
+figure img{width:100%;background:var(--night)}
+
+.about{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(20px,5vw,80px)}
+.about .say{font-size:clamp(1.3rem,2.3vw,1.85rem);line-height:1.32;letter-spacing:-.01em;max-width:30ch;font-weight:500}
+.tools{margin-top:26px;color:var(--soft);max-width:60ch}
+.tools b{color:var(--ink);font-weight:600}
+
+.contact{margin-top:clamp(72px,10vw,140px);background:var(--red);color:var(--on-red);padding:clamp(56px,9vw,120px) 0}
+.contact ::selection{background:var(--on-red);color:var(--red)}
+.contact :focus-visible{outline-color:var(--on-red)}
+.contact h2{font-size:clamp(2.3rem,7.4vw,5.6rem)}
+.contact h2 a{text-decoration-color:var(--on-red);text-decoration-thickness:.06em}
+.contact a:hover{color:var(--on-red);text-decoration-thickness:.12em}
+.contact p{margin-top:22px;max-width:46ch;font-size:1.15rem}
+footer{background:var(--night);color:#cfc8e2;padding:26px 0;font-size:.95rem}
+footer .wrap{display:flex;flex-wrap:wrap;gap:8px 28px}
+footer span{margin-right:auto}
+footer a:hover{color:#fff}
+
+@media (max-width:820px){
+  .top nav{display:none}
+  .card1,.neo,.wide .txt,.pair,.about{grid-template-columns:1fr}
+  .still{height:56vh}
+  .still .acts{left:var(--edge);right:auto}
+  #wake{display:none}
+  .facts div{grid-template-columns:1fr;gap:2px}
+}
+</style>
 </head>
 <body>
-<canvas id="alley" aria-hidden="true"></canvas>
-<div class="vig"></div>
+<a class="skip" href="#work">Skip to the work</a>
 
-<div class="hud" role="banner">
-  <b>NEO-JOWO OS</b>
-  <div class="tick hide" aria-hidden="true"><span>ようこそ · WELCOME · Добро пожаловать · 환영합니다 · مرحبا · स्वागत है · ยินดีต้อนรับ · Bienvenue · Bienvenido · 欢迎光临 · Καλώς ήρθατε · Hoş geldiniz · Karibu · Witamy · Nnọọ · Ndewo · Bem-vindo · E kaabo &nbsp;&nbsp;&nbsp; ようこそ · WELCOME · Добро пожаловать · 환영합니다 · مرحبا · स्वागत है · ยินดีต้อนรับ · Bienvenue · Bienvenido · 欢迎光临 · Καλώς ήρθατε · Hoş geldiniz · Karibu · Witamy · Nnọọ · Ndewo · Bem-vindo · E kaabo</span></div>
-  <div class="r"><span id="langsel"></span><a id="afun" class="snd" href="serious.html" title="Switch to the plain, professional version of this site">ANTI-FUN</a><button id="shf" class="snd" type="button" title="Shuffle: generate a new house track">&#10551; SHUFFLE</button><button id="mon" class="snd" type="button" title="Summon a monster attack on the skyline (30 second cooldown)">&#9732; MONSTER</button><button id="day" class="snd" type="button" aria-pressed="false" title="Toggle daytime: no rain, the skyline, the odd monster, and the club becomes the beach, Playa Sofia">&#9728; DAY</button><button id="snd" class="snd" type="button" aria-pressed="false" title="Toggle house music">&#9834; SOUND OFF</button><span class="hide"><span class="dot"></span>ONLINE</span><span class="hide" id="date"></span><span id="clock">--:--:--</span><span class="hide">TORONTO / 東京-2099</span></div>
-</div>
+<header class="top">
+  <a class="me" href="#top">Ejovwo Obahor</a>
+  <nav aria-label="Sections"><a href="#work">Work</a><a href="#about">About</a><a href="#contact">Contact</a></nav>
+  <span id="langsel"></span>
+  <a class="fun" id="fun" href="neo.html" title="Switch to Neo-Jowo OS, the cyberpunk version of this site">FUN</a>
+</header>
 
-<section class="hero" id="hero">
-  <div class="tag"><span>COMPUTER SCIENCE STUDENT // TORONTO</span><button id="herot" class="herot" type="button" aria-controls="hero" aria-expanded="true" title="Fold the intro away to see the street">HIDE &#9662;</button></div>
-  <h1>EJOVWO<br>OBAHOR</h1>
-  <p>Welcome to the alley. Click the street to hurry along, hover a stranger to peek at their file, click to keep it open, or open a window below.</p>
-  <div class="wd" id="wd"><button id="wdb" class="wdb" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="wdm">JOWO'S WORLDS <span class="car" aria-hidden="true">&#9662;</span></button><ul id="wdm" class="wdm" role="menu" hidden><li role="none"><a role="menuitem" href="https://jowo66.github.io/strong/" target="_blank" rel="noopener"><span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg></span>Mini Gym</a></li><li role="none"><a role="menuitem" href="https://jowo66.github.io/reverb-worlds/" target="_blank" rel="noopener"><span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg></span>Reverb</a></li><li role="none"><a role="menuitem" href="https://jowo66.github.io/weather-report/" target="_blank" rel="noopener"><span class="ic"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="2.6"/><path d="M8 1.8v1.3M2.2 8h1.3M3.9 3.9l.9.9M12.1 3.9l-.9.9"/><path d="M8.5 20h9a3.5 3.5 0 0 0 .4-6.97A5 5 0 0 0 8.3 12.4 3.8 3.8 0 0 0 8.5 20z"/></svg></span>Weather Report</a></li></ul></div>
-  <div class="v" aria-hidden="true">夜の都</div>
-</section>
-<div class="sfx" style="right:9vw;bottom:140px;font-size:54px;transform:rotate(8deg)" aria-hidden="true">ドン!</div>
+<main id="top">
+  <figure class="still" id="still">
+    <img src="assets/work/alley.webp" srcset="assets/work/alley-900.webp 900w, assets/work/alley.webp 1800w" sizes="100vw" width="1800" height="1000" alt="A rainy neon alley at night, drawn in low-poly 3D: shop fronts, hanging lanterns and people walking toward a glowing street." fetchpriority="high">
+    <div class="acts">
+      <button class="btn" id="wake" type="button">Run it here</button>
+      <a class="btn q" href="neo.html">Open Neo-Jowo OS</a>
+    </div>
+  </figure>
 
-<div id="np" role="status" aria-live="polite" hidden></div>
-<nav class="dock" aria-label="Applications">
-  <button class="app" data-app="about"><span class="g">我</span>About</button>
-  <button class="app cy" data-app="skills"><span class="g">技</span>Skills</button>
-  <button class="app am" data-app="map"><span class="g">地</span>Map</button>
-  <button class="app vm" data-app="club"><span class="g">踊</span>Nightclub</button>
-  <button class="app cy" data-app="contact"><span class="g">連</span>Contact</button>
-</nav>
-
-<aside class="sys" aria-hidden="true">
-  <i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i>
-  <div class="sh">SYS // MONITOR</div>
-  <div class="kv"><span>UPTIME</span><b id="up">00:00</b></div>
-  <div class="kv"><span>WINDOWS</span><b id="wn">0</b></div>
-  <div class="kv"><span>FOCUS</span><b id="tg">NONE</b></div>
-  <div class="kv"><span>PACE</span><b id="pace">1.0x</b></div>
-  <div class="kv"><span>CURSOR</span><b id="cur">0000,0000</b></div>
-  <div class="sh" style="margin-top:8px">DATA STREAM</div>
-  <pre id="hex"></pre>
-</aside>
-
-<div class="toast" aria-hidden="true"></div>
-
-<div id="boot"><pre id="bootText"></pre></div>
-
-<noscript><p style="position:fixed;z-index:30000;top:50px;left:20px;background:#000;padding:12px">This page needs JavaScript. <a href="classic.html">Open the classic version</a>.</p></noscript>
-
-<!-- window templates -->
-<template id="t-about">
-  <h3>whoami</h3>
-  <p class="cmd">cat profile.txt</p>
-  <p>I'm Ejovwo, a computer science student in Toronto. I build things for the web and for the canvas. This city runs on hand-written JavaScript with no frameworks: the alley, its people, the music and the club are all generated in code. The monsters and the district map's buildings are free CC0 3D models by Quaternius, which I render into animated sprites with three.js.</p>
-  <p class="cmd">ls apps/</p>
-  <p><b style="color:var(--pink)">Casa Sofia</b>, the nightclub, is a small 3D simulation I wrote from scratch: a hologram DJ, a moshpit and a sound button that plays nine genres of house and dance music, all synthesised in the browser. Open the Map to wander the district.</p>
-  <div class="todo">TODO: add school, program and year here.</div>
-</template>
-<template id="t-skills">
-  <h3>Skill tree</h3>
-  <div class="chips">
-    <span class="chip">HTML</span><span class="chip">CSS</span><span class="chip">JavaScript</span>
-    <span class="chip">Canvas / animation</span><span class="chip">Web Audio</span><span class="chip">three.js / glTF</span><span class="chip">Playwright</span><span class="chip p">Python</span><span class="chip p">Git</span><span class="chip p">Linux</span>
+  <div class="wrap">
+    <div class="card1">
+      <h1>Ejovwo Obahor</h1>
+      <div>
+        <p class="lead">Computer science student in Toronto. I build interactive software for the browser: graphics, audio and small simulations.</p>
+        <p>The street above is one of them. It is drawn live, and the code is on <a href="https://github.com/Jowo66">GitHub</a>.</p>
+      </div>
+    </div>
   </div>
-  <div class="todo">TODO: replace with languages and tools you actually use, plus course work.</div>
-</template>
-<template id="t-map">
-  <div class="mapwrap"><canvas id="map" width="360" height="260"></canvas><button class="mapmode" type="button" title="Switch between the isometric map and the street-level skyline">ISO / SKYLINE</button></div>
-  <div class="cap" id="cap">Hover a building. The lit ones are open; empty lots are reserved for future projects.</div>
-</template>
-<template id="t-contact">
-  <h3>Signal</h3>
-  <div class="links">
-    <a href="https://github.com/Jowo66" target="_blank" rel="noopener">GitHub<small>github.com/Jowo66</small></a>
-    <a href="https://jowo66.github.io/strong/" target="_blank" rel="noopener">Mini Gym<small>tiny members work out and grow into champions</small></a>
-    <a href="https://jowo66.github.io/reverb-worlds/" target="_blank" rel="noopener">Reverb<small>music player with animated worlds and a reactive hologram</small></a>
-    <a href="https://jowo66.github.io/weather-report/" target="_blank" rel="noopener">Weather Report<small>how the weather will feel in what you are wearing</small></a>
-    <a href="classic.html">Classic Matrix site<small>the original green-on-black homepage</small></a>
-  </div>
-  <div class="todo">TODO: add email and LinkedIn once you have the links you want public.</div>
-</template>
 
-<script src="lp3d.js?v=20261007zq"></script>
-<script src="house.js?v=20261007zq"></script>
-<script src="spotify-config.js?v=20261007zq"></script>
-<script src="spotify.js?v=20261007zq"></script>
-<script src="lang.js?v=20261007zq"></script>
-<script src="alley-cultures.js?v=20261007zq"></script>
-<script src="alley-lore.js?v=20261007zq"></script>
-<script src="sprites.js?v=20261024a"></script>
-<script src="duelyst.js?v=20261026b"></script>
-<script src="street.js?v=20261026j"></script>
-<script src="os.js?v=20261026a"></script>
+  <section id="work" class="wrap">
+    <div class="neo">
+      <div>
+        <h2>Neo-Jowo OS</h2>
+        <div class="body"><p>A portfolio built as a small operating system inside a living alley. Windows open over the street, strangers walk past with files you can read, and the nightclub at the end plays music that is written as it plays.</p></div>
+        <dl class="facts">
+          <div><dt>Rendering</dt><dd>A low-poly 3D renderer I wrote for the 2D canvas. No WebGL and no engine.</dd></div>
+          <div><dt>Music</dt><dd>A synthesiser that generates nine genres of house with the Web Audio API. There are no audio files.</dd></div>
+          <div><dt>People</dt><dd>Simulated passers-by with their own routes, speech and events, including a monster attack.</dd></div>
+          <div><dt>Assets</dt><dd>A pipeline that renders CC0 models with three.js in headless Chromium and packs them into sprite sheets.</dd></div>
+          <div><dt>Testing</dt><dd>Playwright tests run in GitHub Actions on every push.</dd></div>
+        </dl>
+        <p class="links"><a href="neo.html">Open Neo-Jowo OS</a><a href="nightclub.html">Visit the nightclub</a><a href="https://github.com/Jowo66/jowo66.github.io">Source</a></p>
+      </div>
+      <figure>
+        <img src="assets/work/club.webp" width="986" height="555" loading="lazy" alt="Blocky dancers crowd a chequered dance floor under lasers while a hologram DJ plays between two speaker stacks.">
+        <figcaption class="strip"><b>Casa Sofia</b> &middot; the nightclub inside Neo-Jowo OS</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="wrap wide">
+    <figure>
+      <img src="assets/work/gym.webp" width="1400" height="788" loading="lazy" alt="A miniature gym seen from above: lockers, benches, squat racks, cable machines and a stretching area, with tiny members training.">
+      <figcaption class="strip"><b>Mini Gym</b> &middot; a gym that runs itself</figcaption>
+    </figure>
+    <div class="txt">
+      <h2>Mini Gym</h2>
+      <div class="body">
+        <p>Tiny members arrive, change, queue for equipment and train real routines. Moments turn into titles on a Hall of Fame wall. You can make a character and train beside them, on autopilot or one exercise at a time.</p>
+        <p class="built">TypeScript, React and three.js, built with Vite.</p>
+        <p class="links"><a href="https://jowo66.github.io/strong/">Play Mini Gym</a><a href="https://github.com/Jowo66/strong">Source</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap pair">
+    <div>
+      <figure>
+        <img src="assets/work/reverb.webp" width="1200" height="750" loading="lazy" alt="A music player with a glowing wireframe helix at its centre, a track queue on the right and a row of world thumbnails below.">
+        <figcaption class="strip"><b>Reverb // Worlds</b> &middot; world 1 of 16</figcaption>
+      </figure>
+      <h2>Reverb // Worlds</h2>
+      <div class="body">
+        <p>A music player with sixteen visual worlds and a hologram that moves with the music. Every visual is drawn in code on a 2D canvas, and switching worlds never interrupts playback.</p>
+        <p class="built">Plain HTML, CSS and JavaScript modules. No build step.</p>
+        <p class="links"><a href="https://jowo66.github.io/reverb-worlds/">Open Reverb</a><a href="https://github.com/Jowo66/reverb-worlds">Source</a></p>
+      </div>
+    </div>
+    <div class="tall">
+      <figure>
+        <img src="assets/work/weather.webp" width="760" height="940" loading="lazy" alt="A wardrobe screen listing garments such as toque, scarf, hoodie and winter coat, each with a warmth value.">
+        <figcaption class="strip"><b>Weather Report</b> &middot; the wardrobe</figcaption>
+      </figure>
+      <h2>Weather Report</h2>
+      <div class="body">
+        <p>Turns live weather into how it will feel in what you are wearing, with a twenty-garment wardrobe, a 3D avatar and a trip planner.</p>
+        <p class="built">React, TypeScript and three.js.</p>
+        <p class="links"><a href="https://jowo66.github.io/weather-report/">Open Weather Report</a><a href="https://github.com/Jowo66/weather-report">Source</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="about" class="wrap about">
+    <h2>About</h2>
+    <div>
+      <p class="say">I like software you can see and hear, and I like writing the parts underneath it myself.</p>
+      <p class="tools"><b>I work in</b> JavaScript and TypeScript, HTML and CSS, Canvas 2D, the Web Audio API, three.js, React, Playwright, Git and GitHub Actions.</p>
+      <p class="tools">I am looking for co-op and internship roles in software.</p>
+    </div>
+  </section>
+
+  <div class="contact" id="contact">
+    <div class="wrap">
+      <h2><a href="https://github.com/Jowo66">github.com/Jowo66</a></h2>
+      <p>Every project on this page is public there. Open an issue on any repository to reach me.</p>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>&copy; <span id="yr">2026</span> Ejovwo Obahor</span>
+    <a href="neo.html">Neo-Jowo OS</a><a href="nightclub.html">Casa Sofia</a><a href="classic.html">The 2025 site</a>
+  </div>
+</footer>
+
+<script>
+document.getElementById('yr').textContent=new Date().getFullYear();
+(function(){
+  var still=document.getElementById('still'),wake=document.getElementById('wake'),frame=null;
+  wake.addEventListener('click',function(){
+    if(frame){frame.remove();frame=null;wake.textContent='Run it here';return}
+    frame=document.createElement('iframe');
+    frame.src='neo.html?nowin';frame.title='Neo-Jowo OS, running live';frame.allow='autoplay';
+    still.insertBefore(frame,still.querySelector('.acts'));
+    wake.textContent='Back to the still';
+  });
+})();
+</script>
+<script src="lang.js?v=20261115a"></script>
 </body>
 </html>

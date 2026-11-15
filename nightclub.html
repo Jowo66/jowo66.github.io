@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>夜 | Casa Sofia Nightclub, Neo-Jowo 2087</title>
+<link rel="canonical" href="https://jowo66.github.io/nightclub.html">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#1c1330">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Casa Sofia | Neo-Jowo nightclub">
+<meta property="og:description" content="A low-poly 3D nightclub with a hologram DJ and house music synthesised in the browser.">
+<meta property="og:url" content="https://jowo66.github.io/nightclub.html">
+<meta property="og:image" content="https://jowo66.github.io/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+
 <meta name="description" content="A low-poly 3D cyberpunk nightclub in Neo-Jowo, 2087. A hologram DJ plays house music to a moshpit on a pulsing dance floor.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -41,21 +51,20 @@ header.bar{
   position:sticky;top:0;z-index:10;
 }
 .bar a{text-decoration:none;color:var(--cyan);font-weight:600;transition:.25s}
-.bar a:hover{color:var(--magenta);text-shadow:0 0 12px var(--magenta)}
-.bar .mark{font-family:'Shippori Mincho B1',serif;font-size:1.4rem;color:var(--magenta);text-shadow:0 0 14px var(--magenta)}
+.bar a:hover{color:var(--magenta)}
+.bar .mark{font-family:'Shippori Mincho B1',serif;font-size:1.4rem;color:var(--magenta)}
 .bar nav{display:flex;gap:24px}
 
 .intro{max-width:1180px;margin:0 auto;padding:44px 6% 22px}
 .intro h1{
   font-family:'Shippori Mincho B1',serif;font-weight:800;
   font-size:clamp(2.2rem,6vw,4.2rem);line-height:1.05;
-  text-shadow:0 0 18px rgba(255,46,136,.7);
 }
-.intro .sub{margin-top:10px;color:var(--cyan);font-size:1.2rem;font-weight:600;letter-spacing:.08em}
+.intro .sub{margin-top:10px;color:var(--cyan);font-size:1.2rem;font-weight:600;letter-spacing:.02em}
 .intro p.lede{margin-top:14px;max-width:64ch;color:var(--muted)}
 
 .stage{max-width:1180px;margin:0 auto;padding:0 6%}
-.frame{border:2px solid var(--magenta);box-shadow:0 0 34px rgba(255,46,136,.4),inset 0 0 0 1px #000;background:#0a0612}
+.frame{border:2px solid var(--magenta);box-shadow:inset 0 0 0 1px #000;background:#0a0612}
 canvas{display:block;width:100%;height:auto}
 .status{
   display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;
@@ -76,28 +85,24 @@ html.embed .btns{flex-wrap:nowrap;gap:6px;width:100%}
 html.embed .btns button,html.embed .btns select{padding:7px 8px;font-size:clamp(11px,1.45vw,15px);white-space:nowrap;flex:0 1 auto}
 html.embed .btns select{min-width:0;flex:1 1 120px;max-width:none}
 html.embed #pause{margin-left:auto}
-button:hover{background:var(--cyan);color:var(--ink);box-shadow:0 0 22px var(--cyan)}
+button:hover{background:var(--cyan);color:var(--ink)}
 
 section{max-width:1180px;margin:0 auto;padding:80px 6% 70px}
 .head{
   display:flex;align-items:baseline;gap:16px;margin-bottom:34px;flex-wrap:wrap;
   border-bottom:1px solid rgba(39,232,255,.35);padding-bottom:12px;
 }
-.head h2{font-family:'Shippori Mincho B1',serif;font-size:2rem;color:var(--cyan);text-shadow:0 0 14px rgba(39,232,255,.6)}
+.head h2{font-family:'Shippori Mincho B1',serif;font-size:2rem;color:var(--cyan)}
 .head span{color:var(--muted)}
 
 .districts{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:26px}
 .card{
   position:relative;padding:30px;background-color:var(--panel);
   border:1px solid rgba(255,46,136,.45);
-  background-image:
-    linear-gradient(rgba(255,46,136,.07) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(255,46,136,.07) 1px,transparent 1px);
-  background-size:22px 22px;
   transition:.3s;
 }
-.card:hover{border-color:var(--cyan);box-shadow:0 0 28px rgba(39,232,255,.35)}
-.card .k{font-family:'Shippori Mincho B1',serif;font-weight:800;font-size:3.2rem;color:var(--magenta);text-shadow:0 0 16px var(--magenta);line-height:1}
+.card:hover{border-color:var(--cyan)}
+.card .k{font-family:'Shippori Mincho B1',serif;font-weight:800;font-size:3.2rem;color:var(--magenta);line-height:1}
 .card .r{color:var(--amber);font-weight:600;margin:6px 0 12px}
 .card p{color:var(--muted)}
 
@@ -133,7 +138,8 @@ html.embed #np{display:none}
 <header class="bar">
   <span class="mark">夜</span>
   <nav>
-    <a href="index.html">&larr; Back to home</a>
+    <a href="neo.html">&larr; Back to the alley</a>
+    <a href="index.html">Home</a>
   </nav>
 </header>
 
@@ -181,7 +187,7 @@ html.embed #np{display:none}
 </main>
 
 <footer>
-  <p>夜 &copy; <span id="y">2026</span> Ejovwo Obahor &middot; <a href="index.html">Back to home</a></p>
+  <p>夜 &copy; <span id="y">2026</span> Ejovwo Obahor &middot; <a href="neo.html">Back to the alley</a> &middot; <a href="index.html">Home</a></p>
 </footer>
 
 <script>

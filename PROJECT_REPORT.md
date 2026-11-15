@@ -18,8 +18,9 @@ A static personal site on GitHub Pages with no framework and no build step. The 
 
 | Page | Purpose |
 |---|---|
-| `index.html` + `os.js` + `os.css` | **Neo-Jowo OS**: a cyberpunk "operating system" over a 3D neon alley. Apps (About, Skills, Map, Nightclub, Contact) open as manga-style windows. |
-| `serious.html` | Plain, professional version of the portfolio, switched with the **ANTI-FUN / FUN** buttons. |
+| `index.html` | **Home page**: the plain, recruiter-facing landing page with stills of each project. Its FUN button opens Neo-Jowo OS. |
+| `neo.html` + `os.js` + `os.css` | **Neo-Jowo OS**: a cyberpunk "operating system" over a 3D neon alley. Apps (About, Skills, Map, Nightclub, Contact) open as manga-style windows. |
+| `serious.html` | Redirect to `index.html`, kept so old links still work. |
 | `nightclub.html` | **Casa Sofia** (night) / **Playa Sofia** (day beach): a 3D club with a hologram DJ, up to 40 dancers, battles and a synthesised house-music engine. |
 | `classic.html` | The original green-on-black "Matrix" homepage. |
 
@@ -232,7 +233,7 @@ The site draws on a 2D canvas, so the 3D models are rendered ahead of time inste
 ```bash
 git clone https://github.com/Jowo66/jowo66.github.io.git
 cd jowo66.github.io
-python3 -m http.server 8765      # then open http://localhost:8765/index.html
+python3 -m http.server 8765      # then open http://localhost:8765/neo.html
 npm install && npx playwright install chromium && npm test   # from the README
 ```
 
