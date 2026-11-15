@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "index.html"
+        ],
+        "createdAt": "2026-11-15T15:34:02.567Z",
+        "reason": "agent: false positive, the red contact band has block padding and its inner .wrap carries the inline padding; verified in render"
+      }
+    ]
+  }
+}
