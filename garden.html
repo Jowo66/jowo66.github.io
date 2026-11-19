@@ -56,6 +56,10 @@ h1{font-weight:800;font-size:clamp(3.1rem,10.5vw,6rem);line-height:.88;letter-sp
 .btn:hover{background:var(--on-red);color:var(--red)}
 .tools label{display:flex;align-items:center;gap:10px;cursor:pointer}
 .tools input{width:18px;height:18px;accent-color:var(--red)}
+.seasons{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:600 1rem/1 var(--strip);letter-spacing:.08em;text-transform:uppercase;padding:12px 16px;border:2px solid var(--rule);background:transparent;color:var(--ink);cursor:pointer}
+.chip:hover{border-color:var(--red-ink)}
+.chip[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--night)}
 
 .grid{list-style:none;padding:0;margin:clamp(28px,4vw,48px) 0 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(36px,5vw,64px) clamp(20px,3vw,44px)}
 .still{position:relative;aspect-ratio:6/7;background:var(--plate)}
@@ -94,14 +98,15 @@ footer a:hover{color:#fff}
     <div class="head">
       <h1>Garden</h1>
       <div>
-        <p class="lead">Six QR codes, one for each place I would send you. Tap a code and it grows into a tree.</p>
-        <p>Tap the tree and it folds back into the code. Every code is real, and it opens the link written under it.</p>
+        <p class="lead">Six QR codes, one for each place I would send you. Tap a code and it grows into a tree, a pumpkin, a turkey or fireworks, whichever season you pick.</p>
+        <p>Tap it again and it folds back into the code. Every code is real, and it opens the link written under it.</p>
       </div>
     </div>
 
     <div class="tools">
       <button class="btn" id="all" type="button">Grow the garden</button>
-      <label><input type="checkbox" id="baub" checked> Baubles</label>
+      <div class="seasons" id="seasons" role="group" aria-label="Season"></div>
+      <label><input type="checkbox" id="baub" checked> Decorations</label>
     </div>
 
     <ul class="grid" id="plots">
@@ -149,7 +154,7 @@ footer a:hover{color:#fff}
       </li>
     </ul>
 
-    <p class="how"><b>How it works.</b> Each tree is drawn live on a canvas. The squares of the code rise into leaves, the three corner squares become the star, and the coloured squares become baubles. The coloured squares are kept dark enough that the code still scans.</p>
+    <p class="how"><b>How it works.</b> Each picture is drawn live on a canvas. The squares of the code rise into the shape, the three corner squares become its top piece (the star, the stem, the head or the spark), and the coloured squares become decorations. The coloured squares are kept dark enough that the code still scans. Snow, maple leaves, bats and ghosts, or little fireworks fall around it.</p>
   </div>
 </main>
 
@@ -162,7 +167,8 @@ footer a:hover{color:#fff}
 
 <script>document.getElementById('yr').textContent=new Date().getFullYear();</script>
 <script src="assets/qrcode.js?v=20261119m"></script>
-<script src="garden.js?v=20261119m"></script>
+<script src="trees.js?v=20261120c"></script>
+<script src="garden.js?v=20261120c"></script>
 <script src="lang.js?v=20261119m"></script>
 </body>
 </html>

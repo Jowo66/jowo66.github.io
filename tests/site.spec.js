@@ -73,6 +73,11 @@ test('garden shows six trees and grows them', async ({ page }) => {
   await page.goto('/garden.html');
   await page.waitForFunction(() => window.gardenReady === true);
   await expect(page.locator('canvas[data-url]')).toHaveCount(6);
+  await expect(page.locator('#seasons button')).toHaveCount(4);
+  for (const name of ['Halloween', 'Thanksgiving', 'New Year', 'Christmas']) {
+    await page.locator('#seasons button', { hasText: name }).click();
+    await expect(page.locator('#seasons button[aria-pressed=true]')).toHaveText(name);
+  }
   await page.locator('#all').click();
   await expect(page.locator('#all')).toHaveText('Show all codes');
   expect(errors).toEqual([]);

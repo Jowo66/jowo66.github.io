@@ -37,7 +37,7 @@ Red owns regions. It is never a small accent sprinkled on neutral blocks.
 
 ## Garden (`garden.html`)
 
-Same fonts and red as the landing page, on a fixed night ground (`#150f24`) because the trees glow. Each plot is a still (a canvas on `#1e1633`) with a caption strip, a name, one line and a link. Each tree is a real QR code (qrcode.js, MIT) whose squares rise into an ASCII tree; coloured baubles stay dark enough to scan. Only the tree under the pointer, or one just tapped, rotates, and trees off screen are not drawn.
+Same fonts and red as the landing page, on a fixed night ground (`#150f24`) because the trees glow. Each plot is a still (a canvas on `#1e1633`) with a caption strip, a name, one line and a link. Each tree is a real QR code (qrcode.js, MIT) whose squares rise into an ASCII tree; coloured baubles stay dark enough to scan. Four seasons share one engine (`src/trees.js`): Christmas tree with snow, Halloween pumpkin with bats and ghosts, Thanksgiving turkey with maple leaves, New Year fireworks with small bursts. The chosen season is remembered in the browser. Only the picture under the pointer, or one just tapped, rotates, and trees off screen are not drawn.
 
 ## Motion
 
