@@ -18,6 +18,7 @@ A static personal site on GitHub Pages with no framework and no build step. The 
 
 | Page | Purpose |
 |---|---|
+| `garden.html` + `garden.js` | **Garden**: six QR codes (Neo-Jowo OS, resume, Mini Gym, Reverb, Weather Report, LinkedIn) that grow into ASCII trees on tap. |
 | `index.html` | **Home page**: the plain, recruiter-facing landing page with stills of each project. Its FUN button opens Neo-Jowo OS. |
 | `neo.html` + `os.js` + `os.css` | **Neo-Jowo OS**: a cyberpunk "operating system" over a 3D neon alley. Apps (About, Skills, Map, Nightclub, Contact) open as manga-style windows. |
 | `serious.html` | Redirect to `index.html`, kept so old links still work. |

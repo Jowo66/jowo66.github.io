@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Garden | Ejovwo Obahor</title>
+<meta name="description" content="Six QR codes that turn into ASCII Christmas trees. Each one opens a place from Ejovwo Obahor's portfolio.">
+<link rel="canonical" href="https://jowo66.github.io/garden.html">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#150f24">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Garden | Ejovwo Obahor">
+<meta property="og:description" content="Six QR codes that grow into trees. Each one opens a place from my portfolio.">
+<meta property="og:url" content="https://jowo66.github.io/garden.html">
+<meta property="og:image" content="https://jowo66.github.io/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="assets/fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:"Bricolage Grotesque";src:url("assets/fonts/bricolage-grotesque.woff2") format("woff2");font-weight:200 800;font-display:swap}
+@font-face{font-family:"Barlow Condensed";src:url("assets/fonts/barlow-condensed-600.woff2") format("woff2");font-weight:600;font-display:swap}
+@font-face{font-family:"Fragment Mono";src:url("assets/fonts/fragment-mono.woff2") format("woff2");font-weight:400;font-display:swap}
+:root{
+  --night:#150f24;--plate:#1e1633;--ink:#ebe8f1;--soft:#b3abc9;--rule:#3a3052;
+  --red:#c5301a;--red-ink:#ff7256;--on-red:#fff6f2;
+  --text:"Bricolage Grotesque",system-ui,sans-serif;--strip:"Barlow Condensed","Bricolage Grotesque",sans-serif;
+  --edge:clamp(20px,5vw,72px);
+}
+*{box-sizing:border-box}
+html{background:var(--night);color-scheme:dark;scrollbar-color:var(--red) var(--night)}
+body{margin:0;color:var(--ink);font:400 1.0625rem/1.6 var(--text);font-optical-sizing:auto;-webkit-font-smoothing:antialiased}
+::selection{background:var(--red);color:var(--on-red)}
+a{color:inherit;text-decoration-color:var(--red-ink);text-decoration-thickness:2px;text-underline-offset:.22em}
+a:hover{color:var(--red-ink)}
+:focus-visible{outline:3px solid var(--red-ink);outline-offset:3px}
+h1,h2,p,ul{margin:0}
+.skip{position:absolute;left:var(--edge);top:-60px;z-index:20;background:var(--red);color:var(--on-red);padding:10px 16px;font-weight:600;text-decoration:none}
+.skip:focus{top:10px}
+.skip:hover{color:var(--on-red)}
+
+.bar{display:flex;align-items:center;gap:clamp(12px,2.4vw,30px);padding:18px var(--edge);font-weight:500}
+.bar .me{font-weight:700;text-decoration:none;margin-right:auto;letter-spacing:-.01em}
+.bar nav{display:flex;gap:clamp(12px,2.4vw,30px)}
+.bar a{text-decoration:none;padding:6px 0}
+.bar a:hover{text-decoration:underline;text-decoration-color:var(--red-ink)}
+.bar .fun{font:600 1rem/1 var(--strip);letter-spacing:.08em;background:var(--red);color:var(--on-red);padding:10px 14px}
+.bar .fun:hover{background:var(--ink);color:var(--night);text-decoration:none}
+
+.wrap{padding-inline:var(--edge);max-width:1500px;margin-inline:auto}
+.head{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:clamp(24px,5vw,80px);align-items:end;padding-top:clamp(28px,6vw,72px)}
+h1{font-weight:800;font-size:clamp(3.1rem,10.5vw,6rem);line-height:.88;letter-spacing:-.035em}
+.lead{font-size:clamp(1.15rem,1.7vw,1.4rem);line-height:1.4;max-width:34ch}
+.lead + p{margin-top:14px;color:var(--soft);max-width:44ch}
+
+.tools{display:flex;flex-wrap:wrap;align-items:center;gap:14px 26px;margin-top:clamp(28px,4vw,48px);padding-top:16px;border-top:1px solid var(--rule)}
+.btn{font:600 1.0625rem/1 var(--strip);letter-spacing:.08em;text-transform:uppercase;padding:15px 20px;border:2px solid var(--red);background:var(--red);color:var(--on-red);cursor:pointer;transition:background .2s,color .2s}
+.btn:hover{background:var(--on-red);color:var(--red)}
+.tools label{display:flex;align-items:center;gap:10px;cursor:pointer}
+.tools input{width:18px;height:18px;accent-color:var(--red)}
+
+.grid{list-style:none;padding:0;margin:clamp(28px,4vw,48px) 0 0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(36px,5vw,64px) clamp(20px,3vw,44px)}
+.still{position:relative;aspect-ratio:6/7;background:var(--plate)}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:pointer;touch-action:manipulation}
+canvas:focus-visible{outline-offset:-3px}
+.strip{font:600 .9375rem/1.3 var(--strip);letter-spacing:.07em;text-transform:uppercase;color:var(--soft);border-top:3px solid var(--red);padding-top:10px;margin-top:0}
+.strip b{color:var(--ink);font-weight:600}
+.plot h2{font-weight:800;font-size:clamp(1.7rem,2.6vw,2.2rem);line-height:1;letter-spacing:-.03em;margin:18px 0 8px}
+.plot p{color:var(--soft);max-width:32ch}
+.plot .open{display:inline-block;margin-top:10px;font-weight:600}
+.how{margin:clamp(56px,8vw,110px) 0 clamp(56px,8vw,110px);max-width:62ch;color:var(--soft)}
+.how b{color:var(--ink);font-weight:600}
+footer{background:#0f0a1c;color:#cfc8e2;padding:26px 0;font-size:.95rem}
+footer .wrap{display:flex;flex-wrap:wrap;gap:8px 28px}
+footer span{margin-right:auto}
+footer a:hover{color:#fff}
+
+@media (max-width:980px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:820px){.head{grid-template-columns:1fr}.bar nav{display:none}}
+@media (max-width:560px){.grid{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.btn{transition:none}}
+</style>
+</head>
+<body>
+<a class="skip" href="#plots">Skip to the trees</a>
+
+<header class="bar">
+  <a class="me" href="index.html">Ejovwo Obahor</a>
+  <nav aria-label="Pages"><a href="index.html">Home</a><a href="neo.html">Neo-Jowo OS</a></nav>
+  <span id="langsel"></span>
+  <a class="fun" href="neo.html" title="Open Neo-Jowo OS, the cyberpunk version of this site">FUN</a>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="head">
+      <h1>Garden</h1>
+      <div>
+        <p class="lead">Six QR codes, one for each place I would send you. Tap a code and it grows into a tree.</p>
+        <p>Tap the tree and it folds back into the code. Every code is real, and it opens the link written under it.</p>
+      </div>
+    </div>
+
+    <div class="tools">
+      <button class="btn" id="all" type="button">Grow the garden</button>
+      <label><input type="checkbox" id="baub" checked> Baubles</label>
+    </div>
+
+    <ul class="grid" id="plots">
+      <li class="plot">
+        <div class="still"><canvas role="button" tabindex="0" data-name="Neo-Jowo OS" data-pal="neon" data-url="https://jowo66.github.io/neo.html" aria-label="Neo-Jowo OS: QR code. Press Enter to turn it into a tree."></canvas></div>
+        <p class="strip"><b>Portfolio</b></p>
+        <h2>Neo-Jowo OS</h2>
+        <p>This portfolio as a small operating system inside a neon alley.</p>
+        <a class="open" href="neo.html">Open Neo-Jowo OS</a>
+      </li>
+      <li class="plot">
+        <div class="still"><canvas role="button" tabindex="0" data-name="Resume" data-pal="evergreen" data-url="https://claude.ai/artifact/GT6soQaRK9JSX5kVdJHR3K" aria-label="Resume: QR code. Press Enter to turn it into a tree."></canvas></div>
+        <p class="strip"><b>One page</b></p>
+        <h2>Resume</h2>
+        <p>School, experience, projects and skills on one page.</p>
+        <a class="open" href="https://claude.ai/artifact/GT6soQaRK9JSX5kVdJHR3K">Open the resume</a>
+      </li>
+      <li class="plot">
+        <div class="still"><canvas role="button" tabindex="0" data-name="Mini Gym" data-pal="ember" data-url="https://jowo66.github.io/strong/" aria-label="Mini Gym: QR code. Press Enter to turn it into a tree."></canvas></div>
+        <p class="strip"><b>Game</b></p>
+        <h2>Mini Gym</h2>
+        <p>Tiny members train, queue for equipment and become legends.</p>
+        <a class="open" href="https://jowo66.github.io/strong/">Play Mini Gym</a>
+      </li>
+      <li class="plot">
+        <div class="still"><canvas role="button" tabindex="0" data-name="Reverb // Worlds" data-pal="rose" data-url="https://jowo66.github.io/reverb-worlds/" aria-label="Reverb // Worlds: QR code. Press Enter to turn it into a tree."></canvas></div>
+        <p class="strip"><b>Music player</b></p>
+        <h2>Reverb // Worlds</h2>
+        <p>A music player with a hologram that moves with the music.</p>
+        <a class="open" href="https://jowo66.github.io/reverb-worlds/">Open Reverb</a>
+      </li>
+      <li class="plot">
+        <div class="still"><canvas role="button" tabindex="0" data-name="Weather Report" data-pal="frost" data-url="https://jowo66.github.io/weather-report/" aria-label="Weather Report: QR code. Press Enter to turn it into a tree."></canvas></div>
+        <p class="strip"><b>Web app</b></p>
+        <h2>Weather Report</h2>
+        <p>How the weather will feel in what you are wearing.</p>
+        <a class="open" href="https://jowo66.github.io/weather-report/">Open Weather Report</a>
+      </li>
+      <li class="plot">
+        <div class="still"><canvas role="button" tabindex="0" data-name="LinkedIn" data-pal="midnight" data-url="https://www.linkedin.com/in/ejovwo-obahor" aria-label="LinkedIn: QR code. Press Enter to turn it into a tree."></canvas></div>
+        <p class="strip"><b>Profile</b></p>
+        <h2>LinkedIn</h2>
+        <p>My profile, if you would rather message me there.</p>
+        <a class="open" href="https://www.linkedin.com/in/ejovwo-obahor">Open LinkedIn</a>
+      </li>
+    </ul>
+
+    <p class="how"><b>How it works.</b> Each tree is drawn live on a canvas. The squares of the code rise into leaves, the three corner squares become the star, and the coloured squares become baubles. The coloured squares are kept dark enough that the code still scans.</p>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>&copy; <span id="yr">2026</span> Ejovwo Obahor</span>
+    <a href="index.html">Home</a><a href="neo.html">Neo-Jowo OS</a><a href="nightclub.html">Casa Sofia</a>
+  </div>
+</footer>
+
+<script>document.getElementById('yr').textContent=new Date().getFullYear();</script>
+<script src="assets/qrcode.js?v=20261119a"></script>
+<script src="garden.js?v=20261119a"></script>
+<script src="lang.js?v=20261115a"></script>
+</body>
+</html>

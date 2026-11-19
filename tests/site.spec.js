@@ -66,6 +66,18 @@ test('home page has no broken local links or images', async ({ page, request }) 
   }
 });
 
+// TEST 8: the garden loads, shows six trees, and the grow button works.
+test('garden shows six trees and grows them', async ({ page }) => {
+  const errors = [];
+  page.on('pageerror', (err) => errors.push(err.message));
+  await page.goto('/garden.html');
+  await page.waitForFunction(() => window.gardenReady === true);
+  await expect(page.locator('canvas[data-url]')).toHaveCount(6);
+  await page.locator('#all').click();
+  await expect(page.locator('#all')).toHaveText('Show all codes');
+  expect(errors).toEqual([]);
+});
+
 // TEST 7: the old address still takes visitors to the home page.
 test('serious.html redirects to the home page', async ({ page }) => {
   await page.goto('/serious.html');

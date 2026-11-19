@@ -1,1 +1,3 @@
 Bricolage Grotesque (c) The Bricolage Grotesque Project Authors and Barlow Condensed (c) The Barlow Project Authors are licensed under the SIL Open Font License 1.1: https://openfontlicense.org
+Fragment Mono (c) The Fragment Mono Project Authors, SIL Open Font License 1.1: https://openfontlicense.org
+qrcode.js (c) 2009 Kazuhiko Arase, MIT license: https://github.com/kazuhikoarase/qrcode-generator

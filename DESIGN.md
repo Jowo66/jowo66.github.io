@@ -35,6 +35,10 @@ Red owns regions. It is never a small accent sprinkled on neutral blocks.
 - **Links**: ink with a 2px red underline.
 - **Contact band**: full-width red with one very large link.
 
+## Garden (`garden.html`)
+
+Same fonts and red as the landing page, on a fixed night ground (`#150f24`) because the trees glow. Each plot is a still (a canvas on `#1e1633`) with a caption strip, a name, one line and a link. Each tree is a real QR code (qrcode.js, MIT) whose squares rise into an ASCII tree; coloured baubles stay dark enough to scan. Only the tree under the pointer, or one just tapped, rotates, and trees off screen are not drawn.
+
 ## Motion
 
 One moment: the hero still opens from a letterbox slit on load (1.1s, exponential ease-out), skipped under `prefers-reduced-motion`. "Run it here" swaps the still for the live alley in place.

@@ -30,7 +30,7 @@ Read on desktop and phone, usually briefly. The live site is a static GitHub Pag
 
 - The plain page becomes the root URL. The cyberpunk site moves to `neo.html` and every internal link is updated.
 - An English, French and Spanish hover translator (`lang.js`) is shared across pages and must keep working.
-- No fabricated personal facts. Graduation year and a photo are not yet provided; they stay hidden until supplied (user decision).
+- No fabricated personal facts. A photo is not yet provided; it stays hidden until supplied (user decision).
 - No Hebrew text anywhere on the site.
 - No paid services.
 - Commit trailers are required on every commit.
@@ -45,7 +45,8 @@ The name is Ejovwo Obahor. The playful side is the cyberpunk Neo-Jowo OS and mus
 - Live sibling projects: Mini Gym, Reverb // Worlds, Weather Report.
 - From the resume (Claude Doc "Ejovwo Obahor — Resume"): Sheridan College, Honours BSc Computer Science (Cloud Computing); email; LinkedIn; work history at IJE, Halton Multicultural Council and William's Fresh Café; coursework projects (The Maple Table on AWS, IoT home camera, ride booking module); AWS Cloud Practitioner exam prep via LinkedIn Learning (Nov 2026).
 - Kept off the site: phone number.
-- Absent, and not to be invented: graduation year, photo, testimonials.
+- Graduation year: 2028 (user confirmed). Public resume: https://claude.ai/artifact/GT6soQaRK9JSX5kVdJHR3K
+- Absent, and not to be invented: photo, testimonials.
 
 ## Product Principles
 
