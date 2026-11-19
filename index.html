@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ejovwo Obahor | Computer science student, Toronto</title>
-<meta name="description" content="Ejovwo Obahor is a computer science student in Toronto who builds interactive software for the browser: graphics, audio and simulations.">
+<meta name="description" content="Ejovwo Obahor is a computer science (cloud computing) student at Sheridan College who builds interactive software for the browser and on AWS.">
 <link rel="canonical" href="https://jowo66.github.io/">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#1c1330">
@@ -84,6 +84,11 @@ h2{font-weight:800;font-size:clamp(2.1rem,5vw,3.6rem);line-height:.95;letter-spa
 .facts div{display:grid;grid-template-columns:11.5ch 1fr;gap:18px;padding:13px 0;border-bottom:1px solid var(--rule)}
 .facts dt{font:600 1rem/1.5 var(--strip);letter-spacing:.07em;text-transform:uppercase}
 .facts dd{color:var(--soft)}
+.facts.rows{margin-top:0}
+.facts.rows div{grid-template-columns:minmax(0,15rem) 1fr;gap:clamp(14px,3vw,36px);padding:18px 0}
+.facts.rows dt{font:700 1.15rem/1.3 var(--text);letter-spacing:-.01em;text-transform:none}
+.facts.rows dt span{display:block;margin-top:4px;font:600 .9375rem/1.3 var(--strip);letter-spacing:.07em;text-transform:uppercase;color:var(--soft)}
+.facts.rows dd{font-size:1.0625rem}
 
 .wide .txt{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(20px,5vw,80px);padding-top:26px}
 .pair{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,4fr);gap:clamp(28px,5vw,80px);align-items:start}
@@ -99,7 +104,8 @@ figure img{width:100%;background:var(--night)}
 .contact{margin-top:clamp(72px,10vw,140px);background:var(--red);color:var(--on-red);padding:clamp(56px,9vw,120px) 0}
 .contact ::selection{background:var(--on-red);color:var(--red)}
 .contact :focus-visible{outline-color:var(--on-red)}
-.contact h2{font-size:clamp(2.3rem,7.4vw,5.6rem)}
+.contact h2{font-size:clamp(1.55rem,6vw,4.6rem);overflow-wrap:anywhere}
+.contact .also{display:flex;gap:28px;font-weight:600;font-size:1.3rem}
 .contact h2 a{text-decoration-color:var(--on-red);text-decoration-thickness:.06em}
 .contact a:hover{color:var(--on-red);text-decoration-thickness:.12em}
 .contact p{margin-top:22px;max-width:46ch;font-size:1.15rem}
@@ -114,7 +120,7 @@ footer a:hover{color:#fff}
   .still{height:56vh}
   .still .acts{left:var(--edge);right:auto}
   #wake{display:none}
-  .facts div{grid-template-columns:1fr;gap:2px}
+  .facts div,.facts.rows div{grid-template-columns:1fr;gap:2px}
 }
 </style>
 </head>
@@ -123,7 +129,7 @@ footer a:hover{color:#fff}
 
 <header class="top">
   <a class="me" href="#top">Ejovwo Obahor</a>
-  <nav aria-label="Sections"><a href="#work">Work</a><a href="#about">About</a><a href="#contact">Contact</a></nav>
+  <nav aria-label="Sections"><a href="#work">Work</a><a href="#experience">Experience</a><a href="#about">About</a><a href="#contact">Contact</a></nav>
   <span id="langsel"></span>
   <a class="fun" id="fun" href="neo.html" title="Switch to Neo-Jowo OS, the cyberpunk version of this site">FUN</a>
 </header>
@@ -141,7 +147,7 @@ footer a:hover{color:#fff}
     <div class="card1">
       <h1>Ejovwo Obahor</h1>
       <div>
-        <p class="lead">Computer science student in Toronto. I build interactive software for the browser: graphics, audio and small simulations.</p>
+        <p class="lead">Computer science student at Sheridan College, specialising in cloud computing. I build interactive software for the browser: graphics, audio and small simulations.</p>
         <p>The street above is one of them. It is drawn live, and the code is on <a href="https://github.com/Jowo66">GitHub</a>.</p>
       </div>
     </div>
@@ -210,19 +216,43 @@ footer a:hover{color:#fff}
     </div>
   </section>
 
+  <section class="wrap about" id="cloud">
+    <h2>Cloud and coursework</h2>
+    <div>
+      <dl class="facts rows">
+        <div><dt>The Maple Table</dt><dd>A restaurant-menu web app on AWS, built with one partner at Sheridan. A custom VPC with public and private subnets, Apache and PHP on EC2, and two S3 buckets so staff can change prices without touching the server. SSH is locked to a single IP.</dd></div>
+        <div><dt>IoT home camera</dt><dd>A simulated home camera system backed by a Flask REST API, built as a group assignment.</dd></div>
+        <div><dt>Ride booking</dt><dd>The booking module of a group ride-hailing app: the use case diagram and domain model for booking, matching and the trip lifecycle.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="wrap about" id="experience">
+    <h2>Experience</h2>
+    <div>
+      <dl class="facts rows">
+        <div><dt>IJE<span>User experience engineer &middot; 2022 to now</span></dt><dd>I test new features and report three to five bugs a round, and sort five to ten user notes a week into clear categories for the developers.</dd></div>
+        <div><dt>Halton Multicultural Council<span>Administrative associate &middot; summer 2025</span></dt><dd>Admin and tech requests for senior staff, fixes to the translator database, and over 100 sensitive files scanned and processed without an error.</dd></div>
+        <div><dt>William&rsquo;s Fresh Caf&eacute;<span>Day shift manager &middot; 2021 to 2023</span></dt><dd>Ran shifts for six to ten staff, handled the till and helped train new hires.</dd></div>
+      </dl>
+    </div>
+  </section>
+
   <section id="about" class="wrap about">
     <h2>About</h2>
     <div>
       <p class="say">I like software you can see and hear, and I like writing the parts underneath it myself.</p>
-      <p class="tools"><b>I work in</b> JavaScript and TypeScript, HTML and CSS, Canvas 2D, the Web Audio API, three.js, React, Playwright, Git and GitHub Actions.</p>
-      <p class="tools">I am looking for co-op and internship roles in software.</p>
+      <p class="tools"><b>I work in</b> JavaScript and TypeScript, Python, PHP and SQL, HTML and CSS, Canvas 2D, the Web Audio API, three.js, React, Flask and REST APIs, AWS (VPC, EC2, S3), Playwright, Git and GitHub Actions.</p>
+      <p class="tools"><b>Studying</b> for an Honours Bachelor of Science in Computer Science (Cloud Computing) at Sheridan College. I am preparing for the AWS Certified Cloud Practitioner (CLF-C02) exam through LinkedIn Learning (November 2026).</p>
+      <p class="tools">I am looking for co-op and internship roles in software and cloud.</p>
     </div>
   </section>
 
   <div class="contact" id="contact">
     <div class="wrap">
-      <h2><a href="https://github.com/Jowo66">github.com/Jowo66</a></h2>
-      <p>Every project on this page is public there. Open an issue on any repository to reach me.</p>
+      <h2><a href="mailto:ejovwo.obahor@gmail.com">ejovwo.obahor@gmail.com</a></h2>
+      <p class="also"><a href="https://www.linkedin.com/in/ejovwo-obahor">LinkedIn</a><a href="https://github.com/Jowo66">GitHub</a></p>
+      <p>Every project on this page is public on GitHub. Email is the quickest way to reach me.</p>
     </div>
   </div>
 </main>
