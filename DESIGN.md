@@ -49,4 +49,4 @@ Edge padding `clamp(20px, 5vw, 72px)`. Two-column grids at 5/7 and 7/4 collapse 
 
 ## Imagery
 
-Every image is a capture of the running project, taken headless at build time and stored in `assets/work/`. `assets/og.png` is the hero still with the name set beneath it. Nothing is generated or stock.
+Every image is a capture of the running project, taken headless at build time and stored in `assets/work/`. `assets/og.jpg` is the hero still with the name set beneath it. Nothing is generated or stock.

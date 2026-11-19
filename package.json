@@ -2,7 +2,8 @@
   "name": "jowo66-site-tests",
   "private": true,
   "scripts": {
-    "test": "playwright test"
+    "test": "playwright test",
+    "build:js": "esbuild src/*.js --minify --legal-comments=none --target=es2019 --outdir=. && mv qrcode.js assets/qrcode.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.0"

@@ -24,3 +24,7 @@ With `?pixel` the nightclub window opens the pixel club (`club.js`, drawn on `ni
 The monster event picks from ten giants: Cthulhu, the Flying Obelisk, the Reaper, the Spirit Boxer and the Seed Spitter (Pixel Monsters, CC0), and Ball & Chain Bot, Droid Zapper, Stormhead, Shield Droid and Bot Wheel (Mechs & Robots, CC0). Each hits the tower with its own projectile and an impact from the **Free Pixel Effects Pack** (public domain). Flying cars on the rooftops are repainted in unique colour schemes, and every 5th to 7th one stops at the roof to pick up passengers.
 
 Units from **Duelyst** (Counterplay Games, released CC0) join the pixel scenes: twelve of them as monster-event giants (Chaos Knight, Boreal Juggernaut, Cindera, Flumposaur, Molten Golem and others), sixteen as people on the street, and Harmony, Dissonance and six party-goers in the club. `tools/pixel/build-duelyst.js` reads them straight out of the `.unitypackage` into `assets/pixel/du-*.png` and `duelyst.js`; `tools/pixel/palettize.py` then stores them as palette PNGs.
+
+## Scripts
+
+The `.js` files served by the pages (`os.js`, `street.js`, `garden.js`, `assets/qrcode.js` and so on) are minified copies. The readable sources are in `src/`. After editing a file in `src/`, run `npm run build:js` (needs `esbuild` on your PATH) and commit both the source and the minified file. Bump the `?v=` tag on the script in the HTML so browsers fetch the new copy.
